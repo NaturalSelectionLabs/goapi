@@ -1,0 +1,18 @@
+{
+  "version": "0.2",
+  "language": "en",
+  "ignorePaths": [],
+  "words": [
+    "errorlint",
+    "goapi",
+    "innererror",
+    "jschema",
+    "middlewares",
+    "naturalselectionlabs",
+    "nolint",
+    "openapi",
+    "strcase",
+    "vitalik"
+  ],
+  "flagWords": []
+}
