@@ -64,14 +64,8 @@ func (g *Group) Add(method, path string, handler any) *Endpoint {
 		panic("handler is not a function")
 	}
 
-	if tHandler.NumOut() > 0 {
-		if tHandler.Out(tHandler.NumOut()-1) != tError {
-			panic("handler's last return value must be an error")
-		}
-
-		if tHandler.NumOut() > 3 {
-			panic("handler can at most return 2 values")
-		}
+	if tHandler.NumOut() > 3 {
+		panic("handler can at most return 3 values")
 	}
 
 	e := &Endpoint{

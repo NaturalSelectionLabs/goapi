@@ -1,6 +1,7 @@
 package goapi
 
 import (
+	"fmt"
 	"net/http"
 	"net/url"
 	"reflect"
@@ -35,12 +36,14 @@ func (e *Endpoint) Handle(w http.ResponseWriter, r *http.Request, next http.Hand
 	}
 
 	args := make([]reflect.Value, e.tHandler.NumIn())
+	overrideWriter := false
 
 	for i := range args {
 		tArg := e.tHandler.In(i)
 
 		switch tArg {
 		case tHTTPResponseWriter:
+			overrideWriter = true
 			args[i] = reflect.ValueOf(w)
 
 		case tHTTPRequest:
@@ -51,38 +54,44 @@ func (e *Endpoint) Handle(w http.ResponseWriter, r *http.Request, next http.Hand
 				panic("Params argument must be a pointer to a struct: " + tArg.String())
 			}
 
-			args[i] = e.Params(tArg.Elem(), pathParams, r.URL.Query())
+			qs := r.URL.Query()
+
+			if err := e.guardQuery(qs); err != nil {
+				writeResponse(w, nil, nil, err)
+				return
+			}
+
+			args[i] = e.Params(tArg.Elem(), pathParams, qs)
 		}
 	}
 
 	ret := e.vHandler.Call(args)
+
+	if overrideWriter {
+		return
+	}
+
+	if len(ret) > 0 {
+		last := ret[len(ret)-1]
+
+		if last.Type() == tError {
+			if !last.IsNil() {
+				writeResponse(w, nil, nil, ret[0].Interface().(error))
+				return
+			}
+
+			ret = ret[:len(ret)-1]
+		}
+	}
 
 	switch len(ret) {
 	case 0:
 		w.WriteHeader(http.StatusNoContent)
 
 	case 1:
-		if ret[0].IsNil() {
-			w.WriteHeader(http.StatusNoContent)
-			return
-		}
-
-		writeResponse(w, nil, nil, ret[0].Interface().(error))
-
-	case 2:
-		if !ret[1].IsNil() {
-			writeResponse(w, nil, nil, ret[0].Interface().(error))
-			return
-		}
-
 		writeResponse(w, ret[0].Interface(), nil, nil)
 
 	default:
-		if !ret[2].IsNil() {
-			writeResponse(w, nil, nil, ret[0].Interface().(error))
-			return
-		}
-
 		writeResponse(w, ret[0].Interface(), ret[1].Interface(), nil)
 	}
 }
@@ -126,6 +135,17 @@ func (e *Endpoint) Params(tArg reflect.Type, pathParams []string, qs url.Values)
 	}
 
 	return arg
+}
+
+// Ensure query key are camelCased.
+func (e *Endpoint) guardQuery(qs url.Values) error {
+	for k := range qs {
+		if k != strcase.ToSnake(k) {
+			return fmt.Errorf("query key is not snake styled: %s", k)
+		}
+	}
+
+	return nil
 }
 
 func (e *Endpoint) SetTags(tags ...Tag) *Endpoint {

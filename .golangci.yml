@@ -4,6 +4,7 @@ run:
 linters:
   enable-all: true
   disable:
+    - funlen
     - goerr113
     - gomnd
     - errchkjson
