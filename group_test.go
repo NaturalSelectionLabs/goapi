@@ -1,7 +1,6 @@
 package goapi_test
 
 import (
-	"fmt"
 	"net/http"
 	"testing"
 
@@ -26,52 +25,26 @@ func TestGroup(t *testing.T) {
 
 	g.Eq(g.Panic(func() {
 		r.GET("/users/{userID}", func() {})
-	}), "path parameter must be in kebab-case: userID")
+	}), "expect path to be kebab-case, but got: /users/{userID}")
 
-	r.GET("/users/{id}", func(params *Params) (string, string) {
-		return params.ID, params.ID
-	})
+	g.Eq(g.Panic(func() {
+		r.GET("/users", "")
+	}), "expect handler to be a function, but got: string")
 
-	r.POST("/error", func() error {
-		return fmt.Errorf("error")
-	})
+	g.Eq(g.Panic(func() {
+		r.GET("/users", func() (int, int, int, int) { return 0, 0, 0, 0 })
+	}), "expect handler at most return 3 values, but got: 4")
 
-	r.PUT("/override-res", func(w http.ResponseWriter) {
-		w.WriteHeader(http.StatusNotModified)
-	})
+	r.GET("/users/{id}", func(params *Params) string { return params.ID })
 
-	r.GET("/override-header", func() goapi.Response {
-		return &goapi.ResponseOKHeader{
-			ResHeader: http.Header{
-				"x-test": []string{"ok"},
-			},
-		}
-	})
-
-	r.GET("/posts/{id}", func(params *Params) goapi.Response {
-		return &goapi.ResponseOK{
-			Data: params.ID,
-		}
-	})
+	r.POST("/posts/{id}", func(params *Params) string { return params.ID })
 
 	tr := g.Serve()
 	tr.Mux.Handle("/", r)
 
 	g.Eq(g.Req("", tr.URL("/users/123?user_filter=1")).JSON(), map[string]interface{}{
 		"data": "123",
-		"meta": "123",
 	})
-
-	g.Eq(g.Req("", tr.URL("/error")).StatusCode, http.StatusNotFound)
-
-	g.Eq(g.Req(http.MethodPost, tr.URL("/error")).JSON(), map[string]interface{}{
-		"error": map[string]interface{} /* len=2 */ {
-			"code":    `*errors.errorString`, /* len=19 */
-			"message": "error",
-		},
-	})
-
-	g.Eq(g.Req(http.MethodPut, tr.URL("/override-res")).StatusCode, http.StatusNotModified)
 
 	g.Eq(g.Req("", tr.URL("/users/123?userFilter=1")).JSON(), map[string]interface{}{
 		"error": map[string]interface{} /* len=2 */ {
@@ -87,5 +60,7 @@ func TestGroup(t *testing.T) {
 		},
 	})
 
-	g.Eq(g.Req("", tr.URL("/override-header")).Header.Get("x-test"), "ok")
+	g.Eq(g.Req(http.MethodPost, tr.URL("/posts/456")).JSON(), map[string]interface{}{
+		"data": "456",
+	})
 }

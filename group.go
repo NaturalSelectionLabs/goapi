@@ -1,10 +1,10 @@
 package goapi
 
 import (
+	"fmt"
 	"net/http"
 	"reflect"
 	"regexp"
-	"strings"
 
 	"github.com/iancoleman/strcase"
 )
@@ -46,26 +46,30 @@ func (g *Group) HEAD(path string, handler any) *Endpoint {
 }
 
 func (g *Group) Add(method, path string, handler any) *Endpoint {
+	if strcase.ToKebab(path) != path {
+		panic("expect path to be kebab-case, but got: " + path)
+	}
+
 	path = g.prefix + path
 
 	if regSpace.MatchString(path) {
-		panic("path cannot contain spaces:" + path)
+		panic("expect path contain no spaces, but got: " + path)
 	}
 
 	pathPattern, pathParams, err := openAPIPathToRegexp(path)
 	if err != nil {
-		panic("path is not a valid OpenAPI path:" + path)
+		panic("expect path matches the openapi path format, but got: " + path)
 	}
 
 	vHandler := reflect.ValueOf(handler)
 	tHandler := vHandler.Type()
 
 	if tHandler.Kind() != reflect.Func {
-		panic("handler is not a function")
+		panic("expect handler to be a function, but got: " + tHandler.String())
 	}
 
 	if tHandler.NumOut() > 3 {
-		panic("handler can at most return 3 values")
+		panic(fmt.Sprintf("expect handler at most return 3 values, but got: %d", tHandler.NumOut()))
 	}
 
 	e := &Endpoint{
@@ -77,6 +81,23 @@ func (g *Group) Add(method, path string, handler any) *Endpoint {
 		pathParams:  pathParams,
 	}
 
+	for i := 0; i < tHandler.NumIn(); i++ {
+		tArg := tHandler.In(i)
+
+		switch tArg {
+		case tHTTPResponseWriter:
+			e.overrideWriter = true
+
+		case tHTTPRequest:
+
+		default:
+			if tArg.Kind() != reflect.Ptr || tArg.Elem().Kind() != reflect.Struct {
+				panic("expect handler arguments must be http.ResponseWriter, *http.Request, or pointer to a struct, " +
+					"but got: " + tArg.String())
+			}
+		}
+	}
+
 	g.endpoints = append([]*Endpoint{e}, g.endpoints...)
 
 	g.router.Add(e.Handle)
@@ -84,42 +105,12 @@ func (g *Group) Add(method, path string, handler any) *Endpoint {
 	return e
 }
 
-// Group is a shortcut for [Router.Group].
+// Group creates a sub group of current group.
 func (g *Group) Group(prefix string) *Group {
-	return g.router.Group(prefix)
+	return g.router.Group(g.prefix + prefix)
 }
 
 // Handler is a shortcut for [Router.Handler].
 func (g *Group) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	g.router.ServeHTTP(w, r)
-}
-
-var regOpenAPIPath = regexp.MustCompile(`\{([^}]+)\}`)
-
-// Converts OpenAPI style path to Go Regexp and returns path parameters.
-func openAPIPathToRegexp(path string) (*regexp.Regexp, []string, error) {
-	params := []string{}
-
-	// Replace OpenAPI wildcards with Go RegExp named wildcards
-	regexPath := regOpenAPIPath.ReplaceAllStringFunc(path, func(m string) string {
-		param := m[1 : len(m)-1] // Strip outer braces from parameter
-
-		if strcase.ToKebab(param) != param { // Make sure parameter is in kebab-case
-			panic("path parameter must be in kebab-case: " + param)
-		}
-
-		params = append(params, param)    // Add param to list
-		return "(?P<" + param + ">[^/]+)" // Replace with Go Regexp named wildcard
-	})
-
-	// Make sure the path starts with a "^", ends with a "$", and escape slashes
-	regexPath = "^" + strings.ReplaceAll(regexPath, "/", "\\/") + "$"
-
-	// Compile the regular expression
-	r, err := regexp.Compile(regexPath)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	return r, params, nil
 }

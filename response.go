@@ -13,13 +13,19 @@ type Response interface {
 	StatusCode() int
 }
 
+// ResponseHeader is a [Response] object that implements extra Header method.
 type ResponseHeader interface {
 	Header() http.Header
 }
 
+// ErrorCode is an interface to tell if a error is a managed error.
+type ErrorCode interface {
+	ErrorCode() string
+}
+
 type ResponseOK struct {
 	// Data is the primary data returned by the API.
-	Data any `json:"data,omitempty"`
+	Data any `json:"data"`
 	// Meta is a meta object that contains non-standard meta-information,
 	// such as pagination information.
 	Meta any `json:"meta,omitempty"`
@@ -29,9 +35,10 @@ func (r *ResponseOK) StatusCode() int {
 	return http.StatusOK
 }
 
+// ResponseOKHeader is similar with [ResponseOK] but with an extra ResHeader field.
 type ResponseOKHeader struct {
 	ResHeader http.Header `json:"-"`
-	Data      any         `json:"data,omitempty"`
+	Data      any         `json:"data"`
 	Meta      any         `json:"meta,omitempty"`
 }
 
@@ -43,12 +50,28 @@ func (r *ResponseOKHeader) Header() http.Header {
 	return r.ResHeader
 }
 
-type ResponseError struct {
+type ResponseBadRequest struct {
+	Error *Error `json:"error"`
+}
+
+func (r *ResponseBadRequest) StatusCode() int {
+	return http.StatusBadRequest
+}
+
+type ResponseNotFound struct {
 	Error *Error `json:"error,omitempty"`
 }
 
-func (r *ResponseError) StatusCode() int {
-	return http.StatusBadRequest
+func (r *ResponseNotFound) StatusCode() int {
+	return http.StatusNotFound
+}
+
+type ResponseInternalServerError struct {
+	Error *Error `json:"error,omitempty"`
+}
+
+func (r *ResponseInternalServerError) StatusCode() int {
+	return http.StatusInternalServerError
 }
 
 // Error is an error object that contains information about a failed request.
@@ -64,6 +87,10 @@ type Error struct {
 	Details []Error `json:"details,omitempty"`
 	// InnerError is a generic error object that is used by the service developer for debugging.
 	InnerError any `json:"innererror,omitempty"`
+}
+
+func (e *Error) ErrorCode() string {
+	return e.Code
 }
 
 func (e *Error) Error() string {

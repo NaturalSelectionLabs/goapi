@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"reflect"
 	"regexp"
+	"strings"
 
 	"github.com/iancoleman/strcase"
 )
@@ -13,8 +14,6 @@ import (
 var (
 	tHTTPResponseWriter = reflect.TypeOf((*http.ResponseWriter)(nil)).Elem()
 	tHTTPRequest        = reflect.TypeOf((*http.Request)(nil))
-	tResponse           = reflect.TypeOf((*Response)(nil)).Elem()
-	tError              = reflect.TypeOf((*error)(nil)).Elem()
 )
 
 type Endpoint struct {
@@ -24,8 +23,9 @@ type Endpoint struct {
 	tHandler    reflect.Type
 	tags        []Tag
 
-	pathPattern *regexp.Regexp
-	pathParams  []string
+	pathPattern    *regexp.Regexp
+	pathParams     []string
+	overrideWriter bool
 }
 
 func (e *Endpoint) Handle(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
@@ -37,28 +37,22 @@ func (e *Endpoint) Handle(w http.ResponseWriter, r *http.Request, next http.Hand
 	}
 
 	args := make([]reflect.Value, e.tHandler.NumIn())
-	overrideWriter := false
 
 	for i := range args {
 		tArg := e.tHandler.In(i)
 
 		switch tArg {
 		case tHTTPResponseWriter:
-			overrideWriter = true
 			args[i] = reflect.ValueOf(w)
 
 		case tHTTPRequest:
 			args[i] = reflect.ValueOf(r)
 
 		default:
-			if tArg.Kind() != reflect.Ptr || tArg.Elem().Kind() != reflect.Struct {
-				panic("Params argument must be a pointer to a struct: " + tArg.String())
-			}
-
 			qs := r.URL.Query()
 
 			if err := e.guardQuery(qs); err != nil {
-				writeResponse(w, &ResponseError{Error: toError(err)})
+				writeResponse(w, &ResponseBadRequest{Error: toError(err)})
 				return
 			}
 
@@ -68,37 +62,42 @@ func (e *Endpoint) Handle(w http.ResponseWriter, r *http.Request, next http.Hand
 
 	ret := e.vHandler.Call(args)
 
-	if overrideWriter {
+	if e.overrideWriter {
+		return
+	}
+
+	if len(ret) == 0 {
+		w.WriteHeader(http.StatusNoContent)
 		return
 	}
 
 	if len(ret) > 0 {
-		last := ret[len(ret)-1]
+		last := ret[len(ret)-1].Interface()
 
-		if last.Type() == tError {
-			if !last.IsNil() {
-				writeResponse(w, &ResponseError{Error: toError(ret[0].Interface().(error))})
-				return
+		if err, ok := last.(error); ok {
+			if _, ok := last.(ErrorCode); ok {
+				writeResponse(w, &ResponseBadRequest{Error: toError(err)})
+			} else {
+				writeResponse(w, &ResponseInternalServerError{Error: toError(err)})
 			}
 
-			ret = ret[:len(ret)-1]
+			return
 		}
 	}
 
-	if ret[0].Type() == tResponse {
-		writeResponse(w, ret[0].Interface().(Response))
+	first := ret[0].Interface()
+
+	if res, ok := first.(Response); ok {
+		writeResponse(w, res)
 		return
 	}
 
 	switch len(ret) {
-	case 0:
-		w.WriteHeader(http.StatusNoContent)
-
 	case 1:
-		writeResponse(w, &ResponseOK{ret[0].Interface(), nil})
+		writeResponse(w, &ResponseOK{first, nil})
 
 	default:
-		writeResponse(w, &ResponseOK{ret[0].Interface(), ret[1].Interface()})
+		writeResponse(w, &ResponseOK{first, ret[1].Interface()})
 	}
 }
 
@@ -161,4 +160,29 @@ func (e *Endpoint) SetTags(tags ...Tag) *Endpoint {
 
 type Tag struct {
 	name string
+}
+
+var regOpenAPIPath = regexp.MustCompile(`\{([^}]+)\}`)
+
+// Converts OpenAPI style path to Go Regexp and returns path parameters.
+func openAPIPathToRegexp(path string) (*regexp.Regexp, []string, error) {
+	params := []string{}
+
+	// Replace OpenAPI wildcards with Go RegExp named wildcards
+	regexPath := regOpenAPIPath.ReplaceAllStringFunc(path, func(m string) string {
+		param := m[1 : len(m)-1]          // Strip outer braces from parameter
+		params = append(params, param)    // Add param to list
+		return "(?P<" + param + ">[^/]+)" // Replace with Go Regexp named wildcard
+	})
+
+	// Make sure the path starts with a "^", ends with a "$", and escape slashes
+	regexPath = "^" + strings.ReplaceAll(regexPath, "/", "\\/") + "$"
+
+	// Compile the regular expression
+	r, err := regexp.Compile(regexPath)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return r, params, nil
 }

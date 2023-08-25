@@ -1,8 +1,11 @@
 package goapi
 
 import (
+	"fmt"
 	"net/http"
 	"reflect"
+
+	"github.com/iancoleman/strcase"
 )
 
 type Router struct {
@@ -20,7 +23,12 @@ func NewRouter() *Router {
 
 func (r *Router) ServeHTTP(w http.ResponseWriter, rq *http.Request) {
 	if len(r.middlewares) == 0 {
-		w.WriteHeader(http.StatusNotFound)
+		writeResponse(w, &ResponseNotFound{
+			Error: &Error{
+				Message: fmt.Sprintf("path not found: %s %s", rq.Method, rq.URL.Path),
+			},
+		})
+
 		return
 	}
 
@@ -43,6 +51,10 @@ func (r *Router) Add(middleware Middleware) {
 }
 
 func (r *Router) Group(prefix string) *Group {
+	if strcase.ToKebab(prefix) != prefix {
+		panic("prefix must be kebab-case: " + prefix)
+	}
+
 	g := &Group{
 		router:    r,
 		prefix:    prefix,
