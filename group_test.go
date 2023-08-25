@@ -9,6 +9,12 @@ import (
 	"github.com/ysmood/got"
 )
 
+type MyResponse goapi.ResponseOK
+
+func (r *MyResponse) StatusCode() int {
+	return http.StatusNotModified
+}
+
 func TestGroup(t *testing.T) {
 	g := got.T(t)
 
@@ -30,8 +36,22 @@ func TestGroup(t *testing.T) {
 		return fmt.Errorf("error")
 	})
 
-	r.PUT("/override-status-code", func(w http.ResponseWriter) {
+	r.PUT("/override-res", func(w http.ResponseWriter) {
 		w.WriteHeader(http.StatusNotModified)
+	})
+
+	r.GET("/override-header", func() goapi.Response {
+		return &goapi.ResponseOKHeader{
+			ResHeader: http.Header{
+				"x-test": []string{"ok"},
+			},
+		}
+	})
+
+	r.GET("/posts/{id}", func(params *Params) goapi.Response {
+		return &goapi.ResponseOK{
+			Data: params.ID,
+		}
 	})
 
 	tr := g.Serve()
@@ -51,7 +71,7 @@ func TestGroup(t *testing.T) {
 		},
 	})
 
-	g.Eq(g.Req(http.MethodPut, tr.URL("/override-status-code")).StatusCode, http.StatusNotModified)
+	g.Eq(g.Req(http.MethodPut, tr.URL("/override-res")).StatusCode, http.StatusNotModified)
 
 	g.Eq(g.Req("", tr.URL("/users/123?userFilter=1")).JSON(), map[string]interface{}{
 		"error": map[string]interface{} /* len=2 */ {
@@ -59,4 +79,13 @@ func TestGroup(t *testing.T) {
 			"message": `query key is not snake styled: userFilter`, /* len=41 */
 		},
 	})
+
+	g.Eq(g.Req("", tr.URL("/users/123?userFilter=1")).JSON(), map[string]interface{}{
+		"error": map[string]interface{} /* len=2 */ {
+			"code":    `*errors.errorString`,                       /* len=19 */
+			"message": `query key is not snake styled: userFilter`, /* len=41 */
+		},
+	})
+
+	g.Eq(g.Req("", tr.URL("/override-header")).Header.Get("x-test"), "ok")
 }

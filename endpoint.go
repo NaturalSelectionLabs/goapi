@@ -13,6 +13,7 @@ import (
 var (
 	tHTTPResponseWriter = reflect.TypeOf((*http.ResponseWriter)(nil)).Elem()
 	tHTTPRequest        = reflect.TypeOf((*http.Request)(nil))
+	tResponse           = reflect.TypeOf((*Response)(nil)).Elem()
 	tError              = reflect.TypeOf((*error)(nil)).Elem()
 )
 
@@ -57,7 +58,7 @@ func (e *Endpoint) Handle(w http.ResponseWriter, r *http.Request, next http.Hand
 			qs := r.URL.Query()
 
 			if err := e.guardQuery(qs); err != nil {
-				writeResponse(w, nil, nil, err)
+				writeResponse(w, &ResponseError{Error: toError(err)})
 				return
 			}
 
@@ -76,7 +77,7 @@ func (e *Endpoint) Handle(w http.ResponseWriter, r *http.Request, next http.Hand
 
 		if last.Type() == tError {
 			if !last.IsNil() {
-				writeResponse(w, nil, nil, ret[0].Interface().(error))
+				writeResponse(w, &ResponseError{Error: toError(ret[0].Interface().(error))})
 				return
 			}
 
@@ -84,15 +85,20 @@ func (e *Endpoint) Handle(w http.ResponseWriter, r *http.Request, next http.Hand
 		}
 	}
 
+	if ret[0].Type() == tResponse {
+		writeResponse(w, ret[0].Interface().(Response))
+		return
+	}
+
 	switch len(ret) {
 	case 0:
 		w.WriteHeader(http.StatusNoContent)
 
 	case 1:
-		writeResponse(w, ret[0].Interface(), nil, nil)
+		writeResponse(w, &ResponseOK{ret[0].Interface(), nil})
 
 	default:
-		writeResponse(w, ret[0].Interface(), ret[1].Interface(), nil)
+		writeResponse(w, &ResponseOK{ret[0].Interface(), ret[1].Interface()})
 	}
 }
 

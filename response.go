@@ -6,35 +6,49 @@ import (
 	"reflect"
 )
 
-func writeResponse(w http.ResponseWriter, data, meta any, err error) {
-	if err != nil {
-		writeJSON(w, http.StatusBadRequest, Response{
-			Error: toError(err),
-		})
-
-		return
-	}
-
-	writeJSON(w, http.StatusOK, Response{
-		Data: data,
-		Meta: meta,
-	})
-}
-
-func writeJSON(w http.ResponseWriter, status int, data any) {
-	w.Header().Set("Content-Type", "application/json")
-	w.WriteHeader(status)
-	_ = json.NewEncoder(w).Encode(data)
-}
-
 // Response is a response object that contains the primary data returned by the API.
-type Response struct {
+type Response interface {
+	// StatusCode is the HTTP status code of the response.
+	// It should always return the same value.
+	StatusCode() int
+}
+
+type ResponseHeader interface {
+	Header() http.Header
+}
+
+type ResponseOK struct {
 	// Data is the primary data returned by the API.
 	Data any `json:"data,omitempty"`
 	// Meta is a meta object that contains non-standard meta-information,
 	// such as pagination information.
-	Meta  any    `json:"meta,omitempty"`
+	Meta any `json:"meta,omitempty"`
+}
+
+func (r *ResponseOK) StatusCode() int {
+	return http.StatusOK
+}
+
+type ResponseOKHeader struct {
+	ResHeader http.Header `json:"-"`
+	Data      any         `json:"data,omitempty"`
+	Meta      any         `json:"meta,omitempty"`
+}
+
+func (r *ResponseOKHeader) StatusCode() int {
+	return http.StatusOK
+}
+
+func (r *ResponseOKHeader) Header() http.Header {
+	return r.ResHeader
+}
+
+type ResponseError struct {
 	Error *Error `json:"error,omitempty"`
+}
+
+func (r *ResponseError) StatusCode() int {
+	return http.StatusBadRequest
 }
 
 // Error is an error object that contains information about a failed request.
@@ -69,4 +83,17 @@ func toError(err error) *Error {
 		Code:    reflect.TypeOf(err).String(),
 		Message: err.Error(),
 	}
+}
+
+func writeResponse(w http.ResponseWriter, res Response) {
+	w.Header().Set("Content-Type", "application/json")
+
+	if resHeader, ok := res.(ResponseHeader); ok {
+		for k, v := range resHeader.Header() {
+			w.Header()[k] = v
+		}
+	}
+
+	w.WriteHeader(res.StatusCode())
+	_ = json.NewEncoder(w).Encode(res)
 }
