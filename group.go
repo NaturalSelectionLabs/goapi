@@ -45,7 +45,7 @@ func (g *Group) HEAD(path string, handler any) *Endpoint {
 	return g.Add(http.MethodHead, path, handler)
 }
 
-func (g *Group) Add(method, path string, handler any) *Endpoint {
+func (g *Group) Add(method, path string, handler any) *Endpoint { //nolint: gocognit
 	if strcase.ToKebab(path) != path {
 		panic("expect path to be kebab-case, but got: " + path)
 	}
@@ -96,6 +96,11 @@ func (g *Group) Add(method, path string, handler any) *Endpoint {
 
 			for j := 0; j < tArg.Elem().NumField(); j++ {
 				t := tArg.Elem().Field(j).Type
+
+				if t.Implements(tParamDecoder) || reflect.New(t).Type().Implements(tParamDecoder) {
+					continue
+				}
+
 				if t.Kind() == reflect.Ptr {
 					t = t.Elem()
 				}

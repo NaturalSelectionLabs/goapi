@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"testing"
+	"time"
 
 	"github.com/NaturalSelectionLabs/goapi"
 	"github.com/ysmood/got"
@@ -21,6 +22,10 @@ func TestEndpoint(t *testing.T) {
 	r.GET("/query-ptr", func(params *struct{ ID *int }) int { return *params.ID })
 
 	r.GET("/query-arr", func(params *struct{ ID []int }) int { return params.ID[1] })
+
+	r.GET("/query-decoder", func(params *struct{ T Time }) int64 { return params.T.t.Unix() })
+
+	r.GET("/query-decoder/{t}", func(params *struct{ T *Time }) int64 { return params.T.t.Unix() })
 
 	r.GET("/no-content", func() {})
 
@@ -67,6 +72,10 @@ func TestEndpoint(t *testing.T) {
 		r.GET("/bad-params/{p}", func(p string) {})
 	}), "expect handler arguments must be http.ResponseWriter, *http.Request, or pointer to a struct, but got: string")
 
+	g.Eq(g.Panic(func() {
+		r.GET("/bad-params/[a/", func() {})
+	}), "expect path matches the openapi path format, but got: /bad-params/[a/")
+
 	tr := g.Serve()
 	tr.Mux.Handle("/", r)
 
@@ -84,6 +93,14 @@ func TestEndpoint(t *testing.T) {
 
 	g.Eq(g.Req("", tr.URL("/query-arr?id=1&id=2&id=3")).JSON(), map[string]interface{}{
 		"data": 2.0,
+	})
+
+	g.Eq(g.Req("", tr.URL("/query-decoder?t=2023-01-02")).JSON(), map[string]interface{}{
+		"data": 1672617600.0,
+	})
+
+	g.Eq(g.Req("", tr.URL("/query-decoder/2023-01-02")).JSON(), map[string]interface{}{
+		"data": 1672617600.0,
 	})
 
 	g.Eq(g.Req("", tr.URL("/no-content")).StatusCode, http.StatusNoContent)
@@ -111,4 +128,17 @@ func TestEndpoint(t *testing.T) {
 	g.Eq(g.Req("", tr.URL("/override-res")).StatusCode, http.StatusNotModified)
 
 	g.Has(g.Req("", tr.URL("/override-header")).Header.Get("x-ua"), "Go-http-client")
+}
+
+type Time struct {
+	t time.Time
+}
+
+func (t *Time) DecodeParam(v []string) {
+	tt, err := time.Parse(time.DateOnly, v[0])
+	if err != nil {
+		panic(err)
+	}
+
+	t.t = tt
 }

@@ -15,6 +15,7 @@ import (
 var (
 	tHTTPResponseWriter = reflect.TypeOf((*http.ResponseWriter)(nil)).Elem()
 	tHTTPRequest        = reflect.TypeOf((*http.Request)(nil))
+	tParamDecoder       = reflect.TypeOf((*ParamDecoder)(nil)).Elem()
 )
 
 type Endpoint struct {
@@ -127,11 +128,24 @@ func (e *Endpoint) Params(tArg reflect.Type, pathParams []string, qs url.Values)
 		tField := tArg.Field(i)
 		vField := arg.Elem().Field(i)
 
-		if dec, ok := vField.Interface().(ParamDecoder); ok {
+		var field reflect.Value
+		if tField.Type.Kind() == reflect.Ptr {
+			field = reflect.New(tField.Type.Elem())
+		} else {
+			field = reflect.New(tField.Type)
+		}
+
+		if dec, ok := field.Interface().(ParamDecoder); ok {
 			if vs, ok := params[strcase.ToKebab(tField.Name)]; ok {
 				dec.DecodeParam(vs)
 			} else if vs, ok := qs[strcase.ToSnake(tField.Name)]; ok {
 				dec.DecodeParam(vs)
+			}
+
+			if tField.Type.Kind() == reflect.Ptr {
+				vField.Set(field)
+			} else {
+				vField.Set(field.Elem())
 			}
 
 			continue
