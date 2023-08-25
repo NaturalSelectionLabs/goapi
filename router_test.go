@@ -67,3 +67,15 @@ func TestMiddleware(t *testing.T) {
 
 	g.Eq(g.Req("", tr.URL("/")).String(), "ok")
 }
+
+func TestGroupErr(t *testing.T) {
+	g := got.T(t)
+
+	r := goapi.NewRouter()
+
+	g.Eq(g.Panic(func() {
+		r.Group("/users/{id}")
+	}), "expect prefix not contains braces, but got: /users/{id}")
+
+	g.Eq(1, 1)
+}

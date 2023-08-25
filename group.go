@@ -50,8 +50,6 @@ func (g *Group) Add(method, path string, handler any) *Endpoint {
 		panic("expect path to be kebab-case, but got: " + path)
 	}
 
-	path = g.prefix + path
-
 	if regSpace.MatchString(path) {
 		panic("expect path contain no spaces, but got: " + path)
 	}
@@ -99,8 +97,6 @@ func (g *Group) Add(method, path string, handler any) *Endpoint {
 	}
 
 	g.endpoints = append([]*Endpoint{e}, g.endpoints...)
-
-	g.router.Add(e.Handle)
 
 	return e
 }

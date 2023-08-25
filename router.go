@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"net/http"
 	"reflect"
+	"regexp"
+	"strings"
 
 	"github.com/iancoleman/strcase"
 )
@@ -50,9 +52,15 @@ func (r *Router) Add(middleware Middleware) {
 	r.middlewares = append(r.middlewares, middleware)
 }
 
+var regBraces = regexp.MustCompile(`[{}]`)
+
 func (r *Router) Group(prefix string) *Group {
 	if strcase.ToKebab(prefix) != prefix {
-		panic("prefix must be kebab-case: " + prefix)
+		panic("expect prefix be kebab-cased, but got: " + prefix)
+	}
+
+	if regBraces.MatchString(prefix) {
+		panic("expect prefix not contains braces, but got: " + prefix)
 	}
 
 	g := &Group{
@@ -60,6 +68,23 @@ func (r *Router) Group(prefix string) *Group {
 		prefix:    prefix,
 		endpoints: []*Endpoint{},
 	}
+
+	r.Add(func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+		path := r.URL.Path
+
+		if !strings.HasPrefix(path, prefix) {
+			next(w, r)
+			return
+		}
+
+		for _, e := range g.endpoints {
+			pathParams := e.Match(r.Method, path[len(prefix):])
+			if pathParams != nil {
+				e.Handle(w, r, pathParams)
+				return
+			}
+		}
+	})
 
 	return g
 }

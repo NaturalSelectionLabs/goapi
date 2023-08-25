@@ -28,14 +28,7 @@ type Endpoint struct {
 	overrideWriter bool
 }
 
-func (e *Endpoint) Handle(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-	pathParams := e.Match(r.Method, r.URL.Path)
-
-	if pathParams == nil {
-		next(w, r)
-		return
-	}
-
+func (e *Endpoint) Handle(w http.ResponseWriter, r *http.Request, pathParams []string) {
 	args := make([]reflect.Value, e.tHandler.NumIn())
 
 	for i := range args {

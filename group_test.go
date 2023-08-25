@@ -64,3 +64,27 @@ func TestGroup(t *testing.T) {
 		"data": "456",
 	})
 }
+
+func TestMultipleGroups(t *testing.T) {
+	g := got.T(t)
+
+	r := goapi.NewRouter()
+
+	ga := r.Group("/a")
+	ga.GET("/users", func() string { return "a" })
+
+	gb := r.Group("/b")
+	gb.GET("/users", func() string { return "b" })
+
+	tr := g.Serve()
+	tr.Mux.Handle("/", r)
+
+	g.Eq(g.Req("", tr.URL("/a/users")).JSON(), map[string]interface{}{
+		"data": "a",
+	})
+	g.Eq(g.Req("", tr.URL("/b/users")).JSON(), map[string]interface{}{
+		"data": "b",
+	})
+
+	g.Eq(1, 1)
+}
