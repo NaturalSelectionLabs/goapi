@@ -15,4 +15,7 @@ jobs:
         run: go run github.com/ysmood/golangci-lint@latest
 
       - name: test
-        run: go test ./...
+        run: go test -coverprofile=coverage.out ./...
+
+      - name: coverage
+        run: go run github.com/ysmood/got/cmd/check-cov@latest
