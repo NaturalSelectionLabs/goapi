@@ -2,51 +2,12 @@ package goapi_test
 
 import (
 	"context"
-	"fmt"
 	"net/http"
 	"testing"
 
 	"github.com/NaturalSelectionLabs/goapi"
-	"github.com/NaturalSelectionLabs/jschema"
 	"github.com/ysmood/got"
 )
-
-var s = jschema.New("")
-
-type Activity interface {
-	Summary() string
-}
-
-var IActivity = jschema.DefineI(s, new(Activity))
-
-type Post struct {
-	Title string
-	Body  string
-}
-
-var _ = IActivity.Define(Post{})
-
-func (p Post) Summary() string {
-	return p.Title
-}
-
-type Transaction struct {
-	From   string
-	To     string
-	Amount float64
-}
-
-var _ = IActivity.Define(Transaction{})
-
-func (t Transaction) Summary() string {
-	return fmt.Sprintf("%s -> %s: %f", t.From, t.To, t.Amount)
-}
-
-type Filter struct {
-	Keyword string
-	Limit   int
-	Offset  int
-}
 
 func TestMiddleware(t *testing.T) {
 	g := got.T(t)
