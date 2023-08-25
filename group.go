@@ -93,6 +93,24 @@ func (g *Group) Add(method, path string, handler any) *Endpoint {
 				panic("expect handler arguments must be http.ResponseWriter, *http.Request, or pointer to a struct, " +
 					"but got: " + tArg.String())
 			}
+
+			for j := 0; j < tArg.Elem().NumField(); j++ {
+				t := tArg.Elem().Field(j).Type
+				if t.Kind() == reflect.Ptr {
+					t = t.Elem()
+				}
+
+				if t.Kind() == reflect.Slice {
+					t = t.Elem()
+				}
+
+				switch t.Kind() { //nolint: exhaustive
+				case reflect.String, reflect.Int, reflect.Float64:
+				default:
+					panic("expect struct fields to be string, int, " +
+						"float64, slice of them, or pointer of them, but got: " + tArg.String())
+				}
+			}
 		}
 	}
 

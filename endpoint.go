@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"reflect"
 	"regexp"
+	"strconv"
 	"strings"
 
 	"github.com/iancoleman/strcase"
@@ -21,11 +22,16 @@ type Endpoint struct {
 	openapiPath string
 	vHandler    reflect.Value
 	tHandler    reflect.Type
-	tags        []Tag
 
 	pathPattern    *regexp.Regexp
 	pathParams     []string
 	overrideWriter bool
+
+	tags []Tag
+}
+
+type ParamDecoder interface {
+	DecodeParam([]string)
 }
 
 func (e *Endpoint) Handle(w http.ResponseWriter, r *http.Request, pathParams []string) {
@@ -121,13 +127,26 @@ func (e *Endpoint) Params(tArg reflect.Type, pathParams []string, qs url.Values)
 		tField := tArg.Field(i)
 		vField := arg.Elem().Field(i)
 
-		if v, ok := params[strcase.ToKebab(tField.Name)]; ok {
-			vField.SetString(v[0])
-		} else if v, ok := qs[strcase.ToSnake(tField.Name)]; ok {
+		if dec, ok := vField.Interface().(ParamDecoder); ok {
+			if vs, ok := params[strcase.ToKebab(tField.Name)]; ok {
+				dec.DecodeParam(vs)
+			} else if vs, ok := qs[strcase.ToSnake(tField.Name)]; ok {
+				dec.DecodeParam(vs)
+			}
+
+			continue
+		}
+
+		if vs, ok := params[strcase.ToKebab(tField.Name)]; ok {
+			assign(tField, vField, vs[0])
+		} else if vs, ok := qs[strcase.ToSnake(tField.Name)]; ok {
 			if tField.Type.Kind() == reflect.Slice {
-				vField.Set(reflect.ValueOf(v))
+				vField.Set(reflect.MakeSlice(tField.Type, len(vs), len(vs)))
+				for i, v := range vs {
+					assign(tField, vField.Index(i), v)
+				}
 			} else {
-				vField.SetString(v[0])
+				assign(tField, vField, vs[0])
 			}
 		}
 	}
@@ -178,4 +197,36 @@ func openAPIPathToRegexp(path string) (*regexp.Regexp, []string, error) {
 	}
 
 	return r, params, nil
+}
+
+func assign(tField reflect.StructField, vField reflect.Value, val string) {
+	kind := vField.Kind()
+	ptr := kind == reflect.Ptr
+
+	if ptr {
+		kind = tField.Type.Elem().Kind()
+	}
+
+	switch kind { //nolint: exhaustive
+	case reflect.Int:
+		n, _ := strconv.ParseInt(val, 10, 64)
+		setVal(vField, ptr, reflect.ValueOf(int(n)))
+
+	case reflect.Float64:
+		n, _ := strconv.ParseFloat(val, 64)
+		setVal(vField, ptr, reflect.ValueOf(n))
+
+	default:
+		setVal(vField, ptr, reflect.ValueOf(val))
+	}
+}
+
+func setVal(vField reflect.Value, ptr bool, val reflect.Value) {
+	if ptr {
+		p := reflect.New(val.Type())
+		p.Elem().Set(val)
+		val = p
+	}
+
+	vField.Set(val)
 }

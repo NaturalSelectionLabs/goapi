@@ -14,6 +14,14 @@ func TestEndpoint(t *testing.T) {
 
 	r := goapi.New()
 
+	r.GET("/query-int", func(params *struct{ ID int }) int { return params.ID })
+
+	r.GET("/query-float", func(params *struct{ ID float64 }) float64 { return params.ID })
+
+	r.GET("/query-ptr", func(params *struct{ ID *int }) int { return *params.ID })
+
+	r.GET("/query-arr", func(params *struct{ ID []int }) int { return params.ID[1] })
+
 	r.GET("/no-content", func() {})
 
 	r.GET("/data", func() string {
@@ -47,10 +55,10 @@ func TestEndpoint(t *testing.T) {
 		w.WriteHeader(http.StatusNotModified)
 	})
 
-	r.GET("/override-header", func() goapi.Response {
+	r.GET("/override-header", func(r *http.Request) goapi.Response {
 		return &goapi.ResponseOKHeader{
 			ResHeader: http.Header{
-				"x-test": []string{"ok"},
+				"x-ua": []string{r.UserAgent()},
 			},
 		}
 	})
@@ -61,6 +69,22 @@ func TestEndpoint(t *testing.T) {
 
 	tr := g.Serve()
 	tr.Mux.Handle("/", r)
+
+	g.Eq(g.Req("", tr.URL("/query-int?id=1")).JSON(), map[string]interface{}{
+		"data": 1.0,
+	})
+
+	g.Eq(g.Req("", tr.URL("/query-float?id=1.2")).JSON(), map[string]interface{}{
+		"data": 1.2,
+	})
+
+	g.Eq(g.Req("", tr.URL("/query-ptr?id=1")).JSON(), map[string]interface{}{
+		"data": 1.0,
+	})
+
+	g.Eq(g.Req("", tr.URL("/query-arr?id=1&id=2&id=3")).JSON(), map[string]interface{}{
+		"data": 2.0,
+	})
 
 	g.Eq(g.Req("", tr.URL("/no-content")).StatusCode, http.StatusNoContent)
 
@@ -86,5 +110,5 @@ func TestEndpoint(t *testing.T) {
 
 	g.Eq(g.Req("", tr.URL("/override-res")).StatusCode, http.StatusNotModified)
 
-	g.Eq(g.Req("", tr.URL("/override-header")).Header.Get("x-test"), "ok")
+	g.Has(g.Req("", tr.URL("/override-header")).Header.Get("x-ua"), "Go-http-client")
 }

@@ -39,6 +39,10 @@ func TestGroup(t *testing.T) {
 
 	r.POST("/posts/{id}", func(params *Params) string { return params.ID })
 
+	g.Eq(g.Panic(func() {
+		r.GET("/field-type-err", func(params *struct{ P int64 }) {})
+	}), "expect struct fields to be string, int, float64, slice of them, or pointer of them, but got: *struct { P int64 }")
+
 	tr := g.Serve()
 	tr.Mux.Handle("/", r)
 
