@@ -142,3 +142,15 @@ func (t *Time) DecodeParam(v []string) {
 
 	t.t = tt
 }
+
+func TestSetTags(t *testing.T) {
+	g := got.T(t)
+
+	r := goapi.New()
+	e := r.GET("/", func() {})
+	e.SetTags(goapi.NewTag("tag"))
+
+	g.Eq(e.Tags()[0].String(), "tag")
+
+	g.Eq(1, 1)
+}

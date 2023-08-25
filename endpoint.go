@@ -184,8 +184,16 @@ func (e *Endpoint) SetTags(tags ...Tag) *Endpoint {
 	return e
 }
 
+func (e *Endpoint) Tags() []Tag {
+	return e.tags
+}
+
 type Tag struct {
 	name string
+}
+
+func (t Tag) String() string {
+	return t.name
 }
 
 var regOpenAPIPath = regexp.MustCompile(`\{([^}]+)\}`)
