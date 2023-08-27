@@ -3,9 +3,7 @@ package goapi
 import (
 	"fmt"
 	"net/http"
-	"reflect"
 	"regexp"
-	"strings"
 
 	"github.com/iancoleman/strcase"
 )
@@ -14,11 +12,15 @@ type Router struct {
 	middlewares []Middleware
 }
 
+// New is a shortcut for:
+//
+//	NewRouter().Group("")
 func New() *Group {
 	r := NewRouter()
 	return r.Group("")
 }
 
+// NewRouter creates a new router, it implements [http.Handler].
 func NewRouter() *Router {
 	return &Router{}
 }
@@ -34,7 +36,7 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, rq *http.Request) {
 		return
 	}
 
-	r.middlewares[0](w, rq, func(w http.ResponseWriter, rq *http.Request) {
+	r.middlewares[0].Handle(w, rq, func(w http.ResponseWriter, rq *http.Request) {
 		rr := &Router{
 			middlewares: r.middlewares[1:],
 		}
@@ -42,18 +44,14 @@ func (r *Router) ServeHTTP(w http.ResponseWriter, rq *http.Request) {
 	})
 }
 
+// Add a middleware to the router.
 func (r *Router) Add(middleware Middleware) {
-	mVal := reflect.ValueOf(middleware)
-
-	if mVal.Kind() != reflect.Func {
-		panic("middleware must be a function")
-	}
-
 	r.middlewares = append(r.middlewares, middleware)
 }
 
 var regBraces = regexp.MustCompile(`[{}]`)
 
+// Group creates a new group with the given prefix.
 func (r *Router) Group(prefix string) *Group {
 	if strcase.ToKebab(prefix) != prefix {
 		panic("expect prefix be kebab-cased, but got: " + prefix)
@@ -64,27 +62,12 @@ func (r *Router) Group(prefix string) *Group {
 	}
 
 	g := &Group{
-		router:    r,
-		prefix:    prefix,
-		endpoints: []*Endpoint{},
+		router:     r,
+		prefix:     prefix,
+		operations: []*Operation{},
 	}
 
-	r.Add(func(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
-		path := r.URL.Path
-
-		if !strings.HasPrefix(path, prefix) {
-			next(w, r)
-			return
-		}
-
-		for _, e := range g.endpoints {
-			pathParams := e.Match(r.Method, path[len(prefix):])
-			if pathParams != nil {
-				e.Handle(w, r, pathParams)
-				return
-			}
-		}
-	})
+	r.Add(g)
 
 	return g
 }

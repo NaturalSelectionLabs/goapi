@@ -1,14 +1,15 @@
 package goapi
 
 import (
-	"fmt"
+	"encoding/json"
+	"io"
 	"net/http"
-	"net/url"
 	"reflect"
 	"regexp"
 	"strconv"
 	"strings"
 
+	"github.com/NaturalSelectionLabs/goapi/lib/openapi"
 	"github.com/iancoleman/strcase"
 )
 
@@ -16,10 +17,11 @@ var (
 	tHTTPResponseWriter = reflect.TypeOf((*http.ResponseWriter)(nil)).Elem()
 	tHTTPRequest        = reflect.TypeOf((*http.Request)(nil))
 	tParamDecoder       = reflect.TypeOf((*ParamDecoder)(nil)).Elem()
+	tError              = reflect.TypeOf((*error)(nil)).Elem()
 )
 
-type Endpoint struct {
-	method      string
+type Operation struct {
+	method      openapi.Method
 	openapiPath string
 	vHandler    reflect.Value
 	tHandler    reflect.Type
@@ -28,18 +30,51 @@ type Endpoint struct {
 	pathParams     []string
 	overrideWriter bool
 
-	tags []Tag
+	meta *OperationMeta
+}
+
+type OperationMeta struct {
+	// Summary is used for display in the openapi UI.
+	Summary string
+	// Description is used for display in the openapi UI.
+	Description string
+	// OperationID is a unique string used to identify an individual operation.
+	// This can be used by tools and libraries to provide functionality for
+	// referencing and calling the operation from different parts of your application.
+	OperationID string
+	// Tags are used for grouping operations together for display in the openapi UI.
+	Tags []string
+
+	ResponseDescription string
 }
 
 type ParamDecoder interface {
 	DecodeParam([]string)
 }
 
-func (e *Endpoint) Handle(w http.ResponseWriter, r *http.Request, pathParams []string) {
-	args := make([]reflect.Value, e.tHandler.NumIn())
+func (op *Operation) Handle(w http.ResponseWriter, r *http.Request, pathParams []string) {
+	body := map[string]json.RawMessage{}
+
+	if r.Method == http.MethodPost || r.Method == http.MethodPut || r.Method == http.MethodPatch {
+		b, err := io.ReadAll(r.Body)
+		if err != nil {
+			writeResponse(w, &ResponseBadRequest{Error: toError(err)})
+			return
+		}
+
+		if len(b) > 0 {
+			err := json.Unmarshal(b, &body)
+			if err != nil {
+				writeResponse(w, &ResponseBadRequest{Error: toError(err)})
+				return
+			}
+		}
+	}
+
+	args := make([]reflect.Value, op.tHandler.NumIn())
 
 	for i := range args {
-		tArg := e.tHandler.In(i)
+		tArg := op.tHandler.In(i)
 
 		switch tArg {
 		case tHTTPResponseWriter:
@@ -49,20 +84,19 @@ func (e *Endpoint) Handle(w http.ResponseWriter, r *http.Request, pathParams []s
 			args[i] = reflect.ValueOf(r)
 
 		default:
-			qs := r.URL.Query()
+			var err error
 
-			if err := e.guardQuery(qs); err != nil {
+			args[i], err = op.Params(tArg.Elem(), pathParams, r, body)
+			if err != nil {
 				writeResponse(w, &ResponseBadRequest{Error: toError(err)})
 				return
 			}
-
-			args[i] = e.Params(tArg.Elem(), pathParams, qs)
 		}
 	}
 
-	ret := e.vHandler.Call(args)
+	ret := op.vHandler.Call(args)
 
-	if e.overrideWriter {
+	if op.overrideWriter {
 		return
 	}
 
@@ -101,12 +135,12 @@ func (e *Endpoint) Handle(w http.ResponseWriter, r *http.Request, pathParams []s
 	}
 }
 
-func (e *Endpoint) Match(method, path string) []string {
-	if method != e.method {
+func (op *Operation) Match(method, path string) []string {
+	if method != op.method.String() {
 		return nil
 	}
 
-	matches := e.pathPattern.FindStringSubmatch(path)
+	matches := op.pathPattern.FindStringSubmatch(path)
 
 	if matches == nil {
 		return nil
@@ -115,18 +149,53 @@ func (e *Endpoint) Match(method, path string) []string {
 	return matches[1:]
 }
 
-func (e *Endpoint) Params(tArg reflect.Type, pathParams []string, qs url.Values) reflect.Value {
+func (op *Operation) Params( //nolint: gocognit
+	tArg reflect.Type,
+	pathParams []string,
+	r *http.Request,
+	body map[string]json.RawMessage,
+) (reflect.Value, error) {
 	arg := reflect.New(tArg)
 
 	params := make(map[string][]string, len(pathParams))
 
-	for i, name := range e.pathParams {
+	for i, name := range op.pathParams {
 		params[name] = []string{pathParams[i]}
 	}
 
 	for i := 0; i < tArg.NumField(); i++ {
 		tField := tArg.Field(i)
 		vField := arg.Elem().Field(i)
+
+		switch inWhere(tField) {
+		case InHeader:
+			vs := r.Header.Values(toHeaderName(tField.Name))
+			if len(vs) > 0 {
+				assign(tField, vField, vs[0])
+			}
+
+			continue
+
+		case InBody:
+			if len(body) > 0 {
+				if b, ok := body[toBodyName(tField.Name)]; ok {
+					v := reflect.New(tField.Type)
+
+					err := json.Unmarshal(b, v.Interface())
+					if err != nil {
+						return reflect.Value{}, err
+					}
+
+					setVal(vField, tField.Type.Kind() == reflect.Ptr, v.Elem())
+				}
+
+				continue
+			}
+
+		case InOthers:
+		}
+
+		qs := r.URL.Query()
 
 		var field reflect.Value
 		if tField.Type.Kind() == reflect.Ptr {
@@ -136,9 +205,9 @@ func (e *Endpoint) Params(tArg reflect.Type, pathParams []string, qs url.Values)
 		}
 
 		if dec, ok := field.Interface().(ParamDecoder); ok {
-			if vs, ok := params[strcase.ToKebab(tField.Name)]; ok {
+			if vs, ok := params[toPathName(tField.Name)]; ok {
 				dec.DecodeParam(vs)
-			} else if vs, ok := qs[strcase.ToSnake(tField.Name)]; ok {
+			} else if vs, ok := qs[toQueryName(tField.Name)]; ok {
 				dec.DecodeParam(vs)
 			}
 
@@ -151,9 +220,9 @@ func (e *Endpoint) Params(tArg reflect.Type, pathParams []string, qs url.Values)
 			continue
 		}
 
-		if vs, ok := params[strcase.ToKebab(tField.Name)]; ok {
+		if vs, ok := params[toPathName(tField.Name)]; ok {
 			assign(tField, vField, vs[0])
-		} else if vs, ok := qs[strcase.ToSnake(tField.Name)]; ok {
+		} else if vs, ok := qs[toQueryName(tField.Name)]; ok {
 			if tField.Type.Kind() == reflect.Slice {
 				vField.Set(reflect.MakeSlice(tField.Type, len(vs), len(vs)))
 				for i, v := range vs {
@@ -165,35 +234,7 @@ func (e *Endpoint) Params(tArg reflect.Type, pathParams []string, qs url.Values)
 		}
 	}
 
-	return arg
-}
-
-// Ensure query key are camelCased.
-func (e *Endpoint) guardQuery(qs url.Values) error {
-	for k := range qs {
-		if k != strcase.ToSnake(k) {
-			return fmt.Errorf("query key is not snake styled: %s", k)
-		}
-	}
-
-	return nil
-}
-
-func (e *Endpoint) SetTags(tags ...Tag) *Endpoint {
-	e.tags = tags
-	return e
-}
-
-func (e *Endpoint) Tags() []Tag {
-	return e.tags
-}
-
-type Tag struct {
-	name string
-}
-
-func (t Tag) String() string {
-	return t.name
+	return arg, nil
 }
 
 var regOpenAPIPath = regexp.MustCompile(`\{([^}]+)\}`)
@@ -251,4 +292,39 @@ func setVal(vField reflect.Value, ptr bool, val reflect.Value) {
 	}
 
 	vField.Set(val)
+}
+
+type InWhere int
+
+const (
+	InHeader InWhere = iota
+	InBody
+	InOthers
+)
+
+func inWhere(t reflect.StructField) InWhere {
+	switch t.Tag.Get("in") {
+	case "header":
+		return InHeader
+	case "body":
+		return InBody
+	default:
+		return InOthers
+	}
+}
+
+func toHeaderName(name string) string {
+	return strcase.ToKebab(name)
+}
+
+func toPathName(name string) string {
+	return strcase.ToKebab(name)
+}
+
+func toQueryName(name string) string {
+	return strcase.ToSnake(name)
+}
+
+func toBodyName(name string) string {
+	return strcase.ToLowerCamel(name)
 }

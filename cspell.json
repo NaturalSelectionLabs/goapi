@@ -1,18 +1,24 @@
 {
   "version": "0.2",
   "language": "en",
-  "ignorePaths": [],
+  "ignorePaths": [
+    "*_enumer.go"
+  ],
   "words": [
+    "enumer",
     "errorlint",
     "goapi",
+    "gocognit",
     "iancoleman",
     "innererror",
     "jschema",
     "middlewares",
     "naturalselectionlabs",
+    "nestif",
     "nolint",
     "openapi",
     "strcase",
+    "trimprefix",
     "vitalik"
   ],
   "flagWords": []

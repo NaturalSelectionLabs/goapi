@@ -5,48 +5,58 @@ import (
 	"net/http"
 	"reflect"
 	"regexp"
+	"strings"
 
-	"github.com/iancoleman/strcase"
+	"github.com/NaturalSelectionLabs/goapi/lib/openapi"
 )
 
 type Group struct {
-	router    *Router
-	prefix    string
-	endpoints []*Endpoint
+	router     *Router
+	prefix     string
+	operations []*Operation
 }
 
 var regSpace = regexp.MustCompile(`\s+`)
 
-func (g *Group) GET(path string, handler any) *Endpoint {
-	return g.Add(http.MethodGet, path, handler)
+func (g *Group) GET(path string, handler any, opts ...GroupAddOption) *Operation {
+	return g.Add(openapi.GET, path, handler, opts...)
 }
 
-func (g *Group) POST(path string, handler any) *Endpoint {
-	return g.Add(http.MethodPost, path, handler)
+func (g *Group) POST(path string, handler any, opts ...GroupAddOption) *Operation {
+	return g.Add(openapi.POST, path, handler, opts...)
 }
 
-func (g *Group) PUT(path string, handler any) *Endpoint {
-	return g.Add(http.MethodPut, path, handler)
+func (g *Group) PUT(path string, handler any, opts ...GroupAddOption) *Operation {
+	return g.Add(openapi.PUT, path, handler, opts...)
 }
 
-func (g *Group) PATCH(path string, handler any) *Endpoint {
-	return g.Add(http.MethodPatch, path, handler)
+func (g *Group) PATCH(path string, handler any, opts ...GroupAddOption) *Operation {
+	return g.Add(openapi.PATCH, path, handler, opts...)
 }
 
-func (g *Group) DELETE(path string, handler any) *Endpoint {
-	return g.Add(http.MethodDelete, path, handler)
+func (g *Group) DELETE(path string, handler any, opts ...GroupAddOption) *Operation {
+	return g.Add(openapi.DELETE, path, handler, opts...)
 }
 
-func (g *Group) OPTIONS(path string, handler any) *Endpoint {
-	return g.Add(http.MethodOptions, path, handler)
+func (g *Group) OPTIONS(path string, handler any, opts ...GroupAddOption) *Operation {
+	return g.Add(openapi.OPTIONS, path, handler, opts...)
 }
 
-func (g *Group) HEAD(path string, handler any) *Endpoint {
-	return g.Add(http.MethodHead, path, handler)
+func (g *Group) HEAD(path string, handler any, opts ...GroupAddOption) *Operation {
+	return g.Add(openapi.HEAD, path, handler, opts...)
 }
 
-func (g *Group) Add(method, path string, handler any) *Endpoint { //nolint: gocognit
-	if strcase.ToKebab(path) != path {
+type GroupAddOption func(op *Operation)
+
+// Meta is a type of option for [Group.Add] to set the meta info of an operation.
+func (g *Group) Meta(meta OperationMeta) GroupAddOption {
+	return func(op *Operation) { op.meta = &meta }
+}
+
+func (g *Group) Add( //nolint: gocognit
+	method openapi.Method, path string, handler any, opts ...GroupAddOption,
+) *Operation {
+	if toPathName(path) != path {
 		panic("expect path to be kebab-case, but got: " + path)
 	}
 
@@ -70,7 +80,7 @@ func (g *Group) Add(method, path string, handler any) *Endpoint { //nolint: goco
 		panic(fmt.Sprintf("expect handler at most return 3 values, but got: %d", tHandler.NumOut()))
 	}
 
-	e := &Endpoint{
+	op := &Operation{
 		method:      method,
 		openapiPath: path,
 		vHandler:    vHandler,
@@ -79,12 +89,16 @@ func (g *Group) Add(method, path string, handler any) *Endpoint { //nolint: goco
 		pathParams:  pathParams,
 	}
 
+	for _, opt := range opts {
+		opt(op)
+	}
+
 	for i := 0; i < tHandler.NumIn(); i++ {
 		tArg := tHandler.In(i)
 
 		switch tArg {
 		case tHTTPResponseWriter:
-			e.overrideWriter = true
+			op.overrideWriter = true
 
 		case tHTTPRequest:
 
@@ -119,9 +133,28 @@ func (g *Group) Add(method, path string, handler any) *Endpoint { //nolint: goco
 		}
 	}
 
-	g.endpoints = append([]*Endpoint{e}, g.endpoints...)
+	g.operations = append([]*Operation{op}, g.operations...)
 
-	return e
+	return op
+}
+
+func (g *Group) Handle(w http.ResponseWriter, r *http.Request, next http.HandlerFunc) {
+	path := r.URL.Path
+
+	if !strings.HasPrefix(path, g.prefix) {
+		next(w, r)
+		return
+	}
+
+	for _, op := range g.operations {
+		pathParams := op.Match(r.Method, path[len(g.prefix):])
+		if pathParams != nil {
+			op.Handle(w, r, pathParams)
+			return
+		}
+	}
+
+	next(w, r)
 }
 
 // Group creates a sub group of current group.
