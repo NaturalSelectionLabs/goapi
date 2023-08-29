@@ -9,6 +9,8 @@
     "errorlint",
     "goapi",
     "gocognit",
+    "gocritic",
+    "gofumpt",
     "iancoleman",
     "innererror",
     "jschema",

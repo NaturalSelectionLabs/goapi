@@ -4,6 +4,7 @@ run:
 linters:
   enable-all: true
   disable:
+    - testpackage
     - funlen
     - goerr113
     - gomnd

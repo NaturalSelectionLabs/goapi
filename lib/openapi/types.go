@@ -40,10 +40,11 @@ type Operation struct {
 	RequestBody *RequestBody            `json:"requestBody,omitempty"`
 	Responses   map[StatusCode]Response `json:"responses"`
 
-	Summary     string   `json:"summary,omitempty"`
-	Description string   `json:"description,omitempty"`
-	OperationID string   `json:"operationId,omitempty"`
-	Tags        []string `json:"tags,omitempty"`
+	Summary     string                `json:"summary,omitempty"`
+	Security    []map[string][]string `json:"security,omitempty"`
+	Description string                `json:"description,omitempty"`
+	OperationID string                `json:"operationId,omitempty"`
+	Tags        []string              `json:"tags,omitempty"`
 }
 
 type Parameter struct {
@@ -81,5 +82,6 @@ type Schema struct {
 }
 
 type Components struct {
-	Schemas map[string]*jschema.Schema `json:"schemas"`
+	Schemas         map[string]*jschema.Schema `json:"schemas"`
+	SecuritySchemes map[string]any             `json:"securitySchemes"`
 }

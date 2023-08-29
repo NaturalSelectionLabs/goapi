@@ -13,19 +13,41 @@ func TestMiddleware(t *testing.T) {
 	g := got.T(t)
 
 	r := goapi.NewRouter()
-	tr := g.Serve()
-	tr.Mux.Handle("/", r)
 
-	r.Add(goapi.MiddlewareFunc(func(w http.ResponseWriter, rq *http.Request, next http.HandlerFunc) {
-		rq = rq.WithContext(context.WithValue(rq.Context(), "middleware01", "ok")) //nolint: staticcheck
-		next(w, rq)
+	r.Add(goapi.MiddlewareFunc(func(h http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, rq *http.Request) {
+			rq = rq.WithContext(context.WithValue(rq.Context(), "middleware01", "ok")) //nolint: staticcheck
+			h.ServeHTTP(w, rq)
+		})
 	}))
-	r.Add(goapi.MiddlewareFunc(func(w http.ResponseWriter, rq *http.Request, _ http.HandlerFunc) {
-		val := rq.Context().Value("middleware01").(string)
-		g.E(w.Write([]byte(val)))
+
+	r.Add(goapi.MiddlewareFunc(func(h http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, rq *http.Request) {
+			val := rq.Context().Value("middleware01").(string)
+			g.E(w.Write([]byte(val)))
+		})
 	}))
+
+	tr := g.Serve()
+	tr.Mux.Handle("/", r.Server())
 
 	g.Eq(g.Req("", tr.URL("/")).String(), "ok")
+}
+
+func TestMiddlewareNotFound(t *testing.T) {
+	g := got.T(t)
+
+	r := goapi.NewRouter()
+	tr := g.Serve()
+	tr.Mux.Handle("/", r.Server())
+
+	r.Add(goapi.MiddlewareFunc(func(h http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, rq *http.Request) {
+			h.ServeHTTP(w, rq)
+		})
+	}))
+
+	g.Eq(g.Req("", tr.URL("/x")).StatusCode, http.StatusNotFound)
 }
 
 func TestGroupErr(t *testing.T) {
@@ -45,7 +67,7 @@ func TestNotFound(t *testing.T) {
 
 	r := goapi.New()
 	tr := g.Serve()
-	tr.Mux.Handle("/", r)
+	tr.Mux.Handle("/", r.Server())
 
 	g.Eq(g.Req("", tr.URL("/test")).StatusCode, http.StatusNotFound)
 }

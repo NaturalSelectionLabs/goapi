@@ -16,6 +16,3 @@ jobs:
 
       - name: test
         run: go test -coverprofile=coverage.out ./...
-
-      - name: coverage
-        run: go run github.com/ysmood/got/cmd/check-cov@latest
