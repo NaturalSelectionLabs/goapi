@@ -57,9 +57,8 @@ func TestOpenAPI(t *testing.T) {
 	// Ensure you have nodejs installed
 	{
 		g.E(os.WriteFile("tmp/openapi.json", []byte(doc), 0666))
-		cmd := exec.Command("npx", strings.Split("rdme openapi:validate tmp/openapi.json", " ")...)
-		cmd.Stdout = os.Stdout
-		g.E(cmd.Run())
+		out, err := exec.Command("npx", strings.Split("rdme openapi:validate tmp/openapi.json", " ")...).CombinedOutput()
+		g.Desc("%s", out).E(err)
 	}
 
 	g.Eq(g.JSON(doc), map[string]interface{} /* len=4 */ {
