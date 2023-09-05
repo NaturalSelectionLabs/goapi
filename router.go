@@ -42,8 +42,8 @@ func (r *Router) Server() http.Handler {
 	}))
 }
 
-// Add a middleware to the router.
-func (r *Router) Add(middlewares ...Middleware) {
+// Use a middleware to the router.
+func (r *Router) Use(middlewares ...Middleware) {
 	r.middlewares = append(r.middlewares, middlewares...)
 }
 

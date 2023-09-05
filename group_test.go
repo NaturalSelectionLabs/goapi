@@ -10,13 +10,19 @@ import (
 func TestMultipleGroups(t *testing.T) {
 	g := got.T(t)
 
-	r := goapi.NewRouter()
+	r := goapi.New()
 
 	ga := r.Group("/a")
 	ga.GET("/users", func() res { return res{Data: "a"} })
 
 	gb := r.Group("/b")
 	gb.GET("/users", func() res { return res{Data: "b"} })
+	gb.POST("/users", func() res { return res{Data: "b"} })
+	gb.PUT("/users", func() res { return res{Data: "b"} })
+	gb.PATCH("/users", func() res { return res{Data: "b"} })
+	gb.DELETE("/users", func() res { return res{Data: "b"} })
+	gb.HEAD("/users", func() res { return res{Data: "b"} })
+	gb.OPTIONS("/users", func() res { return res{Data: "b"} })
 
 	tr := g.Serve()
 	tr.Mux.Handle("/", r.Server())

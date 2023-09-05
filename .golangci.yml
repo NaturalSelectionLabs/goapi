@@ -42,3 +42,7 @@ gocyclo:
 
 issues:
   exclude-use-default: false
+  exclude-rules:
+    - path: "status_code_test.go"
+      linters:
+        - staticcheck

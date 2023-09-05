@@ -1,6 +1,7 @@
 package goapi_test
 
 import (
+	"net/http"
 	"os"
 	"os/exec"
 	"strings"
@@ -19,7 +20,12 @@ var iRes = vary.New(new(Res))
 
 type Res01 struct {
 	goapi.StatusOK
-	ID string `description:"response id"`
+
+	Data string
+
+	Header struct {
+		SetCookie string
+	}
 }
 
 var _ = iRes.Add(Res01{})
@@ -35,6 +41,13 @@ func (Res02) Description() string {
 
 var _ = iRes.Add(Res02{})
 
+type Res03 struct {
+	goapi.StatusOK
+
+	Data string
+	Meta string
+}
+
 func TestOpenAPI(t *testing.T) {
 	g := got.T(t)
 
@@ -42,14 +55,35 @@ func TestOpenAPI(t *testing.T) {
 	tr := g.Serve()
 	tr.Mux.Handle("/", r.Server())
 
-	r.GET("/test", func(p struct {
+	r.Use(goapi.MiddlewareFunc(func(h http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			h.ServeHTTP(w, r)
+		})
+	}))
+
+	r.GET("/one", func(p struct {
 		goapi.InURL
 		ID string
 	}, h struct {
 		goapi.InHeader
 		UA string
+	}, b struct {
+		goapi.InBody
+		Data string `json:"data"`
 	}) Res {
 		return Res01{}
+	}, r.Meta(goapi.OperationMeta{
+		Summary:     "test",
+		Description: "test endpoint",
+		OperationID: "test",
+		Tags:        []string{"test"},
+	}))
+
+	r.GET("/two/{id}", func(struct {
+		goapi.InURL
+		ID string
+	}) Res03 {
+		return Res03{}
 	})
 
 	doc := r.OpenAPI(nil).JSON()
@@ -63,7 +97,7 @@ func TestOpenAPI(t *testing.T) {
 
 	g.Eq(g.JSON(doc), map[string]interface{} /* len=4 */ {
 		"components": map[string]interface{}{
-			"schemas": map[string]interface{} /* len=5 */ {
+			"schemas": map[string]interface{} /* len=2 */ {
 				"Error": map[string]interface{} /* len=5 */ {
 					`additionalProperties` /* len=20 */ : false,
 					"description":                        `github.com/NaturalSelectionLabs/goapi.Error`, /* len=43 */
@@ -90,45 +124,10 @@ func TestOpenAPI(t *testing.T) {
 					"title": "Error",
 					"type":  "object",
 				},
-				"Res01": map[string]interface{} /* len=6 */ {
+				"InBody": map[string]interface{} /* len=4 */ {
 					`additionalProperties` /* len=20 */ : false,
-					"description":                        `github.com/NaturalSelectionLabs/goapi_test.Res01`, /* len=48 */
-					"properties": map[string]interface{}{
-						"ID": map[string]interface{} /* len=2 */ {
-							"description": "response id",
-							"type":        "string",
-						},
-					},
-					"required": []interface{} /* len=1 cap=1 */ {
-						"ID",
-					},
-					"title": "Res01",
-					"type":  "object",
-				},
-				"Res02": map[string]interface{} /* len=6 */ {
-					`additionalProperties` /* len=20 */ : false,
-					"description":                        `github.com/NaturalSelectionLabs/goapi_test.Res02`, /* len=48 */
-					"properties": map[string]interface{}{
-						"Error": map[string]interface{}{
-							"$ref": `#/components/schemas/Error`, /* len=26 */
-						},
-					},
-					"required": []interface{} /* len=1 cap=1 */ {
-						"Error",
-					},
-					"title": "Res02",
-					"type":  "object",
-				},
-				"StatusForbidden": map[string]interface{} /* len=4 */ {
-					`additionalProperties` /* len=20 */ : false,
-					"description":                        `github.com/NaturalSelectionLabs/goapi.StatusForbidden`, /* len=53 */
-					"title":                              "StatusForbidden",
-					"type":                               "object",
-				},
-				"StatusOK": map[string]interface{} /* len=4 */ {
-					`additionalProperties` /* len=20 */ : false,
-					"description":                        `github.com/NaturalSelectionLabs/goapi.StatusOK`, /* len=46 */
-					"title":                              "StatusOK",
+					"description":                        `github.com/NaturalSelectionLabs/goapi.InBody`, /* len=44 */
+					"title":                              "InBody",
 					"type":                               "object",
 				},
 			},
@@ -138,9 +137,11 @@ func TestOpenAPI(t *testing.T) {
 			"version": "",
 		},
 		"openapi": "3.1.0",
-		"paths": map[string]interface{}{
-			"/test": map[string]interface{}{
-				"get": map[string]interface{} /* len=2 */ {
+		"paths": map[string]interface{} /* len=2 */ {
+			"/one": map[string]interface{}{
+				"get": map[string]interface{} /* len=7 */ {
+					"description": "test endpoint",
+					"operationId": "test",
 					"parameters": []interface{} /* len=2 cap=2 */ {
 						map[string]interface{} /* len=4 */ {
 							"in":       "query",
@@ -159,26 +160,112 @@ func TestOpenAPI(t *testing.T) {
 							},
 						},
 					},
+					"requestBody": map[string]interface{}{
+						"content": map[string]interface{}{
+							"application/json" /* len=16 */ : map[string]interface{}{
+								"schema": map[string]interface{} /* len=4 */ {
+									`additionalProperties` /* len=20 */ : false,
+									"properties": map[string]interface{}{
+										"data": map[string]interface{}{
+											"type": "string",
+										},
+									},
+									"required": []interface{} /* len=1 cap=1 */ {
+										"data",
+									},
+									"type": "object",
+								},
+							},
+						},
+					},
 					"responses": map[string]interface{} /* len=2 */ {
-						"200": map[string]interface{} /* len=2 */ {
+						"200": map[string]interface{} /* len=3 */ {
 							"content": map[string]interface{}{
 								"application/json" /* len=16 */ : map[string]interface{}{
-									"schema": map[string]interface{}{
-										"$ref": `#/components/schemas/Res01`, /* len=26 */
+									"schema": map[string]interface{} /* len=4 */ {
+										`additionalProperties` /* len=20 */ : false,
+										"properties": map[string]interface{}{
+											"data": map[string]interface{}{
+												"type": "string",
+											},
+										},
+										"required": []interface{} /* len=1 cap=1 */ {
+											"data",
+										},
+										"type": "object",
 									},
 								},
 							},
 							"description": "",
+							"headers": map[string]interface{}{
+								"set-cookie": map[string]interface{}{
+									"schema": map[string]interface{}{
+										"type": "string",
+									},
+								},
+							},
 						},
 						"403": map[string]interface{} /* len=2 */ {
 							"content": map[string]interface{}{
 								"application/json" /* len=16 */ : map[string]interface{}{
-									"schema": map[string]interface{}{
-										"$ref": `#/components/schemas/Res02`, /* len=26 */
+									"schema": map[string]interface{} /* len=4 */ {
+										`additionalProperties` /* len=20 */ : false,
+										"properties": map[string]interface{}{
+											"error": map[string]interface{}{
+												"$ref": `#/components/schemas/Error`, /* len=26 */
+											},
+										},
+										"required": []interface{} /* len=1 cap=1 */ {
+											"error",
+										},
+										"type": "object",
 									},
 								},
 							},
 							"description": "returns 403",
+						},
+					},
+					"summary": "test",
+					"tags": []interface{} /* len=1 cap=1 */ {
+						"test",
+					},
+				},
+			},
+			"/two/{id}": map[string]interface{}{
+				"get": map[string]interface{} /* len=2 */ {
+					"parameters": []interface{} /* len=1 cap=1 */ {
+						map[string]interface{} /* len=4 */ {
+							"in":       "path",
+							"name":     "id",
+							"required": true,
+							"schema": map[string]interface{}{
+								"type": "string",
+							},
+						},
+					},
+					"responses": map[string]interface{}{
+						"200": map[string]interface{} /* len=2 */ {
+							"content": map[string]interface{}{
+								"application/json" /* len=16 */ : map[string]interface{}{
+									"schema": map[string]interface{} /* len=4 */ {
+										`additionalProperties` /* len=20 */ : false,
+										"properties": map[string]interface{} /* len=2 */ {
+											"data": map[string]interface{}{
+												"type": "string",
+											},
+											"meta": map[string]interface{}{
+												"type": "string",
+											},
+										},
+										"required": []interface{} /* len=2 cap=2 */ {
+											"data",
+											"meta",
+										},
+										"type": "object",
+									},
+								},
+							},
+							"description": "",
 						},
 					},
 				},

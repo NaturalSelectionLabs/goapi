@@ -1,16 +1,16 @@
 {
   "version": "0.2",
   "language": "en",
-  "ignorePaths": [
-    "*_enumer.go"
-  ],
+  "ignorePaths": ["*_enumer.go", ".golangci.yml"],
   "words": [
+    "coverprofile",
     "enumer",
     "errorlint",
     "goapi",
     "gocognit",
     "gocritic",
     "gofumpt",
+    "golangci",
     "iancoleman",
     "innererror",
     "jschema",
@@ -19,6 +19,7 @@
     "nestif",
     "nolint",
     "openapi",
+    "rdme",
     "strcase",
     "trimprefix",
     "vitalik"

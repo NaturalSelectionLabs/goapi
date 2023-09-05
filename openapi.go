@@ -140,12 +140,31 @@ func resDoc(s jschema.Schemas, op *Operation) map[openapi.StatusCode]openapi.Res
 
 	add := func(t reflect.Type) {
 		parsedRes := parseResponse(t)
+
+		scm := &jschema.Schema{
+			Type:                 jschema.TypeObject,
+			AdditionalProperties: ptr(false),
+			Properties:           jschema.Properties{},
+		}
+
+		if parsedRes.hasErr { //nolint: gocritic
+			scm.Properties["error"] = s.DefineT(parsedRes.err)
+			scm.Required = []string{"error"}
+		} else if parsedRes.hasMeta {
+			scm.Properties["data"] = s.DefineT(parsedRes.data)
+			scm.Properties["meta"] = s.DefineT(parsedRes.meta)
+			scm.Required = []string{"data", "meta"}
+		} else {
+			scm.Properties["data"] = s.DefineT(parsedRes.data)
+			scm.Required = []string{"data"}
+		}
+
 		res := openapi.Response{
 			Description: getDescription(t),
 			Headers:     resHeaderDoc(s, parsedRes.header),
 			Content: &openapi.Content{
 				JSON: &openapi.Schema{
-					Schema: s.DefineT(t),
+					Schema: scm,
 				},
 			},
 		}
@@ -169,15 +188,10 @@ func resHeaderDoc(s jschema.Schemas, t reflect.Type) openapi.Headers {
 		return nil
 	}
 
-	parsed := parseParam(nil, t)
-
 	headers := openapi.Headers{}
 
-	for _, f := range parsed.fields {
-		if f.skip {
-			continue
-		}
-
+	for i := 0; i < t.NumField(); i++ {
+		f := parseHeaderField(t.Field(i))
 		headers[f.name] = openapi.Header{
 			Description: f.description,
 			Schema:      s.DefineT(f.item),
@@ -193,4 +207,8 @@ func getDescription(t reflect.Type) string {
 	}
 
 	return ""
+}
+
+func ptr[T any](v T) *T {
+	return &v
 }

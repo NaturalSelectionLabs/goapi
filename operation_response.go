@@ -13,6 +13,19 @@ type Response interface {
 
 var tResponse = reflect.TypeOf((*Response)(nil)).Elem()
 
+type responseErr struct {
+	Error any `json:"error"`
+}
+
+type responseMeta struct {
+	Data any `json:"data"`
+	Meta any `json:"meta"`
+}
+
+type responseData struct {
+	Data any `json:"data"`
+}
+
 // Error is an error object that contains information about a failed request.
 // Reference: https://github.com/microsoft/api-guidelines/blob/vNext/Guidelines.md#error--object
 type Error struct {
@@ -27,8 +40,6 @@ type Error struct {
 	// InnerError is a generic error object that is used by the service developer for debugging.
 	InnerError any `json:"innererror,omitempty"`
 }
-
-var tError = reflect.TypeOf((*Error)(nil)).Elem()
 
 func writeResErr(w http.ResponseWriter, code int, msg string) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
@@ -47,9 +58,12 @@ type parsedRes struct {
 	hasData    bool
 	hasMeta    bool
 
-	header reflect.Type
-
 	typ reflect.Type
+
+	header reflect.Type
+	data   reflect.Type
+	meta   reflect.Type
+	err    reflect.Type
 }
 
 func parseResponse(t reflect.Type) *parsedRes {
@@ -67,22 +81,24 @@ func parseResponse(t reflect.Type) *parsedRes {
 	}
 
 	if err, has := t.FieldByName("Error"); has {
-		if err.Type != tError {
-			panic("response Error field must be a goapi.Error")
-		}
-
 		res.hasErr = true
+		res.err = err.Type
 	}
 
-	if _, has := t.FieldByName("Data"); has {
+	if f, has := t.FieldByName("Data"); has {
 		if res.hasErr {
 			panic("response Data field should not exist when Error field exists")
 		}
 
 		res.hasData = true
+		res.data = f.Type
 	}
 
-	if _, has := t.FieldByName("Meta"); has {
+	if !res.hasData && !res.hasErr {
+		panic("response must have either Data or Error field")
+	}
+
+	if f, has := t.FieldByName("Meta"); has {
 		if res.hasErr {
 			panic("response Meta field should not exist when Error field exists")
 		}
@@ -92,6 +108,7 @@ func parseResponse(t reflect.Type) *parsedRes {
 		}
 
 		res.hasMeta = true
+		res.meta = f.Type
 	}
 
 	return res
@@ -114,29 +131,18 @@ func (s *parsedRes) write(w http.ResponseWriter, res reflect.Value) {
 
 	var data any
 
-	if s.hasErr {
-		data = struct {
-			Error any `json:"error"`
-		}{
+	if s.hasErr { //nolint: gocritic
+		data = responseErr{
 			Error: res.FieldByName("Error").Interface(),
 		}
-	}
-
-	if s.hasData {
-		data = struct {
-			Data any `json:"data"`
-		}{
-			Data: res.FieldByName("Data").Interface(),
-		}
-	}
-
-	if s.hasMeta {
-		data = struct {
-			Data any `json:"data"`
-			Meta any `json:"meta"`
-		}{
+	} else if s.hasMeta {
+		data = responseMeta{
 			Data: res.FieldByName("Data").Interface(),
 			Meta: res.FieldByName("Meta").Interface(),
+		}
+	} else {
+		data = responseData{
+			Data: res.FieldByName("Data").Interface(),
 		}
 	}
 

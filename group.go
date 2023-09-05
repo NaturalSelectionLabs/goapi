@@ -55,7 +55,7 @@ func (g *Group) Add(
 		opt(op)
 	}
 
-	g.router.Add(op)
+	g.router.Use(op)
 }
 
 // Group creates a sub group of current group.
@@ -66,4 +66,9 @@ func (g *Group) Group(prefix string) *Group {
 // Handler is a shortcut for [Router.Handler].
 func (g *Group) Server() http.Handler {
 	return g.router.Server()
+}
+
+// Use is a shortcut for [Router.Use].
+func (g *Group) Use(m Middleware) {
+	g.router.Use(m)
 }
