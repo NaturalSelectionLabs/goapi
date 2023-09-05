@@ -1,6 +1,9 @@
 package goapi_test
 
 import (
+	"os"
+	"os/exec"
+	"strings"
 	"testing"
 
 	"github.com/NaturalSelectionLabs/goapi"
@@ -8,29 +11,29 @@ import (
 	"github.com/ysmood/vary"
 )
 
-type resGroup interface {
+type Res interface {
 	goapi.Response
 }
 
-var iRes = vary.New(new(resGroup))
+var iRes = vary.New(new(Res))
 
-type res01 struct {
-	goapi.Status200
+type Res01 struct {
+	goapi.StatusOK
 	ID string `description:"response id"`
 }
 
-var _ = iRes.Add(res01{})
+var _ = iRes.Add(Res01{})
 
-type res02 struct {
-	goapi.Status403
+type Res02 struct {
+	goapi.StatusForbidden
 	Error goapi.Error
 }
 
-func (res02) Description() string {
+func (Res02) Description() string {
 	return "returns 403"
 }
 
-var _ = iRes.Add(res02{})
+var _ = iRes.Add(Res02{})
 
 func TestOpenAPI(t *testing.T) {
 	g := got.T(t)
@@ -45,12 +48,22 @@ func TestOpenAPI(t *testing.T) {
 	}, h struct {
 		goapi.InHeader
 		UA string
-	}) resGroup {
-		return res01{}
+	}) Res {
+		return Res01{}
 	})
 
-	g.Eq(g.JSON(r.OpenAPI(nil).JSON()), map[string]interface{} /* len=4 */ {
-		"components": map[string]interface{} /* len=2 */ {
+	doc := r.OpenAPI(nil).JSON()
+
+	// Ensure you have nodejs installed
+	{
+		g.E(os.WriteFile("tmp/openapi.json", []byte(doc), 0666))
+		cmd := exec.Command("npx", strings.Split("rdme openapi:validate tmp/openapi.json", " ")...)
+		cmd.Stdout = os.Stdout
+		g.E(cmd.Run())
+	}
+
+	g.Eq(g.JSON(doc), map[string]interface{} /* len=4 */ {
+		"components": map[string]interface{}{
 			"schemas": map[string]interface{} /* len=5 */ {
 				"Error": map[string]interface{} /* len=5 */ {
 					`additionalProperties` /* len=20 */ : false,
@@ -78,21 +91,9 @@ func TestOpenAPI(t *testing.T) {
 					"title": "Error",
 					"type":  "object",
 				},
-				"Status200": map[string]interface{} /* len=4 */ {
+				"Res01": map[string]interface{} /* len=6 */ {
 					`additionalProperties` /* len=20 */ : false,
-					"description":                        `github.com/NaturalSelectionLabs/goapi.Status200`, /* len=47 */
-					"title":                              "Status200",
-					"type":                               "object",
-				},
-				"Status403": map[string]interface{} /* len=4 */ {
-					`additionalProperties` /* len=20 */ : false,
-					"description":                        `github.com/NaturalSelectionLabs/goapi.Status403`, /* len=47 */
-					"title":                              "Status403",
-					"type":                               "object",
-				},
-				"res01": map[string]interface{} /* len=6 */ {
-					`additionalProperties` /* len=20 */ : false,
-					"description":                        `github.com/NaturalSelectionLabs/goapi_test.res01`, /* len=48 */
+					"description":                        `github.com/NaturalSelectionLabs/goapi_test.Res01`, /* len=48 */
 					"properties": map[string]interface{}{
 						"ID": map[string]interface{} /* len=2 */ {
 							"description": "response id",
@@ -102,12 +103,12 @@ func TestOpenAPI(t *testing.T) {
 					"required": []interface{} /* len=1 cap=1 */ {
 						"ID",
 					},
-					"title": "res01",
+					"title": "Res01",
 					"type":  "object",
 				},
-				"res02": map[string]interface{} /* len=6 */ {
+				"Res02": map[string]interface{} /* len=6 */ {
 					`additionalProperties` /* len=20 */ : false,
-					"description":                        `github.com/NaturalSelectionLabs/goapi_test.res02`, /* len=48 */
+					"description":                        `github.com/NaturalSelectionLabs/goapi_test.Res02`, /* len=48 */
 					"properties": map[string]interface{}{
 						"Error": map[string]interface{}{
 							"$ref": `#/components/schemas/Error`, /* len=26 */
@@ -116,11 +117,22 @@ func TestOpenAPI(t *testing.T) {
 					"required": []interface{} /* len=1 cap=1 */ {
 						"Error",
 					},
-					"title": "res02",
+					"title": "Res02",
 					"type":  "object",
 				},
+				"StatusForbidden": map[string]interface{} /* len=4 */ {
+					`additionalProperties` /* len=20 */ : false,
+					"description":                        `github.com/NaturalSelectionLabs/goapi.StatusForbidden`, /* len=53 */
+					"title":                              "StatusForbidden",
+					"type":                               "object",
+				},
+				"StatusOK": map[string]interface{} /* len=4 */ {
+					`additionalProperties` /* len=20 */ : false,
+					"description":                        `github.com/NaturalSelectionLabs/goapi.StatusOK`, /* len=46 */
+					"title":                              "StatusOK",
+					"type":                               "object",
+				},
 			},
-			"securitySchemes": nil,
 		},
 		"info": map[string]interface{} /* len=2 */ {
 			"title":   "",
@@ -129,7 +141,7 @@ func TestOpenAPI(t *testing.T) {
 		"openapi": "3.1.0",
 		"paths": map[string]interface{}{
 			"/test": map[string]interface{}{
-				"GET": map[string]interface{} /* len=2 */ {
+				"get": map[string]interface{} /* len=2 */ {
 					"parameters": []interface{} /* len=2 cap=2 */ {
 						map[string]interface{} /* len=4 */ {
 							"in":       "query",
@@ -149,20 +161,21 @@ func TestOpenAPI(t *testing.T) {
 						},
 					},
 					"responses": map[string]interface{} /* len=2 */ {
-						"200": map[string]interface{}{
+						"200": map[string]interface{} /* len=2 */ {
 							"content": map[string]interface{}{
 								"application/json" /* len=16 */ : map[string]interface{}{
 									"schema": map[string]interface{}{
-										"$ref": `#/components/schemas/res01`, /* len=26 */
+										"$ref": `#/components/schemas/Res01`, /* len=26 */
 									},
 								},
 							},
+							"description": "",
 						},
 						"403": map[string]interface{} /* len=2 */ {
 							"content": map[string]interface{}{
 								"application/json" /* len=16 */ : map[string]interface{}{
 									"schema": map[string]interface{}{
-										"$ref": `#/components/schemas/res02`, /* len=26 */
+										"$ref": `#/components/schemas/Res02`, /* len=26 */
 									},
 								},
 							},
@@ -173,6 +186,4 @@ func TestOpenAPI(t *testing.T) {
 			},
 		},
 	})
-
-	g.Eq(1, 1)
 }

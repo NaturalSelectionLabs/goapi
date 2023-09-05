@@ -1,301 +1,373 @@
 package goapi
 
-type Status200 struct{}
+type StatusContinue struct{}
 
-func (Status200) statusCode() int {
+func (StatusContinue) statusCode() int {
+	return 100
+}
+
+type StatusSwitchingProtocols struct{}
+
+func (StatusSwitchingProtocols) statusCode() int {
+	return 101
+}
+
+type StatusProcessing struct{}
+
+func (StatusProcessing) statusCode() int {
+	return 102
+}
+
+type StatusEarlyHints struct{}
+
+func (StatusEarlyHints) statusCode() int {
+	return 103
+}
+
+type StatusOK struct{}
+
+func (StatusOK) statusCode() int {
 	return 200
 }
 
-type Status201 struct{}
+type StatusCreated struct{}
 
-func (Status201) statusCode() int {
+func (StatusCreated) statusCode() int {
 	return 201
 }
 
-type Status202 struct{}
+type StatusAccepted struct{}
 
-func (Status202) statusCode() int {
+func (StatusAccepted) statusCode() int {
 	return 202
 }
 
-type Status204 struct{}
+type StatusNonAuthoritativeInfo struct{}
 
-func (Status204) statusCode() int {
+func (StatusNonAuthoritativeInfo) statusCode() int {
+	return 203
+}
+
+type StatusNoContent struct{}
+
+func (StatusNoContent) statusCode() int {
 	return 204
 }
 
-type Status301 struct{}
+type StatusResetContent struct{}
 
-func (Status301) statusCode() int {
+func (StatusResetContent) statusCode() int {
+	return 205
+}
+
+type StatusPartialContent struct{}
+
+func (StatusPartialContent) statusCode() int {
+	return 206
+}
+
+type StatusMultiStatus struct{}
+
+func (StatusMultiStatus) statusCode() int {
+	return 207
+}
+
+type StatusAlreadyReported struct{}
+
+func (StatusAlreadyReported) statusCode() int {
+	return 208
+}
+
+type StatusIMUsed struct{}
+
+func (StatusIMUsed) statusCode() int {
+	return 226
+}
+
+type StatusMultipleChoices struct{}
+
+func (StatusMultipleChoices) statusCode() int {
+	return 300
+}
+
+type StatusMovedPermanently struct{}
+
+func (StatusMovedPermanently) statusCode() int {
 	return 301
 }
 
-type Status302 struct{}
+type StatusFound struct{}
 
-func (Status302) statusCode() int {
+func (StatusFound) statusCode() int {
 	return 302
 }
 
-type Status303 struct{}
+type StatusSeeOther struct{}
 
-func (Status303) statusCode() int {
+func (StatusSeeOther) statusCode() int {
 	return 303
 }
 
-type Status304 struct{}
+type StatusNotModified struct{}
 
-func (Status304) statusCode() int {
+func (StatusNotModified) statusCode() int {
 	return 304
 }
 
-type Status305 struct{}
+type StatusUseProxy struct{}
 
-func (Status305) statusCode() int {
+func (StatusUseProxy) statusCode() int {
 	return 305
 }
 
-type Status307 struct{}
+type StatusTemporaryRedirect struct{}
 
-func (Status307) statusCode() int {
+func (StatusTemporaryRedirect) statusCode() int {
 	return 307
 }
 
-type Status400 struct{}
+type StatusPermanentRedirect struct{}
 
-func (Status400) statusCode() int {
+func (StatusPermanentRedirect) statusCode() int {
+	return 308
+}
+
+type StatusBadRequest struct{}
+
+func (StatusBadRequest) statusCode() int {
 	return 400
 }
 
-type Status401 struct{}
+type StatusUnauthorized struct{}
 
-func (Status401) statusCode() int {
+func (StatusUnauthorized) statusCode() int {
 	return 401
 }
 
-type Status402 struct{}
+type StatusPaymentRequired struct{}
 
-func (Status402) statusCode() int {
+func (StatusPaymentRequired) statusCode() int {
 	return 402
 }
 
-type Status403 struct{}
+type StatusForbidden struct{}
 
-func (Status403) statusCode() int {
+func (StatusForbidden) statusCode() int {
 	return 403
 }
 
-type Status404 struct{}
+type StatusNotFound struct{}
 
-func (Status404) statusCode() int {
+func (StatusNotFound) statusCode() int {
 	return 404
 }
 
-type Status405 struct{}
+type StatusMethodNotAllowed struct{}
 
-func (Status405) statusCode() int {
+func (StatusMethodNotAllowed) statusCode() int {
 	return 405
 }
 
-type Status406 struct{}
+type StatusNotAcceptable struct{}
 
-func (Status406) statusCode() int {
+func (StatusNotAcceptable) statusCode() int {
 	return 406
 }
 
-type Status407 struct{}
+type StatusProxyAuthRequired struct{}
 
-func (Status407) statusCode() int {
+func (StatusProxyAuthRequired) statusCode() int {
 	return 407
 }
 
-type Status408 struct{}
+type StatusRequestTimeout struct{}
 
-func (Status408) statusCode() int {
+func (StatusRequestTimeout) statusCode() int {
 	return 408
 }
 
-type Status409 struct{}
+type StatusConflict struct{}
 
-func (Status409) statusCode() int {
+func (StatusConflict) statusCode() int {
 	return 409
 }
 
-type Status410 struct{}
+type StatusGone struct{}
 
-func (Status410) statusCode() int {
+func (StatusGone) statusCode() int {
 	return 410
 }
 
-type Status411 struct{}
+type StatusLengthRequired struct{}
 
-func (Status411) statusCode() int {
+func (StatusLengthRequired) statusCode() int {
 	return 411
 }
 
-type Status412 struct{}
+type StatusPreconditionFailed struct{}
 
-func (Status412) statusCode() int {
+func (StatusPreconditionFailed) statusCode() int {
 	return 412
 }
 
-type Status413 struct{}
+type StatusRequestEntityTooLarge struct{}
 
-func (Status413) statusCode() int {
+func (StatusRequestEntityTooLarge) statusCode() int {
 	return 413
 }
 
-type Status414 struct{}
+type StatusRequestURITooLong struct{}
 
-func (Status414) statusCode() int {
+func (StatusRequestURITooLong) statusCode() int {
 	return 414
 }
 
-type Status415 struct{}
+type StatusUnsupportedMediaType struct{}
 
-func (Status415) statusCode() int {
+func (StatusUnsupportedMediaType) statusCode() int {
 	return 415
 }
 
-type Status416 struct{}
+type StatusRequestedRangeNotSatisfiable struct{}
 
-func (Status416) statusCode() int {
+func (StatusRequestedRangeNotSatisfiable) statusCode() int {
 	return 416
 }
 
-type Status417 struct{}
+type StatusExpectationFailed struct{}
 
-func (Status417) statusCode() int {
+func (StatusExpectationFailed) statusCode() int {
 	return 417
 }
 
-type Status418 struct{}
+type StatusTeapot struct{}
 
-func (Status418) statusCode() int {
+func (StatusTeapot) statusCode() int {
 	return 418
 }
 
-type Status421 struct{}
+type StatusMisdirectedRequest struct{}
 
-func (Status421) statusCode() int {
+func (StatusMisdirectedRequest) statusCode() int {
 	return 421
 }
 
-type Status422 struct{}
+type StatusUnprocessableEntity struct{}
 
-func (Status422) statusCode() int {
+func (StatusUnprocessableEntity) statusCode() int {
 	return 422
 }
 
-type Status423 struct{}
+type StatusLocked struct{}
 
-func (Status423) statusCode() int {
+func (StatusLocked) statusCode() int {
 	return 423
 }
 
-type Status424 struct{}
+type StatusFailedDependency struct{}
 
-func (Status424) statusCode() int {
+func (StatusFailedDependency) statusCode() int {
 	return 424
 }
 
-type Status425 struct{}
+type StatusTooEarly struct{}
 
-func (Status425) statusCode() int {
+func (StatusTooEarly) statusCode() int {
 	return 425
 }
 
-type Status426 struct{}
+type StatusUpgradeRequired struct{}
 
-func (Status426) statusCode() int {
+func (StatusUpgradeRequired) statusCode() int {
 	return 426
 }
 
-type Status428 struct{}
+type StatusPreconditionRequired struct{}
 
-func (Status428) statusCode() int {
+func (StatusPreconditionRequired) statusCode() int {
 	return 428
 }
 
-type Status429 struct{}
+type StatusTooManyRequests struct{}
 
-func (Status429) statusCode() int {
+func (StatusTooManyRequests) statusCode() int {
 	return 429
 }
 
-type Status431 struct{}
+type StatusRequestHeaderFieldsTooLarge struct{}
 
-func (Status431) statusCode() int {
+func (StatusRequestHeaderFieldsTooLarge) statusCode() int {
 	return 431
 }
 
-type Status451 struct{}
+type StatusUnavailableForLegalReasons struct{}
 
-func (Status451) statusCode() int {
+func (StatusUnavailableForLegalReasons) statusCode() int {
 	return 451
 }
 
-type Status500 struct{}
+type StatusInternalServerError struct{}
 
-func (Status500) statusCode() int {
+func (StatusInternalServerError) statusCode() int {
 	return 500
 }
 
-type Status501 struct{}
+type StatusNotImplemented struct{}
 
-func (Status501) statusCode() int {
+func (StatusNotImplemented) statusCode() int {
 	return 501
 }
 
-type Status502 struct{}
+type StatusBadGateway struct{}
 
-func (Status502) statusCode() int {
+func (StatusBadGateway) statusCode() int {
 	return 502
 }
 
-type Status503 struct{}
+type StatusServiceUnavailable struct{}
 
-func (Status503) statusCode() int {
+func (StatusServiceUnavailable) statusCode() int {
 	return 503
 }
 
-type Status504 struct{}
+type StatusGatewayTimeout struct{}
 
-func (Status504) statusCode() int {
+func (StatusGatewayTimeout) statusCode() int {
 	return 504
 }
 
-type Status505 struct{}
+type StatusHTTPVersionNotSupported struct{}
 
-func (Status505) statusCode() int {
+func (StatusHTTPVersionNotSupported) statusCode() int {
 	return 505
 }
 
-type Status506 struct{}
+type StatusVariantAlsoNegotiates struct{}
 
-func (Status506) statusCode() int {
+func (StatusVariantAlsoNegotiates) statusCode() int {
 	return 506
 }
 
-type Status507 struct{}
+type StatusInsufficientStorage struct{}
 
-func (Status507) statusCode() int {
+func (StatusInsufficientStorage) statusCode() int {
 	return 507
 }
 
-type Status508 struct{}
+type StatusLoopDetected struct{}
 
-func (Status508) statusCode() int {
+func (StatusLoopDetected) statusCode() int {
 	return 508
 }
 
-type Status510 struct{}
+type StatusNotExtended struct{}
 
-func (Status510) statusCode() int {
+func (StatusNotExtended) statusCode() int {
 	return 510
 }
 
-type Status511 struct{}
+type StatusNetworkAuthenticationRequired struct{}
 
-func (Status511) statusCode() int {
+func (StatusNetworkAuthenticationRequired) statusCode() int {
 	return 511
 }

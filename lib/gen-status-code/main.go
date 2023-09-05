@@ -12,14 +12,18 @@ import (
 func main() {
 	out := "package goapi\n"
 
-	for _, code := range openapi.StatusCode(0).Values() {
+	for _, name := range openapi.StatusCode(0).Values() {
+		code, _ := openapi.StatusCodeString(name)
 		out += format(`
-type Status{{.}} struct{}
+type Status{{.Name}} struct{}
 
-func (Status{{.}}) statusCode() int {
-	return {{.}}
+func (Status{{.Name}}) statusCode() int {
+	return {{.Code}}
 }
-`, code)
+`, struct {
+			Name string
+			Code int
+		}{name, int(code)})
 	}
 
 	f, err := os.OpenFile("response-status-code.go", os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644) //nolint: gofumpt
@@ -34,7 +38,7 @@ func (Status{{.}}) statusCode() int {
 }
 
 // render go template.
-func format(tpl string, value string) string {
+func format(tpl string, value any) string {
 	var buf bytes.Buffer
 
 	t := template.Must(template.New("").Parse(tpl))

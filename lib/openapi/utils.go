@@ -1,10 +1,13 @@
 package openapi
 
-import "encoding/json"
+import (
+	"encoding/json"
+	"strings"
+)
 
 // JSON returns the OpenAPI doc in JSON format.
 func (doc *Document) JSON() string {
-	b, err := json.Marshal(doc)
+	b, err := json.MarshalIndent(doc, "", "  ")
 	if err != nil {
 		panic(err)
 	}
@@ -16,7 +19,7 @@ func (p Path) MarshalJSON() ([]byte, error) {
 	m := map[string]Operation{}
 
 	for method, op := range p {
-		m[method.String()] = op
+		m[strings.ToLower(method.String())] = op
 	}
 
 	return json.Marshal(m)

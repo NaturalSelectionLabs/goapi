@@ -10,23 +10,23 @@ import (
 )
 
 type res struct {
-	goapi.Status200
+	goapi.StatusOK
 	Data string
 }
 
 type resMeta struct {
-	goapi.Status200
+	goapi.StatusOK
 	Data string
 	Meta string
 }
 
 type resErr struct {
-	goapi.Status400
+	goapi.StatusBadRequest
 	Error goapi.Error
 }
 
 type resHeader struct {
-	goapi.Status200
+	goapi.StatusOK
 	Data   int
 	Header struct {
 		X_UA string

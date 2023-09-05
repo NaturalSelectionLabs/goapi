@@ -59,7 +59,7 @@ type RequestBody struct {
 }
 
 type Response struct {
-	Description string   `json:"description,omitempty"`
+	Description string   `json:"description"`
 	Headers     Headers  `json:"headers,omitempty"`
 	Content     *Content `json:"content,omitempty"`
 }
@@ -81,5 +81,5 @@ type Schema struct {
 
 type Components struct {
 	Schemas         map[string]*jschema.Schema `json:"schemas"`
-	SecuritySchemes map[string]any             `json:"securitySchemes"`
+	SecuritySchemes map[string]any             `json:"securitySchemes,omitempty"`
 }
