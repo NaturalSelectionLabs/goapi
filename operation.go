@@ -19,7 +19,7 @@ type Operation struct {
 	tHandler reflect.Type
 	params   []*parsedParam
 
-	res *parsedRes
+	tRes reflect.Type
 
 	override http.HandlerFunc
 
@@ -64,7 +64,7 @@ func newOperation(method openapi.Method, path string, handler any) *Operation {
 		vHandler: vHandler,
 		tHandler: tHandler,
 		params:   params,
-		res:      parseResponse(tRes),
+		tRes:     tRes,
 	}
 }
 
@@ -123,7 +123,7 @@ func (op *Operation) handle(w http.ResponseWriter, r *http.Request, qs url.Value
 
 	res := op.vHandler.Call(params)[0]
 
-	op.res.write(w, res)
+	parseResponse(res.Type()).write(w, res)
 }
 
 type OperationMeta struct {
@@ -137,6 +137,4 @@ type OperationMeta struct {
 	OperationID string
 	// Tags are used for grouping operations together for display in the openapi UI.
 	Tags []string
-
-	ResponseDescription string
 }

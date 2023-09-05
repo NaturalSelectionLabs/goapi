@@ -1,8 +1,6 @@
 package openapi
 
 import (
-	"net/http"
-
 	"github.com/NaturalSelectionLabs/jschema"
 )
 
@@ -61,9 +59,9 @@ type RequestBody struct {
 }
 
 type Response struct {
-	Description string      `json:"description,omitempty"`
-	Headers     http.Header `json:"headers,omitempty"`
-	Content     *Content    `json:"content,omitempty"`
+	Description string   `json:"description,omitempty"`
+	Headers     Headers  `json:"headers,omitempty"`
+	Content     *Content `json:"content,omitempty"`
 }
 
 type Headers map[string]Header

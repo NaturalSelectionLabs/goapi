@@ -48,18 +48,16 @@ type parsedRes struct {
 	hasMeta    bool
 
 	header reflect.Type
+
+	typ reflect.Type
 }
 
 func parseResponse(t reflect.Type) *parsedRes {
-	if t.Kind() != reflect.Struct {
-		panic("handler must return a struct")
-	}
-
 	if !t.Implements(tResponse) {
 		panic("handler must return a goapi.Response")
 	}
 
-	res := &parsedRes{}
+	res := &parsedRes{typ: t}
 
 	res.statusCode = reflect.New(t).Elem().Interface().(Response).statusCode()
 
