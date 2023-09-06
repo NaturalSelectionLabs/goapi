@@ -8,6 +8,10 @@ import (
 	"github.com/ysmood/vary"
 )
 
+func Vary(i any) *vary.Interface {
+	return vary.New(i)
+}
+
 type Description interface {
 	Description() string
 }

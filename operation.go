@@ -123,6 +123,10 @@ func (op *Operation) handle(w http.ResponseWriter, r *http.Request, qs url.Value
 
 	res := op.vHandler.Call(params)[0]
 
+	if res.Type().Kind() == reflect.Interface {
+		res = res.Elem()
+	}
+
 	parseResponse(res.Type()).write(w, res)
 }
 

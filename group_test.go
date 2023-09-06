@@ -15,16 +15,16 @@ func TestMultipleGroups(t *testing.T) {
 
 	{
 		ga := r.Group("/a")
-		ga.GET("/users", func() res { return res{Data: "a"} })
+		ga.GET("/users", func() res { return resOK{Data: "a"} })
 		gb := r.Group("/b")
 
-		gb.GET("/users", func() res { return res{Data: "b"} })
-		gb.POST("/users", func() res { return res{Data: "post"} })
-		gb.PUT("/users", func() res { return res{Data: "b"} })
-		gb.PATCH("/users", func() res { return res{Data: "b"} })
-		gb.DELETE("/users", func() res { return res{Data: "b"} })
-		gb.HEAD("/users", func() res { return res{Data: "b"} })
-		gb.OPTIONS("/users", func() res { return res{Data: "b"} })
+		gb.GET("/users", func() res { return resOK{Data: "b"} })
+		gb.POST("/users", func() res { return resOK{Data: "post"} })
+		gb.PUT("/users", func() res { return resOK{Data: "b"} })
+		gb.PATCH("/users", func() res { return resOK{Data: "b"} })
+		gb.DELETE("/users", func() res { return resOK{Data: "b"} })
+		gb.HEAD("/users", func() res { return resOK{Data: "b"} })
+		gb.OPTIONS("/users", func() res { return resOK{Data: "b"} })
 
 		g.Eq(g.Panic(func() {
 			gb.Group("user")

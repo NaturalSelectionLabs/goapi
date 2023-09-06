@@ -8,3 +8,9 @@ It helps to standardize the way to define input and output of a service.
 - Auto generate openapi doc from code reflection
 - Use function signature to define input and output
 - Type safe without struct tags
+
+## Usage
+
+Check the [examples folder](lib/examples/).
+
+Read the tests for details.

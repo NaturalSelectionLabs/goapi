@@ -9,10 +9,18 @@ import (
 	"github.com/ysmood/got"
 )
 
-type res struct {
+type res interface {
+	goapi.Response
+}
+
+var ires = goapi.Vary(new(res))
+
+type resOK struct {
 	goapi.StatusOK
 	Data string
 }
+
+var _ = ires.Add(resOK{})
 
 type resMeta struct {
 	goapi.StatusOK
@@ -53,7 +61,7 @@ func TestOperation(t *testing.T) {
 			A string
 		},
 		) res {
-			return res{Data: params.A}
+			return resOK{Data: params.A}
 		})
 
 		r.GET("/meta", func(params struct {
@@ -69,7 +77,7 @@ func TestOperation(t *testing.T) {
 			T time.Time
 		},
 		) res {
-			return res{Data: params.T.String()}
+			return resOK{Data: params.T.String()}
 		})
 
 		r.POST("/req-body", func(params struct {
@@ -77,7 +85,7 @@ func TestOperation(t *testing.T) {
 			A string
 		},
 		) res {
-			return res{Data: params.A}
+			return resOK{Data: params.A}
 		})
 
 		r.GET("/error-res", func() resErr {
@@ -141,7 +149,7 @@ func TestOperation(t *testing.T) {
 	g.Eq(g.Req("", tr.URL("/override-header")).Header.Get("x-ua"), "test-client")
 
 	g.Eq(g.Panic(func() {
-		r.GET("/[", func() res { return res{} })
+		r.GET("/[", func() res { return resOK{} })
 	}).(error).Error(), "error parsing regexp: missing closing ]: `[$`")
 
 	g.Eq(g.Panic(func() {

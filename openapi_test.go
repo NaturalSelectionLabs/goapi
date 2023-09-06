@@ -9,14 +9,13 @@ import (
 
 	"github.com/NaturalSelectionLabs/goapi"
 	"github.com/ysmood/got"
-	"github.com/ysmood/vary"
 )
 
 type Res interface {
 	goapi.Response
 }
 
-var iRes = vary.New(new(Res))
+var iRes = goapi.Vary(new(Res))
 
 type Res01 struct {
 	goapi.StatusOK
