@@ -7,18 +7,13 @@ import (
 	"github.com/NaturalSelectionLabs/goapi"
 )
 
-// Here is the cli commands to run this example:
+// To test the example, start the server
 //
-// $ go run ./lib/examples/basic
-// $ curl localhost:3000/login -id '{"username": "admin", "password": "123456"}'
-// # Set-Cookie: token=123456
+//	go run ./lib/examples/basic
 //
-// $ curl 'localhost:3000/users/3/posts?keyword=sky' -H 'Cookie: token=123456'
-// # {"data":["post1","post2"],"meta":"User 3 using keyword: sky"}
+// Then run
 //
-// $ curl localhost:3000/openapi.json
-// # output the openapi json doc
-
+//	bash ./lib/examples/basic/test.sh
 func main() {
 	router := goapi.New()
 
