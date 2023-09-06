@@ -3,9 +3,6 @@ package goapi
 import (
 	"fmt"
 	"net/http"
-	"regexp"
-
-	"github.com/iancoleman/strcase"
 )
 
 type Middleware interface {
@@ -33,7 +30,21 @@ func New() *Group {
 }
 
 func NewRouter() *Router {
-	return &Router{}
+	return &Router{
+		middlewares: []Middleware{
+			MiddlewareFunc(func(h http.Handler) http.Handler {
+				return http.HandlerFunc(func(w http.ResponseWriter, rq *http.Request) {
+					defer func() {
+						if err := recover(); err != nil {
+							writeResErr(w, http.StatusInternalServerError, fmt.Sprint(err))
+						}
+					}()
+
+					h.ServeHTTP(w, rq)
+				})
+			}),
+		},
+	}
 }
 
 func (r *Router) Server() http.Handler {
@@ -57,18 +68,6 @@ func (r *Router) Handler(h http.Handler) http.Handler {
 
 // Group creates a new group with the given prefix.
 func (r *Router) Group(prefix string) *Group {
-	if len(prefix) > 0 && prefix[len(prefix)-1] == '/' {
-		panic("expect prefix to not end with '/', but got: " + prefix)
-	}
-
-	if strcase.ToKebab(prefix) != prefix {
-		panic("expect prefix be kebab-cased, but got: " + prefix)
-	}
-
-	if regexp.MustCompile(`[{}]`).MatchString(prefix) {
-		panic("expect prefix not contains braces, but got: " + prefix)
-	}
-
 	g := &Group{
 		router: r,
 		prefix: prefix,

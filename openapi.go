@@ -141,32 +141,38 @@ func resDoc(s jschema.Schemas, op *Operation) map[openapi.StatusCode]openapi.Res
 	add := func(t reflect.Type) {
 		parsedRes := parseResponse(t)
 
-		scm := &jschema.Schema{
-			Type:                 jschema.TypeObject,
-			AdditionalProperties: ptr(false),
-			Properties:           jschema.Properties{},
-		}
+		var content *openapi.Content
 
-		if parsedRes.hasErr { //nolint: gocritic
-			scm.Properties["error"] = s.DefineT(parsedRes.err)
-			scm.Required = []string{"error"}
-		} else if parsedRes.hasMeta {
-			scm.Properties["data"] = s.DefineT(parsedRes.data)
-			scm.Properties["meta"] = s.DefineT(parsedRes.meta)
-			scm.Required = []string{"data", "meta"}
-		} else {
-			scm.Properties["data"] = s.DefineT(parsedRes.data)
-			scm.Required = []string{"data"}
+		if parsedRes.hasData || parsedRes.hasErr {
+			scm := &jschema.Schema{
+				Type:                 jschema.TypeObject,
+				AdditionalProperties: ptr(false),
+				Properties:           jschema.Properties{},
+			}
+
+			if parsedRes.hasErr { //nolint: gocritic
+				scm.Properties["error"] = s.DefineT(parsedRes.err)
+				scm.Required = []string{"error"}
+			} else if parsedRes.hasMeta {
+				scm.Properties["data"] = s.DefineT(parsedRes.data)
+				scm.Properties["meta"] = s.DefineT(parsedRes.meta)
+				scm.Required = []string{"data", "meta"}
+			} else {
+				scm.Properties["data"] = s.DefineT(parsedRes.data)
+				scm.Required = []string{"data"}
+			}
+
+			content = &openapi.Content{
+				JSON: &openapi.Schema{
+					Schema: scm,
+				},
+			}
 		}
 
 		res := openapi.Response{
 			Description: getDescription(t),
 			Headers:     resHeaderDoc(s, parsedRes.header),
-			Content: &openapi.Content{
-				JSON: &openapi.Schema{
-					Schema: scm,
-				},
-			},
+			Content:     content,
 		}
 
 		list[openapi.StatusCode(parsedRes.statusCode)] = res

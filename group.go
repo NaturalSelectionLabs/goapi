@@ -2,8 +2,10 @@ package goapi
 
 import (
 	"net/http"
+	"regexp"
 
 	"github.com/NaturalSelectionLabs/goapi/lib/openapi"
+	"github.com/iancoleman/strcase"
 )
 
 type Group struct {
@@ -60,6 +62,22 @@ func (g *Group) Add(
 
 // Group creates a sub group of current group.
 func (g *Group) Group(prefix string) *Group {
+	if len(prefix) > 0 && prefix[0] != '/' {
+		panic("expect prefix to start with '/', but got: " + prefix)
+	}
+
+	if len(prefix) > 0 && prefix[len(prefix)-1] == '/' {
+		panic("expect prefix to not end with '/', but got: " + prefix)
+	}
+
+	if strcase.ToKebab(prefix) != prefix {
+		panic("expect prefix be kebab-cased, but got: " + prefix)
+	}
+
+	if regexp.MustCompile(`[{}]`).MatchString(prefix) {
+		panic("expect prefix not contains braces, but got: " + prefix)
+	}
+
 	return g.router.Group(g.prefix + prefix)
 }
 

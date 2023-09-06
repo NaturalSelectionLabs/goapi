@@ -93,12 +93,35 @@ func Test_loadURL_err(t *testing.T) {
 		InURL
 		A int
 		B int
+		C []int
 	}
 
 	parsed = parseParam(path, reflect.TypeOf(testQuery{}))
 
 	_, err = parsed.loadURL(url.Values{"a": {"1"}})
 	g.Eq(err.Error(), "missing parameter in request, param: b")
+
+	_, err = parsed.loadURL(url.Values{"a": {"true"}})
+	g.Eq(err.Error(), "failed to parse path param a: `true` not a valid json true, false, "+
+		"or number: json: cannot unmarshal bool into Go value of type int")
+
+	_, err = parsed.loadURL(url.Values{"a": {"1"}, "b": {"2"}, "c": {"true"}})
+	g.Eq(err.Error(), "failed to parse param c: `true` not a valid json true, false, "+
+		"or number: json: cannot unmarshal bool into Go value of type int")
+
+	g.Eq(g.Panic(func() {
+		parseParam(path, reflect.TypeOf(struct {
+			InURL
+			A []int
+		}{}))
+	}), "path parameter cannot be an slice, param: A")
+
+	g.Eq(g.Panic(func() {
+		parseParam(path, reflect.TypeOf(struct {
+			InURL
+			A *int
+		}{}))
+	}), "path parameter cannot be optional, param: A")
 }
 
 func Test_loadHeader(t *testing.T) {
@@ -122,6 +145,15 @@ func Test_loadHeader(t *testing.T) {
 		X_Y:      10,
 		Z:        "default",
 	})
+
+	type headerErr struct {
+		InHeader
+		Z string `default:"aa"`
+	}
+
+	g.Eq(g.Panic(func() {
+		parseParam(nil, reflect.TypeOf(headerErr{}))
+	}), "failed to parse default tag of Z: invalid character 'a' looking for beginning of value")
 }
 
 func strPtr(s string) *string {
@@ -147,4 +179,38 @@ func Test_loadBody(t *testing.T) {
 		ID:     1,
 		Name:   "test",
 	})
+
+	_, err = parsed.loadBody(bytes.NewBufferString(`{`))
+	g.Eq(err.Error(), "failed to parse json body: unexpected EOF")
+}
+
+func Test_parseResponse_err(t *testing.T) {
+	g := got.T(t)
+
+	g.Eq(g.Panic(func() {
+		parseResponse(reflect.TypeOf(struct{}{}))
+	}), "handler must return a goapi.Response")
+
+	g.Eq(g.Panic(func() {
+		parseResponse(reflect.TypeOf(struct {
+			StatusOK
+			Data  int
+			Error int
+		}{}))
+	}), "response Data field should not exist when Error field exists")
+
+	g.Eq(g.Panic(func() {
+		parseResponse(reflect.TypeOf(struct {
+			StatusOK
+			Meta  int
+			Error int
+		}{}))
+	}), "response Meta field should not exist when Error field exists")
+
+	g.Eq(g.Panic(func() {
+		parseResponse(reflect.TypeOf(struct {
+			StatusOK
+			Meta int
+		}{}))
+	}), "response Meta field requires Data field")
 }

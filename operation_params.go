@@ -213,11 +213,11 @@ func parseURLField(path *Path, t reflect.StructField) *parsedField {
 	f.name = toPathName(t.Name)
 	if path.contains(f.name) {
 		if f.slice {
-			panic("path parameter cannot be an array: " + t.Name)
+			panic("path parameter cannot be an slice, param: " + t.Name)
 		}
 
 		if !f.required {
-			panic("path parameter cannot be optional: " + t.Name)
+			panic("path parameter cannot be optional, param: " + t.Name)
 		}
 
 		f.InPath = true

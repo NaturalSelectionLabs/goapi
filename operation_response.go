@@ -45,10 +45,7 @@ func writeResErr(w http.ResponseWriter, code int, msg string) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(code)
 
-	err := json.NewEncoder(w).Encode(Error{Message: msg})
-	if err != nil {
-		panic(err)
-	}
+	_ = json.NewEncoder(w).Encode(Error{Message: msg})
 }
 
 type parsedRes struct {
@@ -94,10 +91,6 @@ func parseResponse(t reflect.Type) *parsedRes {
 		res.data = f.Type
 	}
 
-	if !res.hasData && !res.hasErr {
-		panic("response must have either Data or Error field")
-	}
-
 	if f, has := t.FieldByName("Meta"); has {
 		if res.hasErr {
 			panic("response Meta field should not exist when Error field exists")
@@ -115,10 +108,6 @@ func parseResponse(t reflect.Type) *parsedRes {
 }
 
 func (s *parsedRes) write(w http.ResponseWriter, res reflect.Value) {
-	if s.hasErr || s.hasData {
-		w.Header().Set("Content-Type", "application/json; charset=utf-8")
-	}
-
 	if s.hasHeader {
 		h := res.FieldByName("Header")
 		for i := 0; i < h.NumField(); i++ {
@@ -126,8 +115,6 @@ func (s *parsedRes) write(w http.ResponseWriter, res reflect.Value) {
 			w.Header().Set(toHeaderName(s.header.Field(i).Name), f.String())
 		}
 	}
-
-	w.WriteHeader(s.statusCode)
 
 	var data any
 
@@ -140,16 +127,22 @@ func (s *parsedRes) write(w http.ResponseWriter, res reflect.Value) {
 			Data: res.FieldByName("Data").Interface(),
 			Meta: res.FieldByName("Meta").Interface(),
 		}
-	} else {
+	} else if s.hasData {
 		data = responseData{
 			Data: res.FieldByName("Data").Interface(),
 		}
 	}
 
 	if s.hasErr || s.hasData {
-		err := json.NewEncoder(w).Encode(data)
+		b, err := json.Marshal(data)
 		if err != nil {
 			panic(err)
 		}
+
+		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		w.WriteHeader(s.statusCode)
+		_, _ = w.Write(b)
+	} else {
+		w.WriteHeader(s.statusCode)
 	}
 }

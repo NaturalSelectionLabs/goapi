@@ -63,7 +63,7 @@ func TestOpenAPI(t *testing.T) {
 
 	r.GET("/one", func(p struct {
 		goapi.InURL
-		ID string
+		ID string `description:"id"`
 	}, h struct {
 		goapi.InHeader
 		UA string
@@ -143,10 +143,11 @@ func TestOpenAPI(t *testing.T) {
 					"description": "test endpoint",
 					"operationId": "test",
 					"parameters": []interface{} /* len=2 cap=2 */ {
-						map[string]interface{} /* len=4 */ {
-							"in":       "query",
-							"name":     "id",
-							"required": true,
+						map[string]interface{} /* len=5 */ {
+							"description": "id",
+							"in":          "query",
+							"name":        "id",
+							"required":    true,
 							"schema": map[string]interface{}{
 								"type": "string",
 							},
