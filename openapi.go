@@ -36,7 +36,7 @@ func (r *Router) OpenAPI(schemas *jschema.Schemas) *openapi.Document {
 
 	for _, m := range r.middlewares {
 		op, ok := m.(*Operation)
-		if !ok {
+		if !ok || op.override != nil {
 			continue
 		}
 

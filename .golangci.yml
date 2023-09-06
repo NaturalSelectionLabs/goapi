@@ -46,3 +46,6 @@ issues:
     - path: "status_code_test.go"
       linters:
         - staticcheck
+    - path: "lib/examples/basic/main.go"
+      linters:
+        - forbidigo

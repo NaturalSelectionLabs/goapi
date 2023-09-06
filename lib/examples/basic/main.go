@@ -13,6 +13,8 @@ import (
 //
 // $ curl 'localhost:3000/users/3/posts?keyword=sky' -H 'Cookie: token=123456'
 // {"data":["post1","post2"],"meta":"User 3 using keyword: sky"}
+//
+// $ curl localhost:3000/openapi.json
 
 func main() {
 	router := goapi.New()
@@ -47,13 +49,25 @@ func main() {
 		}
 	})
 
+	// You can use func(http.ResponseWriter, *http.Request) to override the default handler behavior.
+	// Here we use it to return the openapi doc.
+	router.GET("/openapi.json", func(w http.ResponseWriter, r *http.Request) {
+		doc := router.OpenAPI(nil)
+		doc.Info.Title = "Basic Example"
+		doc.Info.Version = "0.0.1"
+		_, _ = w.Write([]byte(doc.JSON()))
+	})
+
 	_ = http.ListenAndServe(":3000", router.Server())
 }
 
 type PostsParams struct {
 	goapi.InURL
-	ID      int
-	Keyword string
+	ID int
+
+	// Use default tag to mark this field as optional,
+	// you can also use pointer to mark it as optional.
+	Keyword string `default:"\"go\""`
 }
 
 type LoginParams struct {
