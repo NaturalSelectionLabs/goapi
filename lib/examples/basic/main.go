@@ -7,14 +7,17 @@ import (
 	"github.com/NaturalSelectionLabs/goapi"
 )
 
+// Here is the cli commands to run this example:
+//
 // $ go run ./lib/examples/basic
 // $ curl localhost:3000/login -id '{"username": "admin", "password": "123456"}'
-// Set-Cookie: token=123456
+// # Set-Cookie: token=123456
 //
 // $ curl 'localhost:3000/users/3/posts?keyword=sky' -H 'Cookie: token=123456'
-// {"data":["post1","post2"],"meta":"User 3 using keyword: sky"}
+// # {"data":["post1","post2"],"meta":"User 3 using keyword: sky"}
 //
 // $ curl localhost:3000/openapi.json
+// # output the openapi json doc
 
 func main() {
 	router := goapi.New()
@@ -64,9 +67,9 @@ func main() {
 type PostsParams struct {
 	goapi.InURL
 	ID int
-
 	// Use default tag to mark this field as optional,
 	// you can also use pointer to mark it as optional.
+	// The default value should be a json string.
 	Keyword string `default:"\"go\""`
 }
 
@@ -100,7 +103,9 @@ var iPosts = goapi.Vary(new(Posts))
 
 type PostsOK struct {
 	goapi.StatusOK
+	// Use Data to store the main response data.
 	Data []string
+	// Use Meta to store info like pagination.
 	Meta string
 }
 

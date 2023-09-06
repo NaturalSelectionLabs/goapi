@@ -1,11 +1,13 @@
 package goapi
 
 import (
+	"fmt"
 	"net/http"
 	"net/url"
 	"reflect"
 
 	"github.com/NaturalSelectionLabs/goapi/lib/openapi"
+	"github.com/ysmood/vary"
 )
 
 // Operation is a handler for a specific HTTP method and path.
@@ -123,11 +125,18 @@ func (op *Operation) handle(w http.ResponseWriter, r *http.Request, qs url.Value
 
 	res := op.vHandler.Call(params)[0]
 
-	if res.Type().Kind() == reflect.Interface {
+	resType := res.Type()
+	if resType.Kind() == reflect.Interface {
+		setType := resType
 		res = res.Elem()
+		resType = res.Type()
+
+		if _, ok := interfaces[vary.ID(setType)].Implementations[vary.ID(resType)]; !ok {
+			panic(fmt.Sprintf("should vary.Interface.Add %s to %s", resType.String(), setType.String()))
+		}
 	}
 
-	parseResponse(res.Type()).write(w, res)
+	parseResponse(resType).write(w, res)
 }
 
 type OperationMeta struct {

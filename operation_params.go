@@ -121,8 +121,10 @@ func (p *parsedParam) loadURL(qs url.Values) (reflect.Value, error) {
 
 		if !f.InPath && f.slice { //nolint: nestif
 			vs, ok := qs[f.name]
-			if ok {
+			if ok { //nolint: gocritic
 				fv = reflect.MakeSlice(f.sliceType, len(vs), len(vs))
+			} else if f.hasDefault {
+				fv = f.defaultVal
 			} else {
 				continue
 			}
@@ -145,7 +147,7 @@ func (p *parsedParam) loadURL(qs url.Values) (reflect.Value, error) {
 				}
 			} else if f.required {
 				return reflect.Value{}, fmt.Errorf("%w, param: %s", ErrMissingParam, f.name)
-			} else {
+			} else if f.hasDefault {
 				fv = f.defaultVal
 			}
 		}
@@ -196,6 +198,7 @@ type parsedField struct {
 	sliceType   reflect.Type
 	required    bool
 	InPath      bool
+	hasDefault  bool
 	defaultVal  reflect.Value
 	description string
 }
@@ -212,6 +215,10 @@ func parseURLField(path *Path, t reflect.StructField) *parsedField {
 
 	f.name = toPathName(t.Name)
 	if path.contains(f.name) {
+		if f.hasDefault {
+			panic("path parameter cannot have default tag, param: " + t.Name)
+		}
+
 		if f.slice {
 			panic("path parameter cannot be an slice, param: " + t.Name)
 		}
@@ -258,7 +265,12 @@ func parseField(t reflect.StructField) *parsedField {
 	}
 
 	if d, ok := t.Tag.Lookup("default"); ok {
-		v := reflect.New(f.item).Interface()
+		var v any
+		if f.slice {
+			v = reflect.New(f.sliceType).Interface()
+		} else {
+			v = reflect.New(f.item).Interface()
+		}
 
 		err := json.Unmarshal([]byte(d), &v)
 		if err != nil {
@@ -266,6 +278,7 @@ func parseField(t reflect.StructField) *parsedField {
 		}
 
 		f.required = false
+		f.hasDefault = true
 		f.defaultVal = reflect.Indirect(reflect.ValueOf(v))
 	}
 

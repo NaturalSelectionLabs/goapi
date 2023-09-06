@@ -116,6 +116,10 @@ func TestOperation(t *testing.T) {
 			return resEmpty{}
 		})
 
+		r.GET("/res-missed-type", func() res {
+			return resEmpty{}
+		})
+
 		tr.Mux.Handle("/", r.Server())
 	}
 
@@ -163,4 +167,8 @@ func TestOperation(t *testing.T) {
 	g.Eq(g.Req("", tr.URL("/res-enc-err")).StatusCode, http.StatusInternalServerError)
 
 	g.Eq(g.Req("", tr.URL("/res-empty")).String(), "")
+
+	g.Eq(g.Req("", tr.URL("/res-missed-type")).JSON(), map[string]interface{}{
+		"message": `should vary.Interface.Add goapi_test.resEmpty to goapi_test.res`, /* len=63 */
+	})
 }

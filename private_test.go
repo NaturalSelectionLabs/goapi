@@ -122,6 +122,13 @@ func Test_loadURL_err(t *testing.T) {
 			A *int
 		}{}))
 	}), "path parameter cannot be optional, param: A")
+
+	g.Eq(g.Panic(func() {
+		parseParam(path, reflect.TypeOf(struct {
+			InURL
+			A int `default:"1"`
+		}{}))
+	}), "path parameter cannot have default tag, param: A")
 }
 
 func Test_loadHeader(t *testing.T) {
@@ -213,4 +220,25 @@ func Test_parseResponse_err(t *testing.T) {
 			Meta int
 		}{}))
 	}), "response Meta field requires Data field")
+}
+
+func Test_default_arr(t *testing.T) {
+	g := got.T(t)
+
+	type params struct {
+		InURL
+		IDS []int `default:"[1, 2]"`
+	}
+
+	path, err := newPath("/test")
+	g.E(err)
+
+	parsed := parseParam(path, reflect.TypeOf(params{}))
+
+	v, err := parsed.loadURL(url.Values{})
+	g.E(err)
+
+	g.Eq(v.Interface(), params{
+		IDS: []int{1, 2},
+	})
 }

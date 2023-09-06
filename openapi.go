@@ -8,8 +8,10 @@ import (
 	"github.com/ysmood/vary"
 )
 
+var interfaces = vary.NewInterfaces()
+
 func Vary(i any) *vary.Interface {
-	return vary.New(i)
+	return interfaces.New(i)
 }
 
 type Description interface {
@@ -30,7 +32,7 @@ func (r *Router) OpenAPI(schemas *jschema.Schemas) *openapi.Document {
 	}
 
 	if schemas == nil {
-		s := jschema.New("#/components/schemas")
+		s := jschema.NewWithInterfaces("#/components/schemas", interfaces)
 		schemas = &s
 	}
 
@@ -182,7 +184,7 @@ func resDoc(s jschema.Schemas, op *Operation) map[openapi.StatusCode]openapi.Res
 		list[openapi.StatusCode(parsedRes.statusCode)] = res
 	}
 
-	if it := vary.Get(vary.NewID(op.tRes)); it != nil {
+	if it, has := interfaces[vary.ID(op.tRes)]; has {
 		for _, t := range it.Implementations {
 			add(t)
 		}
