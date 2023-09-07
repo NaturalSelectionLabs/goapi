@@ -43,13 +43,6 @@ func (g *Group) HEAD(path string, handler any, opts ...ConfigOperation) {
 	g.Add(openapi.HEAD, path, handler, opts...)
 }
 
-type ConfigOperation func(op *Operation)
-
-// Meta is a type of option for [Group.Add] to set the meta info of an operation.
-func (g *Group) Meta(meta OperationMeta) ConfigOperation {
-	return func(op *Operation) { op.meta = &meta }
-}
-
 func (g *Group) Add(
 	method openapi.Method, path string, handler any, opts ...ConfigOperation,
 ) {

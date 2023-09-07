@@ -25,7 +25,29 @@ type Operation struct {
 
 	override http.HandlerFunc
 
-	meta *OperationMeta
+	meta OperationMeta
+}
+
+type ConfigOperation func(op *Operation)
+
+// Description for the operation.
+func Description(d string) ConfigOperation {
+	return func(op *Operation) { op.meta.Description = d }
+}
+
+// OperationID for the operation.
+func OperationID(id string) ConfigOperation {
+	return func(op *Operation) { op.meta.OperationID = id }
+}
+
+// Summary for the operation.
+func Summary(s string) ConfigOperation {
+	return func(op *Operation) { op.meta.Summary = s }
+}
+
+// Tags for the operation.
+func Tags(tags ...string) ConfigOperation {
+	return func(op *Operation) { op.meta.Tags = tags }
 }
 
 func newOperation(method openapi.Method, path string, handler any) *Operation {

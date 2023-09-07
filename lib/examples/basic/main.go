@@ -15,9 +15,9 @@ import (
 //
 //	bash ./lib/examples/basic/test.sh
 func main() {
-	router := goapi.New()
+	r := goapi.New()
 
-	router.POST("/login", func(p LoginParams) Login {
+	r.POST("/login", func(p LoginParams) Login {
 		// If the username and password are not correct, return a LoginFail response.
 		if p.Username != "admin" || p.Password != "123456" {
 			return Unauthorized{}
@@ -32,11 +32,11 @@ func main() {
 				SetCookie: "token=123456",
 			},
 		}
-	})
+	}, goapi.Description("Login with username and password.")) // openapi description for the endpoint.
 
 	// You can use multiple parameters at the same time to get url values, headers, or request body.
 	// The order of the parameters doesn't matter.
-	router.GET("/users/{id}/posts", func(f PostsParams, h Header) Posts {
+	r.GET("/users/{id}/posts", func(f PostsParams, h Header) Posts {
 		if h.Cookie != "token=123456" {
 			return Unauthorized{}
 		}
@@ -49,19 +49,20 @@ func main() {
 
 	// You can use func(http.ResponseWriter, *http.Request) to override the default handler behavior.
 	// Here we use it to return the openapi doc.
-	router.GET("/openapi.json", func(w http.ResponseWriter, r *http.Request) {
-		doc := router.OpenAPI(nil)
+	r.GET("/openapi.json", func(w http.ResponseWriter, rq *http.Request) {
+		doc := r.OpenAPI(nil)
 		doc.Info.Title = "Basic Example"
 		doc.Info.Version = "0.0.1"
 		_, _ = w.Write([]byte(doc.JSON()))
 	})
 
-	_ = http.ListenAndServe(":3000", router.Server())
+	_ = http.ListenAndServe(":3000", r.Server())
 }
 
 type PostsParams struct {
 	goapi.InURL
-	ID int
+	// Use description tag to describe the openapi parameter.
+	ID int `description:"User ID"`
 	// Use default tag to mark this field as optional,
 	// you can also use pointer to mark it as optional.
 	// The default value should be a json string.
@@ -89,6 +90,10 @@ type LoginOK struct {
 }
 
 var _ = iLogin.Add(LoginOK{})
+
+func (LoginOK) Description() string {
+	return "Login successfully." // openapi description for the response.
+}
 
 type Posts interface {
 	goapi.Response

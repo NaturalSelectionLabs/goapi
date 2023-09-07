@@ -64,12 +64,12 @@ func TestOpenAPI(t *testing.T) {
 		Data string `json:"data"`
 	}) Res {
 		return Res01{}
-	}, r.Meta(goapi.OperationMeta{
-		Summary:     "test",
-		Description: "test endpoint",
-		OperationID: "test",
-		Tags:        []string{"test"},
-	}))
+	},
+		goapi.Summary("test"),
+		goapi.Description("test endpoint"),
+		goapi.OperationID("test"),
+		goapi.Tags("test"),
+	)
 
 	r.GET("/two/{id}", func(struct {
 		goapi.InURL

@@ -14,11 +14,11 @@ func Interface(i any) *vary.Interface {
 	return interfaces.New(i)
 }
 
-type Description interface {
+type Descriptioner interface {
 	Description() string
 }
 
-var tDescription = reflect.TypeOf((*Description)(nil)).Elem()
+var tDescriptioner = reflect.TypeOf((*Descriptioner)(nil)).Elem()
 
 func (r *Group) OpenAPI(schemas *jschema.Schemas) *openapi.Document {
 	return r.router.OpenAPI(schemas)
@@ -55,12 +55,10 @@ func operationDoc(s jschema.Schemas, op *Operation) openapi.Operation {
 		Responses:  map[openapi.StatusCode]openapi.Response{},
 	}
 
-	if op.meta != nil {
-		doc.Summary = op.meta.Summary
-		doc.Description = op.meta.Description
-		doc.OperationID = op.meta.OperationID
-		doc.Tags = op.meta.Tags
-	}
+	doc.Summary = op.meta.Summary
+	doc.Description = op.meta.Description
+	doc.OperationID = op.meta.OperationID
+	doc.Tags = op.meta.Tags
 
 	for _, p := range op.params {
 		var params []openapi.Parameter
@@ -209,8 +207,8 @@ func resHeaderDoc(s jschema.Schemas, t reflect.Type) openapi.Headers {
 }
 
 func getDescription(t reflect.Type) string {
-	if t.Implements(tDescription) {
-		return reflect.New(t).Elem().Interface().(Description).Description()
+	if t.Implements(tDescriptioner) {
+		return reflect.New(t).Elem().Interface().(Descriptioner).Description()
 	}
 
 	return ""
