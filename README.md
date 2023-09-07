@@ -11,6 +11,8 @@ It helps to standardize the way to define input and output of a service.
 
 ## Usage
 
+Hello world example: [main.go](lib/examples/hello-world/main.go).
+
 Check the [examples folder](lib/examples/).
 
 Read the tests for details.

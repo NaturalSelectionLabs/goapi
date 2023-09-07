@@ -6,6 +6,8 @@ import (
 	"reflect"
 )
 
+// Response is an interface that represents a response object.
+//
 //go:generate go run ./lib/gen-status-code
 type Response interface {
 	statusCode() int

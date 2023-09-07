@@ -20,6 +20,7 @@ func TestStatusCode(t *testing.T) {`
 	for _, name := range openapi.StatusCode(0).Values() {
 		code, _ := openapi.StatusCodeString(name)
 		out += format(`
+// Status{{.Name}} {{.Code}}.
 type Status{{.Name}} struct{}
 
 func (Status{{.Name}}) statusCode() int {
