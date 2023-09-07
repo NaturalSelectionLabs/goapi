@@ -15,7 +15,7 @@ type Res interface {
 	goapi.Response
 }
 
-var iRes = goapi.Vary(new(Res))
+var iRes = goapi.Interface(new(Res))
 
 type Res01 struct {
 	goapi.StatusOK

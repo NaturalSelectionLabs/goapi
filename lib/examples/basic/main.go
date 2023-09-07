@@ -79,7 +79,7 @@ type Login interface {
 }
 
 // Creates a set to store all the implementations of the Login interface.
-var iLogin = goapi.Vary(new(Login))
+var iLogin = goapi.Interface(new(Login))
 
 type LoginOK struct {
 	goapi.StatusNoContent
@@ -94,7 +94,7 @@ type Posts interface {
 	goapi.Response
 }
 
-var iPosts = goapi.Vary(new(Posts))
+var iPosts = goapi.Interface(new(Posts))
 
 type PostsOK struct {
 	goapi.StatusOK

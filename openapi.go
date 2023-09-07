@@ -10,7 +10,7 @@ import (
 
 var interfaces = vary.NewInterfaces()
 
-func Vary(i any) *vary.Interface {
+func Interface(i any) *vary.Interface {
 	return interfaces.New(i)
 }
 

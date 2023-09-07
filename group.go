@@ -90,3 +90,8 @@ func (g *Group) Server() http.Handler {
 func (g *Group) Use(m Middleware) {
 	g.router.Use(m)
 }
+
+// Use is a shortcut for [Router.Handler].
+func (g *Group) Handler(h http.Handler) http.Handler {
+	return g.router.Handler(h)
+}
