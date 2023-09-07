@@ -8,18 +8,19 @@ import (
 
 type Middleware interface {
 	// A Middleware https://cs.opensource.google/go/x/pkgsite/+/68be0dd1:internal/middleware/middleware.go
-	Handler(http.Handler) http.Handler
+	Handler(next http.Handler) http.Handler
 }
 
-type MiddlewareFunc func(http.Handler) http.Handler
+type MiddlewareFunc func(next http.Handler) http.Handler
 
-func (fn MiddlewareFunc) Handler(h http.Handler) http.Handler {
-	return fn(h)
+func (fn MiddlewareFunc) Handler(next http.Handler) http.Handler {
+	return fn(next)
 }
 
 // Router itself is a middleware.
 type Router struct {
 	middlewares []Middleware
+	operations  []*Operation
 	Server      *http.Server
 }
 
@@ -27,8 +28,7 @@ type Router struct {
 //
 //	NewRouter().Group("")
 func New() *Group {
-	r := NewRouter()
-	return r.Group("")
+	return NewRouter().Group("")
 }
 
 func NewRouter() *Router {
@@ -76,20 +76,16 @@ func (r *Router) Use(middlewares ...Middleware) {
 	r.middlewares = append(r.middlewares, middlewares...)
 }
 
-func (r *Router) Handler(h http.Handler) http.Handler {
+func (r *Router) Handler(next http.Handler) http.Handler {
 	for i := len(r.middlewares) - 1; i >= 0; i-- {
-		h = r.middlewares[i].Handler(h)
+		next = r.middlewares[i].Handler(next)
 	}
 
-	return h
+	return next
 }
 
 // Group creates a new group with the given prefix.
 func (r *Router) Group(prefix string) *Group {
-	g := &Group{
-		router: r,
-		prefix: prefix,
-	}
-
-	return g
+	g := &Group{router: r}
+	return g.Group(prefix)
 }

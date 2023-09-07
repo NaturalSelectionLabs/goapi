@@ -1,7 +1,6 @@
 package goapi_test
 
 import (
-	"net/http"
 	"os"
 	"os/exec"
 	"strings"
@@ -53,12 +52,6 @@ func TestOpenAPI(t *testing.T) {
 	r := goapi.New()
 	tr := g.Serve()
 	tr.Mux.Handle("/", r.Server())
-
-	r.Use(goapi.MiddlewareFunc(func(h http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			h.ServeHTTP(w, r)
-		})
-	}))
 
 	r.GET("/one", func(p struct {
 		goapi.InURL

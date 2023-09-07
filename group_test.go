@@ -14,9 +14,18 @@ func TestMultipleGroups(t *testing.T) {
 
 	r := goapi.New()
 
+	count := 0
+
 	{
 		ga := r.Group("/a")
+		ga.Use(goapi.MiddlewareFunc(func(next http.Handler) http.Handler {
+			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				count++
+				next.ServeHTTP(w, r)
+			})
+		}))
 		ga.GET("/users", func() res { return resOK{Data: "a"} })
+
 		gb := r.Group("/b")
 
 		gb.GET("/users", func() res { return resOK{Data: "b"} })
@@ -56,8 +65,6 @@ func TestMultipleGroups(t *testing.T) {
 	g.Eq(g.Req(http.MethodPost, tr.URL("/b/users")).JSON(), map[string]any{
 		"data": "post",
 	})
-
-	g.Eq(1, 1)
 }
 
 func TestStart(t *testing.T) {
@@ -74,4 +81,19 @@ func TestStart(t *testing.T) {
 	})
 
 	g.E(r.Shutdown(g.Context()))
+}
+
+func TestGroupAsMiddleware(t *testing.T) {
+	g := got.T(t)
+	tr := g.Serve()
+
+	r := goapi.New()
+
+	h := r.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, _ = w.Write([]byte("ok"))
+	}))
+
+	tr.Mux.Handle("/", h)
+
+	g.Eq(g.Req("", tr.URL("/")).String(), "ok")
 }

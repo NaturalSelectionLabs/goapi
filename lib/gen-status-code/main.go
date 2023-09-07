@@ -39,7 +39,8 @@ func (Status{{.Name}}) statusCode() int {
 	}
 
 	outTest += `
-}`
+}
+`
 
 	writeFile("status_code.go", out)
 	writeFile("status_code_test.go", outTest)

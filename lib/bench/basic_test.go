@@ -1,4 +1,4 @@
-// go test -bench=. -benchmem -cpuprofile profile.out ./lib/bench
+// go test -bench=. -benchmem ./lib/bench
 
 package bench_test
 
@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"net/http"
 	"testing"
+	"time"
 
 	"github.com/NaturalSelectionLabs/goapi"
 	"github.com/labstack/echo/v4"
@@ -34,6 +35,8 @@ func Benchmark_goapi(b *testing.B) {
 
 	go func() { _ = r.Start(":3000") }()
 	b.Cleanup(func() { _ = r.Shutdown(context.Background()) })
+
+	time.Sleep(300 * time.Millisecond)
 
 	b.ResetTimer()
 
@@ -65,6 +68,8 @@ func Benchmark_echo(b *testing.B) {
 
 	go func() { _ = e.Start(":3001") }()
 	b.Cleanup(func() { _ = e.Shutdown(context.Background()) })
+
+	time.Sleep(300 * time.Millisecond)
 
 	b.ResetTimer()
 

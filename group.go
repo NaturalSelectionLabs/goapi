@@ -4,6 +4,7 @@ import (
 	"context"
 	"net/http"
 	"regexp"
+	"strings"
 
 	"github.com/NaturalSelectionLabs/goapi/lib/openapi"
 	"github.com/iancoleman/strcase"
@@ -58,7 +59,8 @@ func (g *Group) Add(
 		opt(op)
 	}
 
-	g.router.Use(op)
+	g.router.operations = append(g.router.operations, op)
+	g.Use(op)
 }
 
 // Group creates a sub group of current group.
@@ -79,7 +81,10 @@ func (g *Group) Group(prefix string) *Group {
 		panic("expect prefix not contains braces, but got: " + prefix)
 	}
 
-	return g.router.Group(g.prefix + prefix)
+	return &Group{
+		router: g.router,
+		prefix: g.prefix + prefix,
+	}
 }
 
 // Handler is a shortcut for [Router.Handler].
@@ -99,7 +104,15 @@ func (g *Group) Shutdown(ctx context.Context) error {
 
 // Use is a shortcut for [Router.Use].
 func (g *Group) Use(m Middleware) {
-	g.router.Use(m)
+	g.router.Use(MiddlewareFunc(func(h http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if strings.HasPrefix(r.URL.Path, g.prefix) {
+				m.Handler(h).ServeHTTP(w, r)
+			} else {
+				h.ServeHTTP(w, r)
+			}
+		})
+	}))
 }
 
 // Use is a shortcut for [Router.Handler].

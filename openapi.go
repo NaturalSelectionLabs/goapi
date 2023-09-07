@@ -36,12 +36,7 @@ func (r *Router) OpenAPI(schemas *jschema.Schemas) *openapi.Document {
 		schemas = &s
 	}
 
-	for _, m := range r.middlewares {
-		op, ok := m.(*Operation)
-		if !ok || op.override != nil {
-			continue
-		}
-
+	for _, op := range r.operations {
 		if _, has := doc.Paths[op.path.path]; !has {
 			doc.Paths[op.path.path] = openapi.Path{}
 		}
