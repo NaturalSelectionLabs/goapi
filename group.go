@@ -1,6 +1,7 @@
 package goapi
 
 import (
+	"context"
 	"net/http"
 	"regexp"
 
@@ -83,7 +84,17 @@ func (g *Group) Group(prefix string) *Group {
 
 // Handler is a shortcut for [Router.Handler].
 func (g *Group) Server() http.Handler {
-	return g.router.Server()
+	return g.router.ServerHandler()
+}
+
+// Start is a shortcut for [Router.Start].
+func (g *Group) Start(addr string) error {
+	return g.router.Start(addr)
+}
+
+// Shutdown is a shortcut for [Router.Shutdown].
+func (g *Group) Shutdown(ctx context.Context) error {
+	return g.router.Shutdown(ctx)
 }
 
 // Use is a shortcut for [Router.Use].

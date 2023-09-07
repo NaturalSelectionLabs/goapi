@@ -1,6 +1,7 @@
 package goapi
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 )
@@ -19,6 +20,7 @@ func (fn MiddlewareFunc) Handler(h http.Handler) http.Handler {
 // Router itself is a middleware.
 type Router struct {
 	middlewares []Middleware
+	Server      *http.Server
 }
 
 // New is a shortcut for:
@@ -47,10 +49,26 @@ func NewRouter() *Router {
 	}
 }
 
-func (r *Router) Server() http.Handler {
+// ServerHandler with a 404 middleware at the end.
+func (r *Router) ServerHandler() http.Handler {
 	return r.Handler(http.HandlerFunc(func(w http.ResponseWriter, rq *http.Request) {
 		writeResErr(w, http.StatusNotFound, fmt.Sprintf("path not found: %s %s", rq.Method, rq.URL.Path))
 	}))
+}
+
+// Start the server.
+func (r *Router) Start(addr string) error {
+	r.Server = &http.Server{
+		Addr:    addr,
+		Handler: r.ServerHandler(),
+	}
+
+	return r.Server.ListenAndServe()
+}
+
+// Shutdown the server.
+func (r *Router) Shutdown(ctx context.Context) error {
+	return r.Server.Shutdown(ctx)
 }
 
 // Use a middleware to the router.

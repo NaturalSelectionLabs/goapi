@@ -3,6 +3,7 @@ package goapi_test
 import (
 	"net/http"
 	"testing"
+	"time"
 
 	"github.com/NaturalSelectionLabs/goapi"
 	"github.com/ysmood/got"
@@ -57,4 +58,20 @@ func TestMultipleGroups(t *testing.T) {
 	})
 
 	g.Eq(1, 1)
+}
+
+func TestStart(t *testing.T) {
+	g := got.T(t)
+	r := goapi.New()
+	r.GET("/", func() resOK { return resOK{Data: "ok"} })
+
+	go func() { _ = r.Start(":41375") }()
+
+	time.Sleep(300 * time.Millisecond)
+
+	g.Eq(g.Req("", "http://localhost:41375").JSON(), map[string]interface{}{
+		"data": "ok",
+	})
+
+	g.E(r.Shutdown(g.Context()))
 }

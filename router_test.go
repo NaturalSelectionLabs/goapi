@@ -29,7 +29,7 @@ func TestMiddleware(t *testing.T) {
 	}))
 
 	tr := g.Serve()
-	tr.Mux.Handle("/", r.Server())
+	tr.Mux.Handle("/", r.ServerHandler())
 
 	g.Eq(g.Req("", tr.URL("/")).String(), "ok")
 }
@@ -39,7 +39,7 @@ func TestMiddlewareNotFound(t *testing.T) {
 
 	r := goapi.NewRouter()
 	tr := g.Serve()
-	tr.Mux.Handle("/", r.Server())
+	tr.Mux.Handle("/", r.ServerHandler())
 
 	r.Use(goapi.MiddlewareFunc(func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, rq *http.Request) {

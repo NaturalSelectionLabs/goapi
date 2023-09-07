@@ -1,4 +1,4 @@
-module github.com/NaturalSelectionLabs/goapi/lib/examples/as-echo-middleware
+module github.com/NaturalSelectionLabs/goapi/lib/bench
 
 go 1.21.1
 

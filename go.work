@@ -2,5 +2,6 @@ go 1.21.1
 
 use (
 	.
+	./lib/bench
 	./lib/examples/as-echo-middleware
 )
