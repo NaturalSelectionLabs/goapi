@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/NaturalSelectionLabs/goapi/lib/middlewares"
 	"github.com/NaturalSelectionLabs/goapi/lib/openapi"
 	"github.com/iancoleman/strcase"
 )
@@ -96,8 +97,8 @@ func (g *Group) Shutdown(ctx context.Context) error {
 }
 
 // Use is a shortcut for [Router.Use].
-func (g *Group) Use(m Middleware) {
-	g.router.Use(MiddlewareFunc(func(h http.Handler) http.Handler {
+func (g *Group) Use(m middlewares.Middleware) {
+	g.router.Use(middlewares.Func(func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if strings.HasPrefix(r.URL.Path, g.prefix) {
 				m.Handler(h).ServeHTTP(w, r)

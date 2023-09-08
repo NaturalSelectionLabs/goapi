@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/NaturalSelectionLabs/goapi"
@@ -43,7 +44,7 @@ func main() {
 		}
 
 		return PostsOK{
-			Data: fetchPosts(c, f.ID, f.Keyword),
+			Data: fetchPosts(c, f.ID, f.Type.String(), f.Keyword),
 			Meta: 100,
 		}
 	})
@@ -57,19 +58,19 @@ func main() {
 		_, _ = w.Write([]byte(doc.JSON()))
 	})
 
-	_ = http.ListenAndServe(":3000", r.Server())
+	log.Println(r.Start(":3000"))
 }
 
 // Simulate slow data fetching from database.
-func fetchPosts(c context.Context, id int, keyword string) []string {
+func fetchPosts(c context.Context, id int, keyword, typ string) []string {
 	posts := []string{}
 
-	for i := 0; i < 10; i++ {
+	for i := 0; i < 2; i++ {
 		if c.Err() != nil { // abort if the request is canceled.
 			return posts
 		}
 
-		posts = append(posts, fmt.Sprintf("%d posted %s%d", id, keyword, i))
+		posts = append(posts, fmt.Sprintf("user %d posted %s %s %d", id, typ, keyword, i))
 	}
 
 	return posts
@@ -79,11 +80,26 @@ type PostsParams struct {
 	goapi.InURL
 	// Use description tag to describe the openapi parameter.
 	ID int `description:"User ID"`
+	// Type of the posts to fetch.
+	// You can use json tag to override the default parameter naming behavior.
+	Type PostType `json:"t"`
 	// Use default tag to mark this field as optional,
 	// you can also use pointer to mark it as optional.
 	// The default value should be a json string.
 	Keyword string `default:"\"go\""`
 }
+
+// Type of a post.
+// When using enumer with -json and -values flags, the generated openapi will respect it.
+//
+//go:generate go run github.com/dmarkham/enumer@latest -type=PostType -trimprefix=PostType -transform=lower -json -values
+type PostType int
+
+const (
+	PostTypeAll PostType = iota
+	PostTypeGame
+	PostTypeMusic
+)
 
 type LoginParams struct {
 	goapi.InBody

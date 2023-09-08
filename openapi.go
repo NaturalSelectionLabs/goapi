@@ -1,6 +1,7 @@
 package goapi
 
 import (
+	"net/http"
 	"reflect"
 
 	"github.com/NaturalSelectionLabs/goapi/lib/openapi"
@@ -37,6 +38,10 @@ func (r *Router) OpenAPI(schemas *jschema.Schemas) *openapi.Document {
 	}
 
 	for _, op := range r.operations {
+		if op.override != nil {
+			continue
+		}
+
 		if _, has := doc.Paths[op.path.path]; !has {
 			doc.Paths[op.path.path] = openapi.Path{}
 		}
@@ -169,13 +174,15 @@ func resDoc(s jschema.Schemas, op *Operation) map[openapi.StatusCode]openapi.Res
 			}
 		}
 
+		code := openapi.StatusCode(parsedRes.statusCode)
+
 		res := openapi.Response{
-			Description: getDescription(t),
+			Description: getDescription(t, code),
 			Headers:     resHeaderDoc(s, parsedRes.header),
 			Content:     content,
 		}
 
-		list[openapi.StatusCode(parsedRes.statusCode)] = res
+		list[code] = res
 	}
 
 	if it, has := interfaces[vary.ID(op.tRes)]; has {
@@ -207,12 +214,12 @@ func resHeaderDoc(s jschema.Schemas, t reflect.Type) openapi.Headers {
 	return headers
 }
 
-func getDescription(t reflect.Type) string {
+func getDescription(t reflect.Type, code openapi.StatusCode) string {
 	if t.Implements(tDescriptioner) {
 		return reflect.New(t).Elem().Interface().(Descriptioner).Description()
 	}
 
-	return ""
+	return http.StatusText(int(code))
 }
 
 func ptr[T any](v T) *T {

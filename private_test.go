@@ -102,12 +102,12 @@ func Test_loadURL_err(t *testing.T) {
 	g.Eq(err.Error(), "missing parameter in request, param: b")
 
 	_, err = parsed.loadURL(url.Values{"a": {"true"}})
-	g.Eq(err.Error(), "failed to parse path param a: `true` not a valid json true, false, "+
-		"or number: json: cannot unmarshal bool into Go value of type int")
+	g.Eq(err.Error(), "failed to parse path param `a`: can't parse `true` to expected value,"+
+		" json: cannot unmarshal bool into Go value of type int")
 
 	_, err = parsed.loadURL(url.Values{"a": {"1"}, "b": {"2"}, "c": {"true"}})
-	g.Eq(err.Error(), "failed to parse param c: `true` not a valid json true, false, "+
-		"or number: json: cannot unmarshal bool into Go value of type int")
+	g.Eq(err.Error(), "failed to parse param `c`: can't parse `true` to expected value, "+
+		"json: cannot unmarshal bool into Go value of type int")
 
 	g.Eq(g.Panic(func() {
 		parseParam(path, reflect.TypeOf(struct {
@@ -128,7 +128,7 @@ func Test_loadURL_err(t *testing.T) {
 			InURL
 			A int `default:"1"`
 		}{}))
-	}), "path parameter cannot have default tag, param: A")
+	}), "path parameter cannot have tag `default`, param: A")
 }
 
 func Test_loadHeader(t *testing.T) {
@@ -160,7 +160,7 @@ func Test_loadHeader(t *testing.T) {
 
 	g.Eq(g.Panic(func() {
 		parseParam(nil, reflect.TypeOf(headerErr{}))
-	}), "failed to parse default tag of Z: invalid character 'a' looking for beginning of value")
+	}), "failed to parse tag `default` of `Z`: invalid character 'a' looking for beginning of value")
 }
 
 func strPtr(s string) *string {

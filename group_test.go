@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/NaturalSelectionLabs/goapi"
+	"github.com/NaturalSelectionLabs/goapi/lib/middlewares"
 	"github.com/ysmood/got"
 )
 
@@ -18,7 +19,7 @@ func TestMultipleGroups(t *testing.T) {
 
 	{
 		ga := r.Group("/a")
-		ga.Use(goapi.MiddlewareFunc(func(next http.Handler) http.Handler {
+		ga.Use(middlewares.Func(func(next http.Handler) http.Handler {
 			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				count++
 				next.ServeHTTP(w, r)

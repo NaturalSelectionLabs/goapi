@@ -108,3 +108,18 @@ type OAuthFlowObject struct {
 	RefreshUrl       string            `json:"refreshUrl,omitempty"`
 	Scopes           map[string]string `json:"scopes"`
 }
+
+// Error is an error object that contains information about a failed request.
+// Reference: https://github.com/microsoft/api-guidelines/blob/vNext/Guidelines.md#error--object
+type Error struct {
+	// Code is a machine-readable error code.
+	Code string `json:"code,omitempty"`
+	// Message is a human-readable error message.
+	Message string `json:"message,omitempty"`
+	// Target is a human-readable description of the target of the error.
+	Target string `json:"target,omitempty"`
+	// Details is an array of structured error details objects.
+	Details []Error `json:"details,omitempty"`
+	// InnerError is a generic error object that is used by the service developer for debugging.
+	InnerError any `json:"innererror,omitempty"`
+}

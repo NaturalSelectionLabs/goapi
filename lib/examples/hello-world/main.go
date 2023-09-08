@@ -1,6 +1,10 @@
 package main
 
-import "github.com/NaturalSelectionLabs/goapi"
+import (
+	"log"
+
+	"github.com/NaturalSelectionLabs/goapi"
+)
 
 type Hello struct {
 	goapi.StatusOK // response http status code 200
@@ -15,5 +19,5 @@ func main() {
 		return Hello{Data: "Hello World!"}
 	})
 
-	_ = r.Start(":3000")
+	log.Println(r.Start(":3000"))
 }

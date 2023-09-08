@@ -1,12 +1,15 @@
 package goapi_test
 
 import (
+	"net/http"
 	"os"
 	"os/exec"
 	"strings"
 	"testing"
 
 	"github.com/NaturalSelectionLabs/goapi"
+	"github.com/NaturalSelectionLabs/goapi/lib/middlewares"
+	"github.com/NaturalSelectionLabs/goapi/lib/openapi"
 	"github.com/ysmood/got"
 )
 
@@ -30,7 +33,7 @@ var _ = iRes.Add(Res01{})
 
 type Res02 struct {
 	goapi.StatusForbidden
-	Error goapi.Error
+	Error openapi.Error
 }
 
 func (Res02) Description() string {
@@ -52,6 +55,10 @@ func TestOpenAPI(t *testing.T) {
 	r := goapi.New()
 	tr := g.Serve()
 	tr.Mux.Handle("/", r.Server())
+
+	r.Use(middlewares.Identity)
+
+	r.GET("/override", func(w http.ResponseWriter, r *http.Request) {})
 
 	r.GET("/one", func(p struct {
 		goapi.InURL
@@ -93,7 +100,7 @@ func TestOpenAPI(t *testing.T) {
 			"schemas": map[string]interface{} /* len=2 */ {
 				"Error": map[string]interface{} /* len=5 */ {
 					`additionalProperties` /* len=20 */ : false,
-					"description":                        `github.com/NaturalSelectionLabs/goapi.Error`, /* len=43 */
+					"description":                        `github.com/NaturalSelectionLabs/goapi/lib/openapi.Error`, /* len=55 */
 					"properties": map[string]interface{} /* len=5 */ {
 						"code": map[string]interface{}{
 							"type": "string",
@@ -190,7 +197,7 @@ func TestOpenAPI(t *testing.T) {
 									},
 								},
 							},
-							"description": "",
+							"description": "OK",
 							"headers": map[string]interface{}{
 								"set-cookie": map[string]interface{}{
 									"schema": map[string]interface{}{
@@ -266,7 +273,7 @@ func TestOpenAPI(t *testing.T) {
 									},
 								},
 							},
-							"description": "",
+							"description": "OK",
 						},
 					},
 				},

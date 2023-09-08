@@ -1,5 +1,5 @@
-github.com/NaturalSelectionLabs/jschema v0.5.1 h1:88v+Rh386uy9yvenXLc1Wgf4SnTNya4iLAUUF1/I7G8=
-github.com/NaturalSelectionLabs/jschema v0.5.1/go.mod h1:jdOtV/kSmcr/Ztrz2K5kkespeAzbyb94RSfM7kshc1M=
+github.com/NaturalSelectionLabs/jschema v0.6.0 h1:bfQr4sXltdZHHTNJxdCe+LwarO+CpVF7YQo4bnTJpOo=
+github.com/NaturalSelectionLabs/jschema v0.6.0/go.mod h1:jdOtV/kSmcr/Ztrz2K5kkespeAzbyb94RSfM7kshc1M=
 github.com/iancoleman/strcase v0.3.0 h1:nTXanmYxhfFAMjZL34Ov6gkzEsSJZ5DbhxWjvSASxEI=
 github.com/iancoleman/strcase v0.3.0/go.mod h1:iwCmte+B7n89clKwxIoIXy/HfoL7AsD47ZCWhYzw7ho=
 github.com/xeipuuv/gojsonpointer v0.0.0-20180127040702-4e3ac2762d5f h1:J9EGpcZtP0E/raorCMxlFGSTBrsSlaDGf3jU/qvAE2c=

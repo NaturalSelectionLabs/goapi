@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"reflect"
 
+	"github.com/NaturalSelectionLabs/goapi/lib/middlewares"
 	"github.com/NaturalSelectionLabs/goapi/lib/openapi"
 	"github.com/ysmood/vary"
 )
@@ -148,7 +149,7 @@ func (op *Operation) handle(w http.ResponseWriter, r *http.Request, qs url.Value
 		}
 
 		if err != nil {
-			writeResErr(w, http.StatusBadRequest, err.Error())
+			middlewares.ResponseError(w, http.StatusBadRequest, err.Error())
 
 			return
 		}
@@ -165,11 +166,11 @@ func (op *Operation) handle(w http.ResponseWriter, r *http.Request, qs url.Value
 		resType = res.Type()
 
 		if _, ok := interfaces[vary.ID(setType)].Implementations[vary.ID(resType)]; !ok {
-			panic(fmt.Sprintf("should vary.Interface.Add %s to %s", resType.String(), setType.String()))
+			panic(fmt.Sprintf("%s should vary.Interface.Add %s to %s", op.path.path, resType.String(), setType.String()))
 		}
 	}
 
-	parseResponse(resType).write(w, res)
+	parseResponse(resType).write(op.path.path, w, res)
 }
 
 type OperationMeta struct {

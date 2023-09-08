@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/NaturalSelectionLabs/goapi"
+	"github.com/NaturalSelectionLabs/goapi/lib/middlewares"
 	"github.com/ysmood/got"
 )
 
@@ -14,14 +15,14 @@ func TestMiddleware(t *testing.T) {
 
 	r := goapi.NewRouter()
 
-	r.Use(goapi.MiddlewareFunc(func(h http.Handler) http.Handler {
+	r.Use(middlewares.Func(func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, rq *http.Request) {
 			rq = rq.WithContext(context.WithValue(rq.Context(), "middleware01", "ok")) //nolint: staticcheck
 			h.ServeHTTP(w, rq)
 		})
 	}))
 
-	r.Use(goapi.MiddlewareFunc(func(h http.Handler) http.Handler {
+	r.Use(middlewares.Func(func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, rq *http.Request) {
 			val := rq.Context().Value("middleware01").(string)
 			g.E(w.Write([]byte(val)))
@@ -41,7 +42,7 @@ func TestMiddlewareNotFound(t *testing.T) {
 	tr := g.Serve()
 	tr.Mux.Handle("/", r.ServerHandler())
 
-	r.Use(goapi.MiddlewareFunc(func(h http.Handler) http.Handler {
+	r.Use(middlewares.Func(func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, rq *http.Request) {
 			h.ServeHTTP(w, rq)
 		})

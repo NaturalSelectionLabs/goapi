@@ -7,6 +7,9 @@ import (
 	"time"
 
 	"github.com/NaturalSelectionLabs/goapi"
+	"github.com/NaturalSelectionLabs/goapi/lib/middlewares"
+	"github.com/NaturalSelectionLabs/goapi/lib/middlewares/calm"
+	"github.com/NaturalSelectionLabs/goapi/lib/openapi"
 	"github.com/ysmood/got"
 )
 
@@ -31,7 +34,7 @@ type resMeta struct {
 
 type resErr struct {
 	goapi.StatusBadRequest
-	Error goapi.Error
+	Error openapi.Error
 }
 
 type resHeader struct {
@@ -56,6 +59,10 @@ func TestOperation(t *testing.T) {
 	tr := g.Serve()
 	r := goapi.New()
 
+	r.Use(&calm.Calm{
+		PrintStack: false,
+	})
+
 	{ // setup
 		r.GET("/query", func(params struct {
 			goapi.InURL
@@ -67,13 +74,13 @@ func TestOperation(t *testing.T) {
 
 		r.GET("/meta", func(params struct {
 			goapi.InHeader
-			A string
+			A string `json:"x"`
 		},
 		) resMeta {
 			return resMeta{Data: params.A, Meta: params.A}
 		})
 
-		r.Use(goapi.MiddlewareFunc(func(next http.Handler) http.Handler {
+		r.Use(middlewares.Func(func(next http.Handler) http.Handler {
 			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				ctx := context.WithValue(r.Context(), "key", "ok") //nolint: staticcheck
 				next.ServeHTTP(w, r.WithContext(ctx))
@@ -102,7 +109,7 @@ func TestOperation(t *testing.T) {
 
 		r.GET("/error-res", func() resErr {
 			return resErr{
-				Error: goapi.Error{
+				Error: openapi.Error{
 					Code: "error",
 				},
 			}
@@ -139,7 +146,7 @@ func TestOperation(t *testing.T) {
 
 	g.Eq(g.Req("", tr.URL("/query")).StatusCode, http.StatusBadRequest)
 
-	g.Eq(g.Req("", tr.URL("/meta"), http.Header{"a": {"ok"}}).JSON(), map[string]any{
+	g.Eq(g.Req("", tr.URL("/meta"), http.Header{"x": {"ok"}}).JSON(), map[string]any{
 		"data": "ok",
 		"meta": "ok",
 	})
@@ -176,11 +183,17 @@ func TestOperation(t *testing.T) {
 		r.GET("/", func() {})
 	}), "handler must return a single value")
 
-	g.Eq(g.Req("", tr.URL("/res-enc-err")).StatusCode, http.StatusInternalServerError)
+	g.Eq(g.Req("", tr.URL("/res-enc-err")).JSON(), map[string]interface{}{
+		"error": map[string]interface{}{
+			"message": `/res-enc-err json: unsupported type: func()`, /* len=43 */
+		},
+	})
 
 	g.Eq(g.Req("", tr.URL("/res-empty")).String(), "")
 
 	g.Eq(g.Req("", tr.URL("/res-missed-type")).JSON(), map[string]interface{}{
-		"message": `should vary.Interface.Add goapi_test.resEmpty to goapi_test.res`, /* len=63 */
+		"error": map[string]interface{}{
+			"message": `/res-missed-type should vary.Interface.Add goapi_test.resEmpty to goapi_test.res`, /* len=80 */
+		},
 	})
 }

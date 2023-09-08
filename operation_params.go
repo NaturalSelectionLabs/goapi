@@ -11,6 +11,7 @@ import (
 	"reflect"
 	"strconv"
 
+	"github.com/NaturalSelectionLabs/jschema"
 	"github.com/iancoleman/strcase"
 )
 
@@ -141,7 +142,7 @@ func (p *parsedParam) loadURL(qs url.Values) (reflect.Value, error) {
 			for i, v := range vs {
 				val, err := toValue(f.item, v)
 				if err != nil {
-					return reflect.Value{}, fmt.Errorf("failed to parse param %s: %w", f.name, err)
+					return reflect.Value{}, fmt.Errorf("failed to parse param `%s`: %w", f.name, err)
 				}
 
 				fv.Index(i).Set(val)
@@ -152,7 +153,7 @@ func (p *parsedParam) loadURL(qs url.Values) (reflect.Value, error) {
 				var err error
 				fv, err = toValue(f.item, vs[0])
 				if err != nil {
-					return reflect.Value{}, fmt.Errorf("failed to parse path param %s: %w", f.name, err)
+					return reflect.Value{}, fmt.Errorf("failed to parse path param `%s`: %w", f.name, err)
 				}
 			} else if f.required {
 				return reflect.Value{}, fmt.Errorf("%w, param: %s", ErrMissingParam, f.name)
@@ -215,6 +216,7 @@ type parsedField struct {
 func parseHeaderField(t reflect.StructField) *parsedField {
 	f := parseField(t)
 	f.name = toHeaderName(t.Name)
+	f.name = tagName(t.Tag, f.name)
 
 	return f
 }
@@ -225,7 +227,7 @@ func parseURLField(path *Path, t reflect.StructField) *parsedField {
 	f.name = toPathName(t.Name)
 	if path.contains(f.name) {
 		if f.hasDefault {
-			panic("path parameter cannot have default tag, param: " + t.Name)
+			panic("path parameter cannot have tag `default`, param: " + t.Name)
 		}
 
 		if f.slice {
@@ -240,6 +242,8 @@ func parseURLField(path *Path, t reflect.StructField) *parsedField {
 	} else {
 		f.name = toQueryName(t.Name)
 	}
+
+	f.name = tagName(t.Tag, f.name)
 
 	return f
 }
@@ -283,7 +287,7 @@ func parseField(t reflect.StructField) *parsedField {
 
 		err := json.Unmarshal([]byte(d), &v)
 		if err != nil {
-			panic("failed to parse default tag of " + t.Name + ": " + err.Error())
+			panic("failed to parse tag `default` of `" + t.Name + "`: " + err.Error())
 		}
 
 		f.required = false
@@ -322,8 +326,18 @@ func toValue(t reflect.Type, val string) (reflect.Value, error) {
 
 	err := json.Unmarshal([]byte(val), v.Interface())
 	if err != nil {
-		return reflect.Value{}, fmt.Errorf("`%s` not a valid json true, false, or number: %w", val, err)
+		return reflect.Value{}, fmt.Errorf("can't parse `%s` to expected value, %w", val, err)
 	}
 
 	return v.Elem(), nil
+}
+
+func tagName(t reflect.StructTag, name string) string {
+	tag := jschema.ParseJSONTag(t)
+
+	if tag != nil && tag.Name != "" {
+		return tag.Name
+	}
+
+	return name
 }
