@@ -1,3 +1,5 @@
+github.com/NaturalSelectionLabs/jschema v0.5.1 h1:88v+Rh386uy9yvenXLc1Wgf4SnTNya4iLAUUF1/I7G8=
+github.com/NaturalSelectionLabs/jschema v0.5.1/go.mod h1:jdOtV/kSmcr/Ztrz2K5kkespeAzbyb94RSfM7kshc1M=
 github.com/golang-jwt/jwt v3.2.2+incompatible h1:IfV12K8xAKAnZqdXVzCZ+TOjboZ2keLg81eXfW3O+oY=
 github.com/golang-jwt/jwt v3.2.2+incompatible/go.mod h1:8pz2t5EyA70fFQQSrl6XZXzqecmYZeUEB8OUGHkxJ+I=
 github.com/stretchr/testify v1.8.1/go.mod h1:w2LPCIKwWwSfY2zedu0+kehJoqGctiVI29o6fzry7u4=
