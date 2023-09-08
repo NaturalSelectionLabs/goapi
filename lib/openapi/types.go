@@ -81,5 +81,30 @@ type Schema struct {
 
 type Components struct {
 	Schemas         map[string]*jschema.Schema `json:"schemas"`
-	SecuritySchemes map[string]any             `json:"securitySchemes,omitempty"`
+	SecuritySchemes map[string]SecurityScheme  `json:"securitySchemes,omitempty"`
+}
+
+type SecurityScheme struct {
+	Type             string            `json:"type"`
+	Description      string            `json:"description,omitempty"`
+	Name             string            `json:"name,omitempty"`
+	In               string            `json:"in,omitempty"`
+	Scheme           string            `json:"scheme,omitempty"`
+	BearerFormat     string            `json:"bearerFormat,omitempty"`
+	Flows            *OAuthFlowsObject `json:"flows,omitempty"`
+	OpenIdConnectUrl string            `json:"openIdConnectUrl,omitempty"`
+}
+
+type OAuthFlowsObject struct {
+	Implicit          *OAuthFlowObject `json:"implicit,omitempty"`
+	Password          *OAuthFlowObject `json:"password,omitempty"`
+	ClientCredentials *OAuthFlowObject `json:"clientCredentials,omitempty"`
+	AuthorizationCode *OAuthFlowObject `json:"authorizationCode,omitempty"`
+}
+
+type OAuthFlowObject struct {
+	AuthorizationUrl string            `json:"authorizationUrl,omitempty"`
+	TokenUrl         string            `json:"tokenUrl,omitempty"`
+	RefreshUrl       string            `json:"refreshUrl,omitempty"`
+	Scopes           map[string]string `json:"scopes"`
 }

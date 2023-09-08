@@ -59,6 +59,7 @@ func operationDoc(s jschema.Schemas, op *Operation) openapi.Operation {
 	doc.Description = op.meta.Description
 	doc.OperationID = op.meta.OperationID
 	doc.Tags = op.meta.Tags
+	doc.Security = op.meta.Security
 
 	for _, p := range op.params {
 		var params []openapi.Parameter

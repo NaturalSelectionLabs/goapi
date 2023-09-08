@@ -50,6 +50,11 @@ func Tags(tags ...string) ConfigOperation {
 	return func(op *Operation) { op.meta.Tags = tags }
 }
 
+// Security for the operation.
+func Security(security ...map[string][]string) ConfigOperation {
+	return func(op *Operation) { op.meta.Security = security }
+}
+
 func newOperation(method openapi.Method, path string, handler any) *Operation {
 	p, err := newPath(path)
 	if err != nil {
@@ -172,4 +177,6 @@ type OperationMeta struct {
 	OperationID string
 	// Tags are used for grouping operations together for display in the openapi UI.
 	Tags []string
+	// Security is a declaration of which security mechanisms can be used for this operation.
+	Security []map[string][]string
 }

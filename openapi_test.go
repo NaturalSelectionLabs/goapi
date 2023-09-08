@@ -69,6 +69,7 @@ func TestOpenAPI(t *testing.T) {
 		goapi.Description("test endpoint"),
 		goapi.OperationID("test"),
 		goapi.Tags("test"),
+		goapi.Security(map[string][]string{"auth": {"read"}}),
 	)
 
 	r.GET("/two/{id}", func(struct {
@@ -131,7 +132,7 @@ func TestOpenAPI(t *testing.T) {
 		"openapi": "3.1.0",
 		"paths": map[string]interface{} /* len=2 */ {
 			"/one": map[string]interface{}{
-				"get": map[string]interface{} /* len=7 */ {
+				"get": map[string]interface{} /* len=8 */ {
 					"description": "test endpoint",
 					"operationId": "test",
 					"parameters": []interface{} /* len=2 cap=2 */ {
@@ -216,6 +217,13 @@ func TestOpenAPI(t *testing.T) {
 								},
 							},
 							"description": "returns 403",
+						},
+					},
+					"security": []interface{} /* len=1 cap=1 */ {
+						map[string]interface{}{
+							"auth": []interface{} /* len=1 cap=1 */ {
+								"read",
+							},
 						},
 					},
 					"summary": "test",
