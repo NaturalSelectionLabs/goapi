@@ -60,9 +60,9 @@ type parsedRes struct {
 	typ reflect.Type
 
 	header reflect.Type
+	err    reflect.Type
 	data   reflect.Type
 	meta   reflect.Type
-	err    reflect.Type
 }
 
 func parseResponse(t reflect.Type) *parsedRes {

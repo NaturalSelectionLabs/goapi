@@ -128,6 +128,12 @@ func (op *Operation) handle(w http.ResponseWriter, r *http.Request, qs url.Value
 	params := []reflect.Value{}
 
 	for _, p := range op.params {
+		if p.isContext {
+			params = append(params, reflect.ValueOf(r.Context()))
+
+			continue
+		}
+
 		var param reflect.Value
 
 		var err error

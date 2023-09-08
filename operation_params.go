@@ -1,6 +1,7 @@
 package goapi
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -51,13 +52,21 @@ func (InBody) paramsIn() paramsIn {
 	return inBody
 }
 
+var tContext = reflect.TypeOf(new(context.Context)).Elem()
+
 type parsedParam struct {
 	in     paramsIn
 	param  reflect.Type
 	fields []*parsedField
+
+	isContext bool
 }
 
 func parseParam(path *Path, p reflect.Type) *parsedParam {
+	if p == tContext {
+		return &parsedParam{isContext: true}
+	}
+
 	if p.Kind() != reflect.Struct || !p.Implements(tParams) {
 		panic("expect parameter to be a struct and embedded with goapi.InHeader, goapi.InURL, or goapi.InBody," +
 			" but got: " + p.String())

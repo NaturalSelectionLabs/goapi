@@ -1,6 +1,7 @@
 package goapi_test
 
 import (
+	"context"
 	"net/http"
 	"testing"
 	"time"
@@ -72,6 +73,17 @@ func TestOperation(t *testing.T) {
 			return resMeta{Data: params.A, Meta: params.A}
 		})
 
+		r.Use(goapi.MiddlewareFunc(func(next http.Handler) http.Handler {
+			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				ctx := context.WithValue(r.Context(), "key", "ok") //nolint: staticcheck
+				next.ServeHTTP(w, r.WithContext(ctx))
+			})
+		}))
+
+		r.GET("/context", func(c context.Context) resOK {
+			return resOK{Data: c.Value("key").(string)}
+		})
+
 		r.GET("/params-time/{t}", func(params struct {
 			goapi.InURL
 			T time.Time
@@ -123,9 +135,7 @@ func TestOperation(t *testing.T) {
 		tr.Mux.Handle("/", r.Server())
 	}
 
-	g.Eq(g.Req("", tr.URL("/query?a=ok")).JSON(), map[string]any{
-		"data": "ok",
-	})
+	g.Eq(g.Req("", tr.URL("/query?a=ok")).JSON(), map[string]any{"data": "ok"})
 
 	g.Eq(g.Req("", tr.URL("/query")).StatusCode, http.StatusBadRequest)
 
@@ -133,6 +143,8 @@ func TestOperation(t *testing.T) {
 		"data": "ok",
 		"meta": "ok",
 	})
+
+	g.Eq(g.Req("", tr.URL("/context")).JSON(), map[string]any{"data": "ok"})
 
 	g.Eq(g.Req("", tr.URL("/params-time/2023-09-05T14:09:01.123Z")).JSON(), map[string]any{
 		"data": "2023-09-05 14:09:01.123 +0000 UTC",

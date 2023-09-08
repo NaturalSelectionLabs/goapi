@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 
@@ -34,16 +35,16 @@ func main() {
 		}
 	}, goapi.Description("Login with username and password.")) // openapi description for the endpoint.
 
-	// You can use multiple parameters at the same time to get url values, headers, or request body.
+	// You can use multiple parameters at the same time to get url values, headers, request context, or request body.
 	// The order of the parameters doesn't matter.
-	r.GET("/users/{id}/posts", func(f PostsParams, h Header) Posts {
+	r.GET("/users/{id}/posts", func(c context.Context, f PostsParams, h Header) Posts {
 		if h.Cookie != "token=123456" {
 			return Unauthorized{}
 		}
 
 		return PostsOK{
-			Data: []string{"post1", "post2"},
-			Meta: fmt.Sprintf("User %d using keyword: %s", f.ID, f.Keyword),
+			Data: fetchPosts(c, f.ID, f.Keyword),
+			Meta: 100,
 		}
 	})
 
@@ -57,6 +58,21 @@ func main() {
 	})
 
 	_ = http.ListenAndServe(":3000", r.Server())
+}
+
+// Simulate slow data fetching from database.
+func fetchPosts(c context.Context, id int, keyword string) []string {
+	posts := []string{}
+
+	for i := 0; i < 10; i++ {
+		if c.Err() != nil { // abort if the request is canceled.
+			return posts
+		}
+
+		posts = append(posts, fmt.Sprintf("%d posted %s%d", id, keyword, i))
+	}
+
+	return posts
 }
 
 type PostsParams struct {
@@ -106,7 +122,8 @@ type PostsOK struct {
 	// Use Data to store the main response data.
 	Data []string
 	// Use Meta to store info like pagination.
-	Meta string
+	// Here we use it to store the total number of posts.
+	Meta int
 }
 
 var _ = iPosts.Add(PostsOK{})
