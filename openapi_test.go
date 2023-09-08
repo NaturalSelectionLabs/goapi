@@ -17,7 +17,7 @@ type Res interface {
 	goapi.Response
 }
 
-var iRes = goapi.Interface(new(Res))
+var _ = goapi.Interface(new(Res), Res01{}, Res02{})
 
 type Res01 struct {
 	goapi.StatusOK
@@ -29,8 +29,6 @@ type Res01 struct {
 	}
 }
 
-var _ = iRes.Add(Res01{})
-
 type Res02 struct {
 	goapi.StatusForbidden
 	Error openapi.Error
@@ -39,8 +37,6 @@ type Res02 struct {
 func (Res02) Description() string {
 	return "returns 403"
 }
-
-var _ = iRes.Add(Res02{})
 
 type Res03 struct {
 	goapi.StatusOK

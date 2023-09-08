@@ -11,8 +11,8 @@ import (
 
 var interfaces = vary.NewInterfaces()
 
-func Interface(i any) *vary.Interface {
-	return interfaces.New(i)
+func Interface(i any, ts ...any) *vary.Interface {
+	return interfaces.New(i, ts...)
 }
 
 type Descriptioner interface {

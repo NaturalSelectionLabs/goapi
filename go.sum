@@ -1,5 +1,5 @@
-github.com/NaturalSelectionLabs/jschema v0.6.0 h1:bfQr4sXltdZHHTNJxdCe+LwarO+CpVF7YQo4bnTJpOo=
-github.com/NaturalSelectionLabs/jschema v0.6.0/go.mod h1:jdOtV/kSmcr/Ztrz2K5kkespeAzbyb94RSfM7kshc1M=
+github.com/NaturalSelectionLabs/jschema v0.6.1 h1:Q0Zan00KMEL6oy5Ktn9zbqX0b/q8+zD50LgrTRpNXSw=
+github.com/NaturalSelectionLabs/jschema v0.6.1/go.mod h1:jUJKGhe7Dnw39TETQFUEtRctBNWNtXH78fzgSRRNRcg=
 github.com/iancoleman/strcase v0.3.0 h1:nTXanmYxhfFAMjZL34Ov6gkzEsSJZ5DbhxWjvSASxEI=
 github.com/iancoleman/strcase v0.3.0/go.mod h1:iwCmte+B7n89clKwxIoIXy/HfoL7AsD47ZCWhYzw7ho=
 github.com/xeipuuv/gojsonpointer v0.0.0-20180127040702-4e3ac2762d5f h1:J9EGpcZtP0E/raorCMxlFGSTBrsSlaDGf3jU/qvAE2c=
@@ -9,5 +9,5 @@ github.com/ysmood/gop v0.1.0 h1:BkW6hF0j/hZNyZv+FOPU7op1zuDqRa7x7GJyygb5uf4=
 github.com/ysmood/gop v0.1.0/go.mod h1:rr5z2z27oGEbyB787hpEcx4ab8cCiPnKxn0SUHt6xzk=
 github.com/ysmood/got v0.35.1 h1:4EVnrjKziFs4XRxPLEsfQgIEy2Crvu5aTxnAL3cDrEg=
 github.com/ysmood/got v0.35.1/go.mod h1:R7naGpP/qR1i9b5xOCkQnfuEAUPq0TROuTffdxbJoIc=
-github.com/ysmood/vary v0.3.0 h1:Lm0xFvy5Y2pFZqzx4pQI0lttfMRp3Ru2gGiwPVVdfHk=
-github.com/ysmood/vary v0.3.0/go.mod h1:X9WYOJwS8Hyeh7Qs08haaeelNru/UIOPUggUnRwxHmM=
+github.com/ysmood/vary v0.3.1 h1:ccaRjykuPuLDJZUSNblbvhLf2xiiAdznuIDamxbbHkw=
+github.com/ysmood/vary v0.3.1/go.mod h1:X9WYOJwS8Hyeh7Qs08haaeelNru/UIOPUggUnRwxHmM=

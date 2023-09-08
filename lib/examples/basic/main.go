@@ -112,7 +112,7 @@ type Login interface {
 }
 
 // Creates a set to store all the implementations of the Login interface.
-var iLogin = goapi.Interface(new(Login))
+var _ = goapi.Interface(new(Login), LoginOK{}, Unauthorized{})
 
 type LoginOK struct {
 	goapi.StatusNoContent
@@ -120,8 +120,6 @@ type LoginOK struct {
 		SetCookie string
 	}
 }
-
-var _ = iLogin.Add(LoginOK{})
 
 func (LoginOK) Description() string {
 	return "Login successfully." // openapi description for the response.
@@ -131,7 +129,7 @@ type Posts interface {
 	goapi.Response
 }
 
-var iPosts = goapi.Interface(new(Posts))
+var _ = goapi.Interface(new(Posts), PostsOK{}, Unauthorized{})
 
 type PostsOK struct {
 	goapi.StatusOK
@@ -142,8 +140,6 @@ type PostsOK struct {
 	Meta int
 }
 
-var _ = iPosts.Add(PostsOK{})
-
 type Header struct {
 	goapi.InHeader
 	Cookie string
@@ -152,6 +148,3 @@ type Header struct {
 type Unauthorized struct {
 	goapi.StatusUnauthorized
 }
-
-var _ = iLogin.Add(Unauthorized{})
-var _ = iPosts.Add(Unauthorized{})
