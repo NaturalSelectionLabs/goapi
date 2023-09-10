@@ -153,7 +153,7 @@ func resDoc(s jschema.Schemas, op *Operation) map[openapi.StatusCode]openapi.Res
 	list := map[openapi.StatusCode]openapi.Response{}
 
 	add := func(t reflect.Type) {
-		parsedRes := parseResponse(t)
+		parsedRes := op.parseResponse(t)
 
 		var content *openapi.Content
 

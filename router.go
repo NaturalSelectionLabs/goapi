@@ -10,9 +10,14 @@ import (
 
 // Router itself is a middleware.
 type Router struct {
+	// FormatResponse is a function that formats the response.
+	// The default format the structs implement [ResponseFormat].
+	// You can use this function override the default format.
+	FormatResponse FormatResponse
+
 	middlewares []middlewares.Middleware
 	operations  []*Operation
-	Server      *http.Server
+	sever       *http.Server
 }
 
 // New is a shortcut for:
@@ -24,7 +29,8 @@ func New() *Group {
 
 func NewRouter() *Router {
 	return &Router{
-		middlewares: []middlewares.Middleware{},
+		middlewares:    []middlewares.Middleware{},
+		FormatResponse: func(format ResponseFormat) any { return format },
 	}
 }
 
@@ -37,17 +43,17 @@ func (r *Router) ServerHandler() http.Handler {
 
 // Start listen on addr with the [Router.ServerHandler].
 func (r *Router) Start(addr string) error {
-	r.Server = &http.Server{
+	r.sever = &http.Server{
 		Addr:    addr,
 		Handler: r.ServerHandler(),
 	}
 
-	return r.Server.ListenAndServe()
+	return r.sever.ListenAndServe()
 }
 
 // Shutdown the server.
 func (r *Router) Shutdown(ctx context.Context) error {
-	return r.Server.Shutdown(ctx)
+	return r.sever.Shutdown(ctx)
 }
 
 // Use a middleware to the router.

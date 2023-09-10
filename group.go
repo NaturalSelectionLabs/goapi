@@ -47,7 +47,7 @@ func (g *Group) HEAD(path string, handler any, opts ...ConfigOperation) {
 func (g *Group) Add(
 	method openapi.Method, path string, handler any, opts ...ConfigOperation,
 ) {
-	op := newOperation(method, g.prefix+path, handler)
+	op := g.newOperation(method, g.prefix+path, handler)
 
 	for _, opt := range opts {
 		opt(op)

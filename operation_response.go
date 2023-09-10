@@ -15,20 +15,33 @@ type Response interface {
 
 var tResponse = reflect.TypeOf((*Response)(nil)).Elem()
 
-type responseErr struct {
+type FormatResponse func(ResponseFormat) any
+
+type ResponseFormat interface {
+	format()
+}
+
+type ResponseFormatErr struct {
 	Error any `json:"error"`
 }
 
-type responseMeta struct {
+func (ResponseFormatErr) format() {}
+
+type ResponseFormatMeta struct {
 	Data any `json:"data"`
 	Meta any `json:"meta"`
 }
 
-type responseData struct {
+func (ResponseFormatMeta) format() {}
+
+type ResponseFormatData struct {
 	Data any `json:"data"`
 }
 
+func (ResponseFormatData) format() {}
+
 type parsedRes struct {
+	operation  *Operation
 	statusCode int
 	hasHeader  bool
 	hasErr     bool
@@ -43,12 +56,12 @@ type parsedRes struct {
 	meta   reflect.Type
 }
 
-func parseResponse(t reflect.Type) *parsedRes {
+func (op *Operation) parseResponse(t reflect.Type) *parsedRes {
 	if !t.Implements(tResponse) {
 		panic("handler must return a goapi.Response")
 	}
 
-	res := &parsedRes{typ: t}
+	res := &parsedRes{operation: op, typ: t}
 
 	res.statusCode = reflect.New(t).Elem().Interface().(Response).statusCode()
 
@@ -87,7 +100,7 @@ func parseResponse(t reflect.Type) *parsedRes {
 	return res
 }
 
-func (s *parsedRes) write(path string, w http.ResponseWriter, res reflect.Value) {
+func (s *parsedRes) write(w http.ResponseWriter, res reflect.Value) {
 	if s.hasHeader {
 		h := res.FieldByName("Header")
 		for i := 0; i < h.NumField(); i++ {
@@ -96,27 +109,27 @@ func (s *parsedRes) write(path string, w http.ResponseWriter, res reflect.Value)
 		}
 	}
 
-	var data any
+	var format ResponseFormat
 
 	if s.hasErr { //nolint: gocritic
-		data = responseErr{
+		format = ResponseFormatErr{
 			Error: res.FieldByName("Error").Interface(),
 		}
 	} else if s.hasMeta {
-		data = responseMeta{
+		format = ResponseFormatMeta{
 			Data: res.FieldByName("Data").Interface(),
 			Meta: res.FieldByName("Meta").Interface(),
 		}
 	} else if s.hasData {
-		data = responseData{
+		format = ResponseFormatData{
 			Data: res.FieldByName("Data").Interface(),
 		}
 	}
 
 	if s.hasErr || s.hasData {
-		b, err := json.Marshal(data)
+		b, err := json.Marshal(s.operation.group.router.FormatResponse(format))
 		if err != nil {
-			panic(path + " " + err.Error())
+			panic(s.operation.path.path + " " + err.Error())
 		}
 
 		w.Header().Set("Content-Type", "application/json; charset=utf-8")

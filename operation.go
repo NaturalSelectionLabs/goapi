@@ -15,6 +15,7 @@ import (
 // We use reflection to constrain the handler function signature,
 // to make it follow the openapi spec.
 type Operation struct {
+	group  *Group
 	method openapi.Method
 	path   *Path
 
@@ -56,7 +57,7 @@ func Security(security ...map[string][]string) ConfigOperation {
 	return func(op *Operation) { op.meta.Security = security }
 }
 
-func newOperation(method openapi.Method, path string, handler any) *Operation {
+func (g *Group) newOperation(method openapi.Method, path string, handler any) *Operation {
 	p, err := newPath(path)
 	if err != nil {
 		panic(err)
@@ -64,6 +65,7 @@ func newOperation(method openapi.Method, path string, handler any) *Operation {
 
 	if h, ok := handler.(func(http.ResponseWriter, *http.Request)); ok {
 		return &Operation{
+			group:    g,
 			method:   method,
 			path:     p,
 			override: h,
@@ -89,6 +91,7 @@ func newOperation(method openapi.Method, path string, handler any) *Operation {
 	tRes := tHandler.Out(0)
 
 	return &Operation{
+		group:    g,
 		method:   method,
 		path:     p,
 		vHandler: vHandler,
@@ -170,7 +173,7 @@ func (op *Operation) handle(w http.ResponseWriter, r *http.Request, qs url.Value
 		}
 	}
 
-	parseResponse(resType).write(op.path.path, w, res)
+	op.parseResponse(resType).write(w, res)
 }
 
 type OperationMeta struct {

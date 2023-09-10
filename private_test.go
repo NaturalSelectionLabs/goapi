@@ -202,13 +202,14 @@ func Test_loadBody(t *testing.T) {
 
 func Test_parseResponse_err(t *testing.T) {
 	g := got.T(t)
+	op := &Operation{}
 
 	g.Eq(g.Panic(func() {
-		parseResponse(reflect.TypeOf(struct{}{}))
+		op.parseResponse(reflect.TypeOf(struct{}{}))
 	}), "handler must return a goapi.Response")
 
 	g.Eq(g.Panic(func() {
-		parseResponse(reflect.TypeOf(struct {
+		op.parseResponse(reflect.TypeOf(struct {
 			StatusOK
 			Data  int
 			Error int
@@ -216,7 +217,7 @@ func Test_parseResponse_err(t *testing.T) {
 	}), "response Data field should not exist when Error field exists")
 
 	g.Eq(g.Panic(func() {
-		parseResponse(reflect.TypeOf(struct {
+		op.parseResponse(reflect.TypeOf(struct {
 			StatusOK
 			Meta  int
 			Error int
@@ -224,7 +225,7 @@ func Test_parseResponse_err(t *testing.T) {
 	}), "response Meta field should not exist when Error field exists")
 
 	g.Eq(g.Panic(func() {
-		parseResponse(reflect.TypeOf(struct {
+		op.parseResponse(reflect.TypeOf(struct {
 			StatusOK
 			Meta int
 		}{}))
