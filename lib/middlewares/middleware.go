@@ -23,11 +23,9 @@ var Identity = Func(func(next http.Handler) http.Handler {
 	return next
 })
 
-func ResponseError(w http.ResponseWriter, code int, msg string) {
+func ResponseError(w http.ResponseWriter, code int, err *openapi.Error) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	w.WriteHeader(code)
 
-	_ = json.NewEncoder(w).Encode(struct {
-		Error *openapi.Error `json:"error"`
-	}{&openapi.Error{Message: msg}})
+	_ = json.NewEncoder(w).Encode(openapi.ResponseFormatErr{Error: err})
 }

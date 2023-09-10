@@ -123,3 +123,32 @@ type Error struct {
 	// InnerError is a generic error object that is used by the service developer for debugging.
 	InnerError any `json:"innererror,omitempty"`
 }
+
+const (
+	CodeNotFound      = "not_found"
+	CodeInvalidParam  = "invalid_param"
+	CodeInternalError = "internal_error"
+)
+
+type ResponseFormat interface {
+	format()
+}
+
+type ResponseFormatErr struct {
+	Error any `json:"error"`
+}
+
+func (ResponseFormatErr) format() {}
+
+type ResponseFormatMeta struct {
+	Data any `json:"data"`
+	Meta any `json:"meta"`
+}
+
+func (ResponseFormatMeta) format() {}
+
+type ResponseFormatData struct {
+	Data any `json:"data"`
+}
+
+func (ResponseFormatData) format() {}

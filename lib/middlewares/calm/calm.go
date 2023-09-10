@@ -7,6 +7,7 @@ import (
 	"runtime/debug"
 
 	"github.com/NaturalSelectionLabs/goapi/lib/middlewares"
+	"github.com/NaturalSelectionLabs/goapi/lib/openapi"
 )
 
 type Calm struct {
@@ -32,7 +33,10 @@ func (c *Calm) Handler(h http.Handler) http.Handler {
 				if c.PrintStack {
 					c.Logger.Error(msg, "stack", string(debug.Stack()))
 				}
-				middlewares.ResponseError(w, http.StatusInternalServerError, msg)
+				middlewares.ResponseError(w, http.StatusInternalServerError, &openapi.Error{
+					Code:    openapi.CodeInternalError,
+					Message: msg,
+				})
 			}
 		}()
 

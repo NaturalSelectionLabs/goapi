@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"github.com/NaturalSelectionLabs/goapi"
+	"github.com/NaturalSelectionLabs/goapi/lib/openapi"
 )
 
 type Res struct {
@@ -14,14 +15,14 @@ type Res struct {
 func main() {
 	r := goapi.NewRouter()
 
-	r.FormatResponse = func(format goapi.ResponseFormat) any {
+	r.FormatResponse = func(format openapi.ResponseFormat) any {
 		switch f := format.(type) {
 		// Return the data directly without nested "data" field.
-		case goapi.ResponseFormatData:
+		case openapi.ResponseFormatData:
 			return f.Data
 
 		// Return the error directly without nested "error" field.
-		case goapi.ResponseFormatErr:
+		case openapi.ResponseFormatErr:
 			return f.Error
 
 		default:

@@ -152,7 +152,10 @@ func (op *Operation) handle(w http.ResponseWriter, r *http.Request, qs url.Value
 		}
 
 		if err != nil {
-			middlewares.ResponseError(w, http.StatusBadRequest, err.Error())
+			middlewares.ResponseError(w, http.StatusBadRequest, &openapi.Error{
+				Code:    openapi.CodeInvalidParam,
+				Message: err.Error(),
+			})
 
 			return
 		}

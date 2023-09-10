@@ -4,6 +4,8 @@ import (
 	"encoding/json"
 	"net/http"
 	"reflect"
+
+	"github.com/NaturalSelectionLabs/goapi/lib/openapi"
 )
 
 // Response is an interface that represents a response object.
@@ -15,30 +17,7 @@ type Response interface {
 
 var tResponse = reflect.TypeOf((*Response)(nil)).Elem()
 
-type FormatResponse func(ResponseFormat) any
-
-type ResponseFormat interface {
-	format()
-}
-
-type ResponseFormatErr struct {
-	Error any `json:"error"`
-}
-
-func (ResponseFormatErr) format() {}
-
-type ResponseFormatMeta struct {
-	Data any `json:"data"`
-	Meta any `json:"meta"`
-}
-
-func (ResponseFormatMeta) format() {}
-
-type ResponseFormatData struct {
-	Data any `json:"data"`
-}
-
-func (ResponseFormatData) format() {}
+type FormatResponse func(openapi.ResponseFormat) any
 
 type parsedRes struct {
 	operation  *Operation
@@ -109,19 +88,19 @@ func (s *parsedRes) write(w http.ResponseWriter, res reflect.Value) {
 		}
 	}
 
-	var format ResponseFormat
+	var format openapi.ResponseFormat
 
 	if s.hasErr { //nolint: gocritic
-		format = ResponseFormatErr{
+		format = openapi.ResponseFormatErr{
 			Error: res.FieldByName("Error").Interface(),
 		}
 	} else if s.hasMeta {
-		format = ResponseFormatMeta{
+		format = openapi.ResponseFormatMeta{
 			Data: res.FieldByName("Data").Interface(),
 			Meta: res.FieldByName("Meta").Interface(),
 		}
 	} else if s.hasData {
-		format = ResponseFormatData{
+		format = openapi.ResponseFormatData{
 			Data: res.FieldByName("Data").Interface(),
 		}
 	}

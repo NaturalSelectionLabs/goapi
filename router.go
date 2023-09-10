@@ -6,6 +6,7 @@ import (
 	"net/http"
 
 	"github.com/NaturalSelectionLabs/goapi/lib/middlewares"
+	"github.com/NaturalSelectionLabs/goapi/lib/openapi"
 )
 
 // Router itself is a middleware.
@@ -30,14 +31,19 @@ func New() *Group {
 func NewRouter() *Router {
 	return &Router{
 		middlewares:    []middlewares.Middleware{},
-		FormatResponse: func(format ResponseFormat) any { return format },
+		FormatResponse: func(format openapi.ResponseFormat) any { return format },
 	}
 }
 
 // ServerHandler with a 404 middleware at the end.
 func (r *Router) ServerHandler() http.Handler {
 	return r.Handler(http.HandlerFunc(func(w http.ResponseWriter, rq *http.Request) {
-		middlewares.ResponseError(w, http.StatusNotFound, fmt.Sprintf("path not found: %s %s", rq.Method, rq.URL.Path))
+		middlewares.ResponseError(w, http.StatusNotFound, &openapi.Error{
+			Code:       openapi.CodeNotFound,
+			Message:    fmt.Sprintf("path not found: %s %s", rq.Method, rq.URL.Path),
+			Target:     rq.URL.Path,
+			InnerError: []any{rq.Method, rq.URL.Path},
+		})
 	}))
 }
 

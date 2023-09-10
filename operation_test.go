@@ -184,7 +184,8 @@ func TestOperation(t *testing.T) {
 	}), "handler must return a single value")
 
 	g.Eq(g.Req("", tr.URL("/res-enc-err")).JSON(), map[string]interface{}{
-		"error": map[string]interface{}{
+		"error": map[string]interface{} /* len=2 */ {
+			"code":    "internal_error",
 			"message": `/res-enc-err json: unsupported type: func()`, /* len=43 */
 		},
 	})
@@ -192,7 +193,8 @@ func TestOperation(t *testing.T) {
 	g.Eq(g.Req("", tr.URL("/res-empty")).String(), "")
 
 	g.Eq(g.Req("", tr.URL("/res-missed-type")).JSON(), map[string]interface{}{
-		"error": map[string]interface{}{
+		"error": map[string]interface{} /* len=2 */ {
+			"code":    "internal_error",
 			"message": `/res-missed-type should vary.Interface.Add goapi_test.resEmpty to goapi_test.res`, /* len=80 */
 		},
 	})
