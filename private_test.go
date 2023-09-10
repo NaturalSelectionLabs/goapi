@@ -153,14 +153,23 @@ func Test_loadHeader(t *testing.T) {
 		Z:        "default",
 	})
 
-	type headerErr struct {
+	type headerErrDefault struct {
 		InHeader
 		Z string `default:"aa"`
 	}
 
 	g.Eq(g.Panic(func() {
-		parseParam(nil, reflect.TypeOf(headerErr{}))
+		parseParam(nil, reflect.TypeOf(headerErrDefault{}))
 	}), "failed to parse tag `default` of `Z`: invalid character 'a' looking for beginning of value")
+
+	type headerErrExample struct {
+		InHeader
+		Z string `example:"aa"`
+	}
+
+	g.Eq(g.Panic(func() {
+		parseParam(nil, reflect.TypeOf(headerErrExample{}))
+	}), "failed to parse tag `example` of `Z`: invalid character 'a' looking for beginning of value")
 }
 
 func strPtr(s string) *string {

@@ -10,6 +10,7 @@
     "benchmem",
     "coverprofile",
     "cpuprofile",
+    "curr",
     "Descriptioner",
     "enumer",
     "errorlint",

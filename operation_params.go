@@ -11,6 +11,7 @@ import (
 	"reflect"
 	"strconv"
 
+	ff "github.com/NaturalSelectionLabs/goapi/lib/flat-fields"
 	"github.com/NaturalSelectionLabs/jschema"
 	"github.com/iancoleman/strcase"
 )
@@ -74,23 +75,22 @@ func parseParam(path *Path, p reflect.Type) *parsedParam {
 	}
 
 	parsed := &parsedParam{param: p}
-	fields := make([]*parsedField, p.NumField())
+	fields := []*parsedField{}
+	flat := ff.Parse(p)
 
 	switch reflect.New(p).Interface().(Params).paramsIn() {
 	case inHeader:
 		parsed.in = inHeader
 
-		for i := 0; i < p.NumField(); i++ {
-			f := parseHeaderField(p.Field(i))
-			fields[i] = f
+		for _, f := range flat.Fields {
+			fields = append(fields, parseHeaderField(f))
 		}
 
 	case inURL:
 		parsed.in = inURL
 
-		for i := 0; i < p.NumField(); i++ {
-			f := parseURLField(path, p.Field(i))
-			fields[i] = f
+		for _, f := range flat.Fields {
+			fields = append(fields, parseURLField(path, f))
 		}
 
 		for _, n := range path.names {
@@ -119,14 +119,9 @@ func parseParam(path *Path, p reflect.Type) *parsedParam {
 var ErrMissingParam = errors.New("missing parameter in request")
 
 func (p *parsedParam) loadURL(qs url.Values) (reflect.Value, error) {
-	val := reflect.New(p.param).Elem()
+	val := reflect.New(p.param)
 
-	for i := 0; i < val.NumField(); i++ {
-		f := p.fields[i]
-		if f.skip {
-			continue
-		}
-
+	for _, f := range p.fields {
 		var fv reflect.Value
 
 		if !f.InPath && f.slice { //nolint: nestif
@@ -165,13 +160,13 @@ func (p *parsedParam) loadURL(qs url.Values) (reflect.Value, error) {
 		if f.ptr && !f.slice {
 			c := reflect.New(f.item)
 			c.Elem().Set(fv)
-			val.Field(i).Set(c)
+			f.flatField.Set(val, c)
 		} else {
-			val.Field(i).Set(fv)
+			f.flatField.Set(val, fv)
 		}
 	}
 
-	return val, nil
+	return val.Elem(), nil
 }
 
 func (p *parsedParam) loadHeader(h http.Header) (reflect.Value, error) {
@@ -200,9 +195,9 @@ func (p *parsedParam) loadBody(body io.Reader) (reflect.Value, error) {
 }
 
 type parsedField struct {
-	skip        bool
 	name        string
 	item        reflect.Type
+	flatField   *ff.FlattenedField
 	ptr         bool
 	slice       bool
 	sliceType   reflect.Type
@@ -210,19 +205,23 @@ type parsedField struct {
 	InPath      bool
 	hasDefault  bool
 	defaultVal  reflect.Value
+	example     reflect.Value
 	description string
 }
 
-func parseHeaderField(t reflect.StructField) *parsedField {
-	f := parseField(t)
-	f.name = toHeaderName(t.Name)
-	f.name = tagName(t.Tag, f.name)
+func parseHeaderField(flatField *ff.FlattenedField) *parsedField {
+	f := flatField.Field
+	parsed := parseField(flatField)
+	parsed.name = toHeaderName(f.Name)
+	parsed.name = tagName(f.Tag, parsed.name)
 
-	return f
+	return parsed
 }
 
-func parseURLField(path *Path, t reflect.StructField) *parsedField {
-	f := parseField(t)
+func parseURLField(path *Path, flatField *ff.FlattenedField) *parsedField {
+	f := parseField(flatField)
+
+	t := flatField.Field
 
 	f.name = toPathName(t.Name)
 	if path.contains(f.name) {
@@ -248,8 +247,9 @@ func parseURLField(path *Path, t reflect.StructField) *parsedField {
 	return f
 }
 
-func parseField(t reflect.StructField) *parsedField {
-	f := &parsedField{required: true}
+func parseField(flatField *ff.FlattenedField) *parsedField {
+	t := flatField.Field
+	f := &parsedField{flatField: flatField, required: true}
 	tf := t.Type
 
 	switch t.Type.Kind() { //nolint: exhaustive
@@ -262,10 +262,6 @@ func parseField(t reflect.StructField) *parsedField {
 	if tf.Kind() == reflect.Ptr {
 		tf = tf.Elem()
 		f.required = false
-	}
-
-	if tf.Implements(tParams) {
-		f.skip = true
 	}
 
 	if tf.Kind() == reflect.Slice {
@@ -293,6 +289,17 @@ func parseField(t reflect.StructField) *parsedField {
 		f.required = false
 		f.hasDefault = true
 		f.defaultVal = reflect.Indirect(reflect.ValueOf(v))
+	}
+
+	if d, ok := t.Tag.Lookup("example"); ok {
+		var v any
+
+		err := json.Unmarshal([]byte(d), &v)
+		if err != nil {
+			panic("failed to parse tag `example` of `" + t.Name + "`: " + err.Error())
+		}
+
+		f.example = reflect.Indirect(reflect.ValueOf(v))
 	}
 
 	if d, ok := t.Tag.Lookup("description"); ok {

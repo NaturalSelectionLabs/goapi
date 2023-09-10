@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"reflect"
 
+	ff "github.com/NaturalSelectionLabs/goapi/lib/flat-fields"
 	"github.com/NaturalSelectionLabs/goapi/lib/openapi"
 	"github.com/NaturalSelectionLabs/jschema"
 	"github.com/ysmood/vary"
@@ -98,10 +99,6 @@ func urlParamDoc(s jschema.Schemas, p *parsedParam) []openapi.Parameter {
 	arr := []openapi.Parameter{}
 
 	for _, f := range p.fields {
-		if f.skip {
-			continue
-		}
-
 		in := openapi.QUERY
 
 		if f.InPath {
@@ -111,7 +108,7 @@ func urlParamDoc(s jschema.Schemas, p *parsedParam) []openapi.Parameter {
 		arr = append(arr, openapi.Parameter{
 			Name:        f.name,
 			In:          in,
-			Schema:      s.DefineT(f.item),
+			Schema:      fieldSchema(s, f),
 			Description: f.description,
 			Required:    f.required,
 		})
@@ -124,20 +121,32 @@ func headerParamDoc(s jschema.Schemas, p *parsedParam) []openapi.Parameter {
 	arr := []openapi.Parameter{}
 
 	for _, f := range p.fields {
-		if f.skip {
-			continue
-		}
-
 		arr = append(arr, openapi.Parameter{
 			Name:        f.name,
 			In:          openapi.HEADER,
-			Schema:      s.DefineT(f.item),
+			Schema:      fieldSchema(s, f),
 			Description: f.description,
 			Required:    f.required,
 		})
 	}
 
 	return arr
+}
+
+func fieldSchema(s jschema.Schemas, f *parsedField) *jschema.Schema {
+	scm := s.DefineT(f.item)
+
+	raw := s.PeakSchema(scm)
+
+	if f.defaultVal.IsValid() {
+		raw.Default = f.defaultVal.Interface()
+	}
+
+	if f.example.IsValid() {
+		raw.Example = f.example.Interface()
+	}
+
+	return scm
 }
 
 func resDoc(s jschema.Schemas, op *Operation) map[openapi.StatusCode]openapi.Response {
@@ -203,8 +212,8 @@ func resHeaderDoc(s jschema.Schemas, t reflect.Type) openapi.Headers {
 
 	headers := openapi.Headers{}
 
-	for i := 0; i < t.NumField(); i++ {
-		f := parseHeaderField(t.Field(i))
+	for _, flat := range ff.Parse(t).Fields {
+		f := parseHeaderField(flat)
 		headers[f.name] = openapi.Header{
 			Description: f.description,
 			Schema:      s.DefineT(f.item),

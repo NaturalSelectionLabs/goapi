@@ -19,14 +19,14 @@ import (
 func main() {
 	r := goapi.New()
 
-	r.POST("/login", func(p LoginParams) Login {
+	r.POST("/login", func(p ParamsLogin) ResLogin {
 		// If the username and password are not correct, return a LoginFail response.
 		if p.Username != "admin" || p.Password != "123456" {
-			return Unauthorized{}
+			return ResUnauthorized{}
 		}
 
 		// If the username and password are correct, return a LoginOK response.
-		return LoginOK{
+		return ResLoginOK{
 			// goapi will automatically use the standard case conversion,
 			// Here SetCookie will be converted to Set-Cookie in http.
 			// Same works for url path and query.
@@ -38,12 +38,12 @@ func main() {
 
 	// You can use multiple parameters at the same time to get url values, headers, request context, or request body.
 	// The order of the parameters doesn't matter.
-	r.GET("/users/{id}/posts", func(c context.Context, f PostsParams, h Header) Posts {
+	r.GET("/users/{id}/posts", func(c context.Context, f ParamsPosts, h ParamsHeader) ResPosts {
 		if h.Cookie != "token=123456" {
-			return Unauthorized{}
+			return ResUnauthorized{}
 		}
 
-		return PostsOK{
+		return ResPostsOK{
 			Data: fetchPosts(c, f.ID, f.Type.String(), f.Keyword),
 			Meta: 100,
 		}
@@ -74,77 +74,4 @@ func fetchPosts(c context.Context, id int, keyword, typ string) []string {
 	}
 
 	return posts
-}
-
-type PostsParams struct {
-	goapi.InURL
-	// Use description tag to describe the openapi parameter.
-	ID int `description:"User ID"`
-	// Type of the posts to fetch.
-	// You can use json tag to override the default parameter naming behavior.
-	Type PostType `json:"t"`
-	// Use default tag to mark this field as optional,
-	// you can also use pointer to mark it as optional.
-	// The default value should be a json string.
-	Keyword string `default:"\"go\""`
-}
-
-// Type of a post.
-// When using enumer with -json and -values flags, the generated openapi will respect it.
-//
-//go:generate go run github.com/dmarkham/enumer@latest -type=PostType -trimprefix=PostType -transform=lower -json -values
-type PostType int
-
-const (
-	PostTypeAll PostType = iota
-	PostTypeGame
-	PostTypeMusic
-)
-
-type LoginParams struct {
-	goapi.InBody
-	Username string
-	Password string
-}
-
-type Login interface {
-	goapi.Response
-}
-
-// Creates a set to store all the implementations of the Login interface.
-var _ = goapi.Interface(new(Login), LoginOK{}, Unauthorized{})
-
-type LoginOK struct {
-	goapi.StatusNoContent
-	Header struct {
-		SetCookie string
-	}
-}
-
-func (LoginOK) Description() string {
-	return "Login successfully." // openapi description for the response.
-}
-
-type Posts interface {
-	goapi.Response
-}
-
-var _ = goapi.Interface(new(Posts), PostsOK{}, Unauthorized{})
-
-type PostsOK struct {
-	goapi.StatusOK
-	// Use Data to store the main response data.
-	Data []string
-	// Use Meta to store info like pagination.
-	// Here we use it to store the total number of posts.
-	Meta int
-}
-
-type Header struct {
-	goapi.InHeader
-	Cookie string
-}
-
-type Unauthorized struct {
-	goapi.StatusUnauthorized
 }
