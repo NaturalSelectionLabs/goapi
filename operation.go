@@ -172,7 +172,7 @@ func (op *Operation) handle(w http.ResponseWriter, r *http.Request, qs url.Value
 		resType = res.Type()
 
 		if _, ok := interfaces[vary.ID(setType)].Implementations[vary.ID(resType)]; !ok {
-			panic(fmt.Sprintf("%s should vary.Interface.Add %s to %s", op.path.path, resType.String(), setType.String()))
+			panic(fmt.Sprintf("%s should goapi.Interface(new(%s), %s{})", op.path.path, setType.String(), resType.String()))
 		}
 	}
 

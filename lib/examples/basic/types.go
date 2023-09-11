@@ -45,7 +45,7 @@ type ResLogin interface {
 }
 
 // Creates a set to store all the implementations of the Login interface.
-var _ = goapi.Interface(new(ResLogin), ResLoginOK{}, ResUnauthorized{})
+var _ = goapi.Interface(new(ResLogin), ResLoginOK{}, goapi.StatusUnauthorized{})
 
 type ResLoginOK struct {
 	goapi.StatusNoContent
@@ -62,7 +62,7 @@ type ResPosts interface {
 	goapi.Response
 }
 
-var _ = goapi.Interface(new(ResPosts), ResPostsOK{}, ResUnauthorized{})
+var _ = goapi.Interface(new(ResPosts), ResPostsOK{}, goapi.StatusUnauthorized{})
 
 type ResPostsOK struct {
 	goapi.StatusOK
@@ -76,8 +76,4 @@ type ResPostsOK struct {
 type ParamsHeader struct {
 	goapi.InHeader
 	Cookie string
-}
-
-type ResUnauthorized struct {
-	goapi.StatusUnauthorized
 }

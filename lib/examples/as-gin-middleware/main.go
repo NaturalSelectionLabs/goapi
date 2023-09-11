@@ -1,6 +1,8 @@
 package main
 
 import (
+	"net/http"
+
 	"github.com/NaturalSelectionLabs/goapi"
 	"github.com/gin-gonic/gin"
 )
@@ -15,7 +17,9 @@ func main() {
 	})
 
 	e.Use(func(ctx *gin.Context) {
-		router.Server().ServeHTTP(ctx.Writer, ctx.Request)
+		router.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			ctx.Next()
+		})).ServeHTTP(ctx.Writer, ctx.Request)
 	})
 
 	_ = e.Run(":3000")

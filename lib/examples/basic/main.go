@@ -22,7 +22,7 @@ func main() {
 	r.POST("/login", func(p ParamsLogin) ResLogin {
 		// If the username and password are not correct, return a LoginFail response.
 		if p.Username != "admin" || p.Password != "123456" {
-			return ResUnauthorized{}
+			return goapi.StatusUnauthorized{}
 		}
 
 		// If the username and password are correct, return a LoginOK response.
@@ -40,7 +40,7 @@ func main() {
 	// The order of the parameters doesn't matter.
 	r.GET("/users/{id}/posts", func(c context.Context, f ParamsPosts, h ParamsHeader) ResPosts {
 		if h.Cookie != "token=123456" {
-			return ResUnauthorized{}
+			return goapi.StatusUnauthorized{}
 		}
 
 		return ResPostsOK{

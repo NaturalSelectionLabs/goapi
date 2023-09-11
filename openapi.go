@@ -12,6 +12,9 @@ import (
 
 var interfaces = vary.NewInterfaces()
 
+// Interface create a interface set of i. ts are the types that implement i.
+// For golang runtime we can't reflect all the implementations of an interface,
+// with it goapi can find out all the possible response type of an endpoint.
 func Interface(i any, ts ...any) *vary.Interface {
 	return interfaces.New(i, ts...)
 }
