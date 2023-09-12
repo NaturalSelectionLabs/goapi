@@ -18,7 +18,7 @@ func TestMultipleGroups(t *testing.T) {
 	count := 0
 
 	{
-		ga := r.Group("/a")
+		ga := r.Router().Group("/a")
 		ga.Use(middlewares.Func(func(next http.Handler) http.Handler {
 			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 				count++

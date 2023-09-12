@@ -160,6 +160,15 @@ func (op *Operation) handle(w http.ResponseWriter, r *http.Request, qs url.Value
 			return
 		}
 
+		if op.group.router.Validate != nil {
+			err := op.group.router.Validate(param.Interface())
+			if err != nil {
+				middlewares.ResponseError(w, http.StatusBadRequest, err)
+
+				return
+			}
+		}
+
 		params = append(params, param)
 	}
 

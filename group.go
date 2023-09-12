@@ -16,6 +16,10 @@ type Group struct {
 	prefix string
 }
 
+func (g *Group) Router() *Router {
+	return g.router
+}
+
 func (g *Group) GET(path string, handler any, opts ...ConfigOperation) {
 	g.Add(openapi.GET, path, handler, opts...)
 }

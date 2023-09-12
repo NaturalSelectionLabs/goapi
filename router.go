@@ -15,6 +15,8 @@ type Router struct {
 	// The default format the structs implement [ResponseFormat].
 	// You can use this function override the default format.
 	FormatResponse FormatResponse
+	// Validate the parameters of each request.
+	Validate func(v interface{}) *openapi.Error
 
 	middlewares []middlewares.Middleware
 	operations  []*Operation

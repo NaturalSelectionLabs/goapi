@@ -54,10 +54,24 @@ type resEmpty struct {
 	goapi.StatusOK
 }
 
+type ParamsValidate struct {
+	goapi.InURL
+}
+
 func TestOperation(t *testing.T) {
 	g := got.T(t)
 	tr := g.Serve()
 	r := goapi.New()
+
+	r.Router().Validate = func(v interface{}) *openapi.Error {
+		if _, ok := v.(ParamsValidate); ok {
+			return &openapi.Error{
+				Code: "error",
+			}
+		}
+
+		return nil
+	}
 
 	r.Use(&calm.Calm{
 		PrintStack: false,
@@ -139,6 +153,8 @@ func TestOperation(t *testing.T) {
 			return resEmpty{}
 		})
 
+		r.GET("/validate", func(params ParamsValidate) goapi.StatusOK { return goapi.StatusOK{} })
+
 		tr.Mux.Handle("/", r.Server())
 	}
 
@@ -196,6 +212,12 @@ func TestOperation(t *testing.T) {
 		"error": map[string]interface{} /* len=2 */ {
 			"code":    "internal_error",
 			"message": `/res-missed-type should goapi.Interface(new(goapi_test.res), goapi_test.resEmpty{})`, /* len=80 */
+		},
+	})
+
+	g.Eq(g.Req("", tr.URL("/validate")).JSON(), map[string]interface{}{
+		"error": map[string]interface{}{
+			"code": "error",
 		},
 	})
 }
