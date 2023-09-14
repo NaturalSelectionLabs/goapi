@@ -19,7 +19,7 @@ func Install(g *goapi.Group, schemas *jschema.Schemas, config func(doc *openapi.
 
 	g.GET("/", op)
 
-	op.doc = config(g.OpenAPI(schemas))
+	op.doc = config(g.OpenAPI())
 
 	fs := http.FileServer(http.FS(swaggerFiles))
 

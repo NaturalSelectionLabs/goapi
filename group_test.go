@@ -10,6 +10,12 @@ import (
 	"github.com/ysmood/got"
 )
 
+func TestPrefix(t *testing.T) {
+	g := got.T(t)
+
+	g.Eq(goapi.New().Group("/test").Prefix(), "/test")
+}
+
 func TestMultipleGroups(t *testing.T) {
 	g := got.T(t)
 

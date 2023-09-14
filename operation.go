@@ -27,37 +27,10 @@ type Operation struct {
 
 	override http.HandlerFunc
 
-	meta OperationMeta
+	openapi OperationOpenAPI
 }
 
-type ConfigOperation func(op *Operation)
-
-// Description for the operation.
-func Description(d string) ConfigOperation {
-	return func(op *Operation) { op.meta.Description = d }
-}
-
-// OperationID for the operation.
-func OperationID(id string) ConfigOperation {
-	return func(op *Operation) { op.meta.OperationID = id }
-}
-
-// Summary for the operation.
-func Summary(s string) ConfigOperation {
-	return func(op *Operation) { op.meta.Summary = s }
-}
-
-// Tags for the operation.
-func Tags(tags ...string) ConfigOperation {
-	return func(op *Operation) { op.meta.Tags = tags }
-}
-
-// Security for the operation.
-func Security(security ...map[string][]string) ConfigOperation {
-	return func(op *Operation) { op.meta.Security = security }
-}
-
-func (g *Group) newOperation(method openapi.Method, path string, handler any) *Operation {
+func (g *Group) newOperation(method openapi.Method, path string, handler OperationHandler) *Operation {
 	p, err := newPath(path)
 	if err != nil {
 		panic(err)
@@ -75,13 +48,20 @@ func (g *Group) newOperation(method openapi.Method, path string, handler any) *O
 	vHandler := reflect.ValueOf(handler)
 	tHandler := vHandler.Type()
 
-	if tHandler.Kind() != reflect.Func {
-		panic("handler must be a function")
+	var doc OperationOpenAPI
+
+	if _, has := tHandler.MethodByName("Handle"); has {
+		vHandler = vHandler.MethodByName("Handle")
+		tHandler = vHandler.Type()
+
+		doc, _ = handler.(OperationOpenAPI)
+	} else if tHandler.Kind() != reflect.Func {
+		panic("handler must be a function or a struct with Handle method")
 	}
 
 	params := []*parsedParam{}
 	for i := 0; i < tHandler.NumIn(); i++ {
-		params = append(params, parseParam(p, tHandler.In(i)))
+		params = append(params, g.parseParam(p, tHandler.In(i)))
 	}
 
 	if tHandler.NumOut() != 1 {
@@ -98,6 +78,7 @@ func (g *Group) newOperation(method openapi.Method, path string, handler any) *O
 		tHandler: tHandler,
 		params:   params,
 		tRes:     tRes,
+		openapi:  doc,
 	}
 }
 
@@ -138,6 +119,12 @@ func (op *Operation) handle(w http.ResponseWriter, r *http.Request, qs url.Value
 			continue
 		}
 
+		if p.isRequest {
+			params = append(params, reflect.ValueOf(r))
+
+			continue
+		}
+
 		var param reflect.Value
 
 		var err error
@@ -160,15 +147,6 @@ func (op *Operation) handle(w http.ResponseWriter, r *http.Request, qs url.Value
 			return
 		}
 
-		if op.group.router.Validate != nil {
-			err := op.group.router.Validate(param.Interface())
-			if err != nil {
-				middlewares.ResponseError(w, http.StatusBadRequest, err)
-
-				return
-			}
-		}
-
 		params = append(params, param)
 	}
 
@@ -180,25 +158,22 @@ func (op *Operation) handle(w http.ResponseWriter, r *http.Request, qs url.Value
 		res = res.Elem()
 		resType = res.Type()
 
+		if _, ok := interfaces[vary.ID(setType)]; !ok {
+			panic(fmt.Sprintf("response of %s should goapi.Interface(new(%s))", op.path.path, setType.String()))
+		}
+
 		if _, ok := interfaces[vary.ID(setType)].Implementations[vary.ID(resType)]; !ok {
-			panic(fmt.Sprintf("%s should goapi.Interface(new(%s), %s{})", op.path.path, setType.String(), resType.String()))
+			panic(fmt.Sprintf("response of %s should goapi.Interface(new(%s), %s{})",
+				op.path.path, setType.String(), resType.String()))
 		}
 	}
 
 	op.parseResponse(resType).write(w, res)
 }
 
-type OperationMeta struct {
-	// Summary is used for display in the openapi UI.
-	Summary string
-	// Description is used for display in the openapi UI.
-	Description string
-	// OperationID is a unique string used to identify an individual operation.
-	// This can be used by tools and libraries to provide functionality for
-	// referencing and calling the operation from different parts of your application.
-	OperationID string
-	// Tags are used for grouping operations together for display in the openapi UI.
-	Tags []string
-	// Security is a declaration of which security mechanisms can be used for this operation.
-	Security []map[string][]string
+// OperationHandler is a function to handle input and output of a http operation.
+type OperationHandler any
+
+type OperationOpenAPI interface {
+	OpenAPI(doc openapi.Operation) openapi.Operation
 }

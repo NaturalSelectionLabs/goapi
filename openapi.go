@@ -25,20 +25,16 @@ type Descriptioner interface {
 
 var tDescriptioner = reflect.TypeOf((*Descriptioner)(nil)).Elem()
 
-func (r *Group) OpenAPI(schemas *jschema.Schemas) *openapi.Document {
-	return r.router.OpenAPI(schemas)
+// OpenAPI is a shortcut for [Router.OpenAPI].
+func (r *Group) OpenAPI() *openapi.Document {
+	return r.router.OpenAPI()
 }
 
 // OpenAPI returns the OpenAPI doc of the router.
 // You can use [json.Marshal] to convert it to a JSON string.
-func (r *Router) OpenAPI(schemas *jschema.Schemas) *openapi.Document {
+func (r *Router) OpenAPI() *openapi.Document {
 	doc := &openapi.Document{
 		Paths: map[string]openapi.Path{},
-	}
-
-	if schemas == nil {
-		s := jschema.NewWithInterfaces("#/components/schemas", interfaces)
-		schemas = &s
 	}
 
 	for _, op := range r.operations {
@@ -50,10 +46,10 @@ func (r *Router) OpenAPI(schemas *jschema.Schemas) *openapi.Document {
 			doc.Paths[op.path.path] = openapi.Path{}
 		}
 
-		doc.Paths[op.path.path][op.method] = operationDoc(*schemas, op)
+		doc.Paths[op.path.path][op.method] = operationDoc(r.Schemas, op)
 	}
 
-	doc.Components.Schemas = schemas.JSON()
+	doc.Components.Schemas = r.Schemas.JSON()
 
 	return doc
 }
@@ -63,12 +59,6 @@ func operationDoc(s jschema.Schemas, op *Operation) openapi.Operation {
 		Parameters: []openapi.Parameter{},
 		Responses:  map[openapi.StatusCode]openapi.Response{},
 	}
-
-	doc.Summary = op.meta.Summary
-	doc.Description = op.meta.Description
-	doc.OperationID = op.meta.OperationID
-	doc.Tags = op.meta.Tags
-	doc.Security = op.meta.Security
 
 	for _, p := range op.params {
 		var params []openapi.Parameter
@@ -95,6 +85,10 @@ func operationDoc(s jschema.Schemas, op *Operation) openapi.Operation {
 
 	doc.Responses = resDoc(s, op)
 
+	if op.openapi != nil {
+		doc = op.openapi.OpenAPI(doc)
+	}
+
 	return doc
 }
 
@@ -112,7 +106,7 @@ func urlParamDoc(s jschema.Schemas, p *parsedParam) []openapi.Parameter {
 			Name:        f.name,
 			In:          in,
 			Schema:      fieldSchema(s, f),
-			Description: f.description,
+			Description: f.schema.Description,
 			Required:    f.required,
 		})
 	}
@@ -128,7 +122,7 @@ func headerParamDoc(s jschema.Schemas, p *parsedParam) []openapi.Parameter {
 			Name:        f.name,
 			In:          openapi.HEADER,
 			Schema:      fieldSchema(s, f),
-			Description: f.description,
+			Description: f.schema.Description,
 			Required:    f.required,
 		})
 	}
@@ -137,17 +131,9 @@ func headerParamDoc(s jschema.Schemas, p *parsedParam) []openapi.Parameter {
 }
 
 func fieldSchema(s jschema.Schemas, f *parsedField) *jschema.Schema {
-	scm := s.DefineT(f.item)
-
-	raw := s.PeakSchema(scm)
-
-	if f.defaultVal.IsValid() {
-		raw.Default = f.defaultVal.Interface()
-	}
-
-	if f.example.IsValid() {
-		raw.Example = f.example.Interface()
-	}
+	scm := s.DefineFieldT(f.flatField.Field)
+	scm = firstProp(scm)
+	scm.Description = ""
 
 	return scm
 }
@@ -160,7 +146,22 @@ func resDoc(s jschema.Schemas, op *Operation) map[openapi.StatusCode]openapi.Res
 
 		var content *openapi.Content
 
-		if parsedRes.hasData || parsedRes.hasErr {
+		if parsedRes.isBinary { //nolint: gocritic,nestif
+			content = &openapi.Content{
+				Binary: &openapi.Schema{
+					Schema: &jschema.Schema{
+						Type:   jschema.TypeString,
+						Format: "binary",
+					},
+				},
+			}
+		} else if parsedRes.isDirect {
+			content = &openapi.Content{
+				JSON: &openapi.Schema{
+					Schema: s.DefineT(parsedRes.data),
+				},
+			}
+		} else if parsedRes.hasData || parsedRes.hasErr {
 			scm := &jschema.Schema{
 				Type:                 jschema.TypeObject,
 				AdditionalProperties: ptr(false),
@@ -190,7 +191,7 @@ func resDoc(s jschema.Schemas, op *Operation) map[openapi.StatusCode]openapi.Res
 
 		res := openapi.Response{
 			Description: getDescription(t, code),
-			Headers:     resHeaderDoc(s, parsedRes.header),
+			Headers:     op.group.resHeaderDoc(s, parsedRes.header),
 			Content:     content,
 		}
 
@@ -208,7 +209,7 @@ func resDoc(s jschema.Schemas, op *Operation) map[openapi.StatusCode]openapi.Res
 	return list
 }
 
-func resHeaderDoc(s jschema.Schemas, t reflect.Type) openapi.Headers {
+func (g *Group) resHeaderDoc(s jschema.Schemas, t reflect.Type) openapi.Headers {
 	if t == nil {
 		return nil
 	}
@@ -216,9 +217,9 @@ func resHeaderDoc(s jschema.Schemas, t reflect.Type) openapi.Headers {
 	headers := openapi.Headers{}
 
 	for _, flat := range ff.Parse(t).Fields {
-		f := parseHeaderField(flat)
+		f := g.parseHeaderField(flat)
 		headers[f.name] = openapi.Header{
-			Description: f.description,
+			Description: f.schema.Description,
 			Schema:      s.DefineT(f.item),
 		}
 	}

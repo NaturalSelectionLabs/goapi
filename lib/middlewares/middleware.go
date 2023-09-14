@@ -29,3 +29,13 @@ func ResponseError(w http.ResponseWriter, code int, err *openapi.Error) {
 
 	_ = json.NewEncoder(w).Encode(openapi.ResponseFormatErr{Error: err})
 }
+
+func Chain(ms ...Middleware) Middleware {
+	return Func(func(next http.Handler) http.Handler {
+		for i := len(ms) - 1; i >= 0; i-- {
+			next = ms[i].Handler(next)
+		}
+
+		return next
+	})
+}

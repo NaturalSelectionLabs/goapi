@@ -18,6 +18,7 @@ type Document struct {
 	Servers    []Server        `json:"servers,omitempty"`
 	Paths      map[string]Path `json:"paths"`
 	Components Components      `json:"components"`
+	Extension  Extension       `json:"x-extension,omitempty"` //nolint: tagliatelle
 }
 
 type Info struct {
@@ -43,6 +44,7 @@ type Operation struct {
 	Description string                `json:"description,omitempty"`
 	OperationID string                `json:"operationId,omitempty"`
 	Tags        []string              `json:"tags,omitempty"`
+	Extension   Extension             `json:"x-extension,omitempty"` //nolint: tagliatelle
 }
 
 type Parameter struct {
@@ -72,7 +74,8 @@ type Header struct {
 }
 
 type Content struct {
-	JSON *Schema `json:"application/json"`
+	JSON   *Schema `json:"application/json,omitempty"`
+	Binary *Schema `json:"application/octet-stream,omitempty"` //nolint: tagliatelle
 }
 
 type Schema struct {
@@ -109,52 +112,4 @@ type OAuthFlowObject struct {
 	Scopes           map[string]string `json:"scopes"`
 }
 
-// Error is an error object that contains information about a failed request.
-// Reference: https://github.com/microsoft/api-guidelines/blob/vNext/Guidelines.md#error--object
-type Error struct {
-	// Code is a machine-readable error code.
-	Code string `json:"code,omitempty"`
-	// Message is a human-readable error message.
-	Message string `json:"message,omitempty"`
-	// Target is a human-readable description of the target of the error.
-	Target string `json:"target,omitempty"`
-	// Details is an array of structured error details objects.
-	Details []Error `json:"details,omitempty"`
-	// InnerError is a generic error object that is used by the service developer for debugging.
-	InnerError any `json:"innererror,omitempty"`
-}
-
-var _ error = (*Error)(nil)
-
-func (err Error) Error() string {
-	return err.Message
-}
-
-const (
-	CodeNotFound      = "not_found"
-	CodeInvalidParam  = "invalid_param"
-	CodeInternalError = "internal_error"
-)
-
-type ResponseFormat interface {
-	format()
-}
-
-type ResponseFormatErr struct {
-	Error any `json:"error"`
-}
-
-func (ResponseFormatErr) format() {}
-
-type ResponseFormatMeta struct {
-	Data any `json:"data"`
-	Meta any `json:"meta"`
-}
-
-func (ResponseFormatMeta) format() {}
-
-type ResponseFormatData struct {
-	Data any `json:"data"`
-}
-
-func (ResponseFormatData) format() {}
+type Extension any

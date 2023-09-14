@@ -58,20 +58,22 @@ type ParamsValidate struct {
 	goapi.InURL
 }
 
+type resForgetCreateInterface interface{ goapi.Response }
+
+type resBin struct {
+	goapi.StatusOK
+	Data goapi.DataBinary
+}
+
+type resDirect struct {
+	goapi.StatusOK
+	Data string `response:"direct"`
+}
+
 func TestOperation(t *testing.T) {
 	g := got.T(t)
 	tr := g.Serve()
 	r := goapi.New()
-
-	r.Router().Validate = func(v interface{}) *openapi.Error {
-		if _, ok := v.(ParamsValidate); ok {
-			return &openapi.Error{
-				Code: "error",
-			}
-		}
-
-		return nil
-	}
 
 	r.Use(&calm.Calm{
 		PrintStack: false,
@@ -105,6 +107,10 @@ func TestOperation(t *testing.T) {
 			return resOK{Data: c.Value("key").(string)}
 		})
 
+		r.GET("/request", func(r *http.Request) resOK {
+			return resOK{Data: r.URL.Query().Get("a")}
+		})
+
 		r.GET("/params-time/{t}", func(params struct {
 			goapi.InURL
 			T time.Time
@@ -124,7 +130,7 @@ func TestOperation(t *testing.T) {
 		r.GET("/error-res", func() resErr {
 			return resErr{
 				Error: openapi.Error{
-					Code: "error",
+					Code: openapi.CodeInvalidParam,
 				},
 			}
 		})
@@ -155,6 +161,22 @@ func TestOperation(t *testing.T) {
 
 		r.GET("/validate", func(params ParamsValidate) goapi.StatusOK { return goapi.StatusOK{} })
 
+		r.GET("/forget-create-interface", func() resForgetCreateInterface {
+			return struct{ goapi.StatusOK }{}
+		})
+
+		r.GET("/res-bin", func() resBin {
+			return resBin{
+				Data: []byte("ok"),
+			}
+		})
+
+		r.GET("/res-direct", func() resDirect {
+			return resDirect{
+				Data: "ok",
+			}
+		})
+
 		tr.Mux.Handle("/", r.Server())
 	}
 
@@ -169,6 +191,8 @@ func TestOperation(t *testing.T) {
 
 	g.Eq(g.Req("", tr.URL("/context")).JSON(), map[string]any{"data": "ok"})
 
+	g.Eq(g.Req("", tr.URL("/request?a=ok")).JSON(), map[string]any{"data": "ok"})
+
 	g.Eq(g.Req("", tr.URL("/params-time/2023-09-05T14:09:01.123Z")).JSON(), map[string]any{
 		"data": "2023-09-05 14:09:01.123 +0000 UTC",
 	})
@@ -179,7 +203,7 @@ func TestOperation(t *testing.T) {
 
 	g.Eq(g.Req("", tr.URL("/error-res")).JSON(), map[string]interface{}{
 		"error": map[string]interface{}{
-			"code": "error",
+			"code": "invalid_param",
 		},
 	})
 
@@ -193,7 +217,7 @@ func TestOperation(t *testing.T) {
 
 	g.Eq(g.Panic(func() {
 		r.GET("/", 10)
-	}), "handler must be a function")
+	}), "handler must be a function or a struct with Handle method")
 
 	g.Eq(g.Panic(func() {
 		r.GET("/", func() {})
@@ -211,13 +235,20 @@ func TestOperation(t *testing.T) {
 	g.Eq(g.Req("", tr.URL("/res-missed-type")).JSON(), map[string]interface{}{
 		"error": map[string]interface{} /* len=2 */ {
 			"code":    "internal_error",
-			"message": `/res-missed-type should goapi.Interface(new(goapi_test.res), goapi_test.resEmpty{})`, /* len=80 */
+			"message": `response of /res-missed-type should goapi.Interface(new(goapi_test.res), goapi_test.resEmpty{})`,
 		},
 	})
 
-	g.Eq(g.Req("", tr.URL("/validate")).JSON(), map[string]interface{}{
-		"error": map[string]interface{}{
-			"code": "error",
+	g.Eq(g.Req("", tr.URL("/forget-create-interface")).JSON(), map[string]interface{}{
+		"error": map[string]interface{} /* len=2 */ {
+			"code":    "internal_error",
+			"message": `response of /forget-create-interface should goapi.Interface(new(goapi_test.resForgetCreateInterface))`,
 		},
 	})
+
+	res := g.Req("", tr.URL("/res-bin"))
+	g.Eq(res.String(), "ok")
+	g.Eq(res.Header.Get("Content-Type"), "application/octet-stream")
+
+	g.Eq(g.Req("", tr.URL("/res-direct")).JSON(), "ok")
 }

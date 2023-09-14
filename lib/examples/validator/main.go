@@ -4,8 +4,6 @@ import (
 	"log"
 
 	"github.com/NaturalSelectionLabs/goapi"
-	"github.com/NaturalSelectionLabs/goapi/lib/openapi"
-	"github.com/go-playground/validator/v10"
 )
 
 type Params struct {
@@ -15,17 +13,17 @@ type Params struct {
 }
 
 func main() {
-	validate := validator.New()
+	// validate := validator.New()
 
 	r := goapi.New()
-	r.Router().Validate = func(v interface{}) *openapi.Error {
-		err := validate.Struct(v)
-		if err != nil {
-			return &openapi.Error{Code: openapi.CodeInvalidParam, Message: err.Error()}
-		}
+	// r.Router().Validate = func(v interface{}) *openapi.DefaultError {
+	// 	err := validate.Struct(v)
+	// 	if err != nil {
+	// 		return &openapi.DefaultError{Code: openapi.ErrCodeInvalidParam, Message: err.Error()}
+	// 	}
 
-		return nil
-	}
+	// 	return nil
+	// }
 
 	r.GET("/", func(p Params) goapi.StatusOK {
 		return goapi.StatusOK{}

@@ -17,7 +17,9 @@ type Response interface {
 
 var tResponse = reflect.TypeOf((*Response)(nil)).Elem()
 
-type FormatResponse func(openapi.ResponseFormat) any
+type DataBinary []byte
+
+var tDataBinary = reflect.TypeOf(DataBinary{})
 
 type parsedRes struct {
 	operation  *Operation
@@ -26,6 +28,8 @@ type parsedRes struct {
 	hasErr     bool
 	hasData    bool
 	hasMeta    bool
+	isDirect   bool
+	isBinary   bool
 
 	typ reflect.Type
 
@@ -59,6 +63,14 @@ func (op *Operation) parseResponse(t reflect.Type) *parsedRes {
 			panic("response Data field should not exist when Error field exists")
 		}
 
+		if f.Type == tDataBinary {
+			res.isBinary = true
+		}
+
+		if f.Tag.Get("response") == "direct" {
+			res.isDirect = true
+		}
+
 		res.hasData = true
 		res.data = f.Type
 	}
@@ -70,6 +82,10 @@ func (op *Operation) parseResponse(t reflect.Type) *parsedRes {
 
 		if !res.hasData {
 			panic("response Meta field requires Data field")
+		}
+
+		if res.isBinary {
+			panic("response Meta field cannot exist when Data field is goapi.DataBinary")
 		}
 
 		res.hasMeta = true
@@ -88,33 +104,53 @@ func (s *parsedRes) write(w http.ResponseWriter, res reflect.Value) {
 		}
 	}
 
-	var format openapi.ResponseFormat
+	if s.isBinary {
+		w.Header().Set("Content-Type", "application/octet-stream")
+		w.WriteHeader(s.statusCode)
+		_, _ = w.Write(res.FieldByName("Data").Interface().(DataBinary))
 
-	if s.hasErr { //nolint: gocritic
-		format = openapi.ResponseFormatErr{
-			Error: res.FieldByName("Error").Interface(),
+		return
+	}
+
+	var data any
+
+	if s.isDirect {
+		data = res.FieldByName("Data").Interface()
+	} else {
+		var format openapi.ResponseFormat
+
+		if s.hasErr { //nolint: gocritic
+			format = openapi.ResponseFormatErr{
+				Error: res.FieldByName("Error").Interface(),
+			}
+		} else if s.hasMeta {
+			format = openapi.ResponseFormatMeta{
+				Data: res.FieldByName("Data").Interface(),
+				Meta: res.FieldByName("Meta").Interface(),
+			}
+		} else if s.hasData {
+			format = openapi.ResponseFormatData{
+				Data: res.FieldByName("Data").Interface(),
+			}
 		}
-	} else if s.hasMeta {
-		format = openapi.ResponseFormatMeta{
-			Data: res.FieldByName("Data").Interface(),
-			Meta: res.FieldByName("Meta").Interface(),
-		}
-	} else if s.hasData {
-		format = openapi.ResponseFormatData{
-			Data: res.FieldByName("Data").Interface(),
-		}
+
+		data = format
 	}
 
 	if s.hasErr || s.hasData {
-		b, err := json.Marshal(s.operation.group.router.FormatResponse(format))
+		b, err := json.Marshal(data)
 		if err != nil {
 			panic(s.operation.path.path + " " + err.Error())
 		}
 
-		w.Header().Set("Content-Type", "application/json; charset=utf-8")
+		setJSONHeader(w)
 		w.WriteHeader(s.statusCode)
 		_, _ = w.Write(b)
 	} else {
 		w.WriteHeader(s.statusCode)
 	}
+}
+
+func setJSONHeader(w http.ResponseWriter) {
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 }

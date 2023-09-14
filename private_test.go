@@ -35,7 +35,7 @@ func Test_loadURL(t *testing.T) {
 		F []int
 	}
 
-	parsed := parseParam(path, reflect.TypeOf(testParams{}))
+	parsed := New().parseParam(path, reflect.TypeOf(testParams{}))
 
 	v, err := parsed.loadURL(url.Values{
 		"a": []string{"10"},
@@ -60,9 +60,30 @@ func Test_loadURL(t *testing.T) {
 	})
 
 	g.Eq(g.Panic(func() {
-		parseParam(path, reflect.TypeOf(struct{}{}))
+		New().parseParam(path, reflect.TypeOf(struct{}{}))
 	}), "expect parameter to be a struct and embedded with "+
 		"goapi.InHeader, goapi.InURL, or goapi.InBody, but got: struct {}")
+}
+
+func Test_loadURL_nil(t *testing.T) {
+	g := got.T(t)
+
+	path, err := newPath("/test")
+	g.E(err)
+
+	type testParams struct {
+		InURL
+		A *string
+	}
+
+	parsed := New().parseParam(path, reflect.TypeOf(testParams{}))
+
+	v, err := parsed.loadURL(url.Values{})
+	g.E(err)
+
+	g.Eq(v.Interface(), testParams{
+		A: nil,
+	})
 }
 
 func Test_loadURL_err(t *testing.T) {
@@ -76,7 +97,7 @@ func Test_loadURL_err(t *testing.T) {
 	}
 
 	g.Eq(g.Panic(func() {
-		parseParam(path, reflect.TypeOf(testParams{}))
+		New().parseParam(path, reflect.TypeOf(testParams{}))
 	}), "expect to have path parameter for {a} in goapi.testParams")
 
 	type testPath struct {
@@ -84,7 +105,7 @@ func Test_loadURL_err(t *testing.T) {
 		A int
 	}
 
-	parsed := parseParam(path, reflect.TypeOf(testPath{}))
+	parsed := New().parseParam(path, reflect.TypeOf(testPath{}))
 
 	_, err = parsed.loadURL(url.Values{})
 	g.Eq(err.Error(), "missing parameter in request, param: a")
@@ -96,7 +117,7 @@ func Test_loadURL_err(t *testing.T) {
 		C []int
 	}
 
-	parsed = parseParam(path, reflect.TypeOf(testQuery{}))
+	parsed = New().parseParam(path, reflect.TypeOf(testQuery{}))
 
 	_, err = parsed.loadURL(url.Values{"a": {"1"}})
 	g.Eq(err.Error(), "missing parameter in request, param: b")
@@ -110,21 +131,21 @@ func Test_loadURL_err(t *testing.T) {
 		"json: cannot unmarshal bool into Go value of type int")
 
 	g.Eq(g.Panic(func() {
-		parseParam(path, reflect.TypeOf(struct {
+		New().parseParam(path, reflect.TypeOf(struct {
 			InURL
 			A []int
 		}{}))
 	}), "path parameter cannot be an slice, param: A")
 
 	g.Eq(g.Panic(func() {
-		parseParam(path, reflect.TypeOf(struct {
+		New().parseParam(path, reflect.TypeOf(struct {
 			InURL
 			A *int
 		}{}))
 	}), "path parameter cannot be optional, param: A")
 
 	g.Eq(g.Panic(func() {
-		parseParam(path, reflect.TypeOf(struct {
+		New().parseParam(path, reflect.TypeOf(struct {
 			InURL
 			A int `default:"1"`
 		}{}))
@@ -137,10 +158,10 @@ func Test_loadHeader(t *testing.T) {
 	type header struct {
 		InHeader
 		X_Y int
-		Z   string `default:"\"default\""`
+		Z   string `default:"default"`
 	}
 
-	parsed := parseParam(nil, reflect.TypeOf(header{}))
+	parsed := New().parseParam(nil, reflect.TypeOf(header{}))
 
 	v, err := parsed.loadHeader(http.Header{
 		"X-Y": []string{"10"},
@@ -152,24 +173,6 @@ func Test_loadHeader(t *testing.T) {
 		X_Y:      10,
 		Z:        "default",
 	})
-
-	type headerErrDefault struct {
-		InHeader
-		Z string `default:"aa"`
-	}
-
-	g.Eq(g.Panic(func() {
-		parseParam(nil, reflect.TypeOf(headerErrDefault{}))
-	}), "failed to parse tag `default` of `Z`: invalid character 'a' looking for beginning of value")
-
-	type headerErrExample struct {
-		InHeader
-		Z string `example:"aa"`
-	}
-
-	g.Eq(g.Panic(func() {
-		parseParam(nil, reflect.TypeOf(headerErrExample{}))
-	}), "failed to parse tag `example` of `Z`: invalid character 'a' looking for beginning of value")
 }
 
 func strPtr(s string) *string {
@@ -185,7 +188,7 @@ func Test_loadBody(t *testing.T) {
 		Name string `json:"name"`
 	}
 
-	parsed := parseParam(nil, reflect.TypeOf(body{}))
+	parsed := New().parseParam(nil, reflect.TypeOf(body{}))
 
 	v, err := parsed.loadBody(bytes.NewBufferString(`{"id": 1, "name": "test"}`))
 	g.E(err)
@@ -230,6 +233,14 @@ func Test_parseResponse_err(t *testing.T) {
 			Meta int
 		}{}))
 	}), "response Meta field requires Data field")
+
+	g.Eq(g.Panic(func() {
+		op.parseResponse(reflect.TypeOf(struct {
+			StatusOK
+			Data DataBinary
+			Meta int
+		}{}))
+	}), "response Meta field cannot exist when Data field is goapi.DataBinary")
 }
 
 func Test_default_arr(t *testing.T) {
@@ -243,7 +254,7 @@ func Test_default_arr(t *testing.T) {
 	path, err := newPath("/test")
 	g.E(err)
 
-	parsed := parseParam(path, reflect.TypeOf(params{}))
+	parsed := New().parseParam(path, reflect.TypeOf(params{}))
 
 	v, err := parsed.loadURL(url.Values{})
 	g.E(err)
@@ -251,4 +262,51 @@ func Test_default_arr(t *testing.T) {
 	g.Eq(v.Interface(), params{
 		IDS: []int{1, 2},
 	})
+}
+
+type myID struct {
+}
+
+func (myID) IsFormat(input interface{}) bool {
+	return input == "ok"
+}
+
+func Test_custom_checker(t *testing.T) {
+	g := got.T(t)
+
+	r := New()
+	r.Router().AddFormatChecker("my-id", myID{})
+
+	type params struct {
+		InURL
+		ID string `format:"my-id"`
+	}
+
+	path, err := newPath("/test")
+	g.E(err)
+
+	parsed := New().parseParam(path, reflect.TypeOf(params{}))
+
+	_, err = parsed.loadURL(url.Values{"id": {"ok"}})
+	g.Nil(err)
+
+	_, err = parsed.loadURL(url.Values{"id": {"no"}})
+	g.Eq(err.Error(), "param `id` is invalid: [(root): Does not match format 'my-id']")
+}
+
+func Test_validation(t *testing.T) {
+	g := got.T(t)
+
+	type A struct {
+		InBody
+		ID string `min:"5"`
+	}
+
+	path, err := newPath("/test")
+	g.E(err)
+
+	parsed := New().parseParam(path, reflect.TypeOf(A{}))
+
+	_, err = parsed.loadBody(bytes.NewBufferString(`{"id": "ok"}`))
+	g.Eq(err.Error(), "request body is invalid: [ID: String length must be greater than or equal to 5]")
 }

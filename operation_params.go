@@ -14,6 +14,7 @@ import (
 	ff "github.com/NaturalSelectionLabs/goapi/lib/flat-fields"
 	"github.com/NaturalSelectionLabs/jschema"
 	"github.com/iancoleman/strcase"
+	"github.com/xeipuuv/gojsonschema"
 )
 
 type paramsIn int
@@ -56,69 +57,22 @@ func (InBody) paramsIn() paramsIn {
 
 var tContext = reflect.TypeOf(new(context.Context)).Elem()
 
+var tRequest = reflect.TypeOf((*http.Request)(nil))
+
 type parsedParam struct {
 	in     paramsIn
 	param  reflect.Type
 	fields []*parsedField
 
 	isContext bool
-}
+	isRequest bool
 
-func parseParam(path *Path, p reflect.Type) *parsedParam {
-	if p == tContext {
-		return &parsedParam{isContext: true}
-	}
-
-	if p.Kind() != reflect.Struct || !p.Implements(tParams) {
-		panic("expect parameter to be a struct and embedded with goapi.InHeader, goapi.InURL, or goapi.InBody," +
-			" but got: " + p.String())
-	}
-
-	parsed := &parsedParam{param: p}
-	fields := []*parsedField{}
-	flat := ff.Parse(p)
-
-	switch reflect.New(p).Interface().(Params).paramsIn() {
-	case inHeader:
-		parsed.in = inHeader
-
-		for _, f := range flat.Fields {
-			fields = append(fields, parseHeaderField(f))
-		}
-
-	case inURL:
-		parsed.in = inURL
-
-		for _, f := range flat.Fields {
-			fields = append(fields, parseURLField(path, f))
-		}
-
-		for _, n := range path.names {
-			has := false
-
-			for _, f := range fields {
-				if f.name == n {
-					has = true
-				}
-			}
-
-			if !has {
-				panic("expect to have path parameter for {" + n + "} in " + p.String())
-			}
-		}
-
-	case inBody:
-		parsed.in = inBody
-	}
-
-	parsed.fields = fields
-
-	return parsed
+	bodyValidator *gojsonschema.Schema
 }
 
 var ErrMissingParam = errors.New("missing parameter in request")
 
-func (p *parsedParam) loadURL(qs url.Values) (reflect.Value, error) {
+func (p *parsedParam) loadURL(qs url.Values) (reflect.Value, error) { //nolint: gocognit
 	val := reflect.New(p.param)
 
 	for _, f := range p.fields {
@@ -158,11 +112,17 @@ func (p *parsedParam) loadURL(qs url.Values) (reflect.Value, error) {
 		}
 
 		if f.ptr && !f.slice {
-			c := reflect.New(f.item)
-			c.Elem().Set(fv)
-			f.flatField.Set(val, c)
+			if fv.IsValid() {
+				c := reflect.New(f.item)
+				c.Elem().Set(fv)
+				f.flatField.Set(val, c)
+			}
 		} else {
 			f.flatField.Set(val, fv)
+		}
+
+		if err := f.validate(val); err != nil {
+			return reflect.Value{}, err
 		}
 	}
 
@@ -191,122 +151,38 @@ func (p *parsedParam) loadBody(body io.Reader) (reflect.Value, error) {
 		return reflect.Value{}, fmt.Errorf("failed to parse json body: %w", err)
 	}
 
+	check, _ := p.bodyValidator.Validate(gojsonschema.NewGoLoader(ref))
+	if !check.Valid() {
+		return reflect.Value{}, fmt.Errorf("request body is invalid: %v", check.Errors())
+	}
+
 	return val.Elem(), nil
 }
 
 type parsedField struct {
-	name        string
-	item        reflect.Type
-	flatField   *ff.FlattenedField
-	ptr         bool
-	slice       bool
-	sliceType   reflect.Type
-	required    bool
-	InPath      bool
-	hasDefault  bool
-	defaultVal  reflect.Value
-	example     reflect.Value
-	description string
+	name       string // the normalized name of the field
+	item       reflect.Type
+	flatField  *ff.FlattenedField
+	ptr        bool
+	slice      bool
+	sliceType  reflect.Type
+	required   bool
+	InPath     bool
+	hasDefault bool
+	defaultVal reflect.Value
+	example    reflect.Value
+
+	schema    *jschema.Schema
+	validator *gojsonschema.Schema
 }
 
-func parseHeaderField(flatField *ff.FlattenedField) *parsedField {
-	f := flatField.Field
-	parsed := parseField(flatField)
-	parsed.name = toHeaderName(f.Name)
-	parsed.name = tagName(f.Tag, parsed.name)
-
-	return parsed
-}
-
-func parseURLField(path *Path, flatField *ff.FlattenedField) *parsedField {
-	f := parseField(flatField)
-
-	t := flatField.Field
-
-	f.name = toPathName(t.Name)
-	if path.contains(f.name) {
-		if f.hasDefault {
-			panic("path parameter cannot have tag `default`, param: " + t.Name)
-		}
-
-		if f.slice {
-			panic("path parameter cannot be an slice, param: " + t.Name)
-		}
-
-		if !f.required {
-			panic("path parameter cannot be optional, param: " + t.Name)
-		}
-
-		f.InPath = true
-	} else {
-		f.name = toQueryName(t.Name)
+func (f *parsedField) validate(val reflect.Value) error {
+	res, _ := f.validator.Validate(gojsonschema.NewGoLoader(f.flatField.Get(val).Interface()))
+	if !res.Valid() {
+		return fmt.Errorf("param `%s` is invalid: %v", f.name, res.Errors())
 	}
 
-	f.name = tagName(t.Tag, f.name)
-
-	return f
-}
-
-func parseField(flatField *ff.FlattenedField) *parsedField {
-	t := flatField.Field
-	f := &parsedField{flatField: flatField, required: true}
-	tf := t.Type
-
-	switch t.Type.Kind() { //nolint: exhaustive
-	case reflect.Ptr, reflect.Slice:
-		f.ptr = true
-	default:
-		f.ptr = false
-	}
-
-	if tf.Kind() == reflect.Ptr {
-		tf = tf.Elem()
-		f.required = false
-	}
-
-	if tf.Kind() == reflect.Slice {
-		f.slice = true
-		f.sliceType = tf
-		f.item = tf.Elem()
-		f.required = false
-	} else {
-		f.item = tf
-	}
-
-	if d, ok := t.Tag.Lookup("default"); ok {
-		var v any
-		if f.slice {
-			v = reflect.New(f.sliceType).Interface()
-		} else {
-			v = reflect.New(f.item).Interface()
-		}
-
-		err := json.Unmarshal([]byte(d), &v)
-		if err != nil {
-			panic("failed to parse tag `default` of `" + t.Name + "`: " + err.Error())
-		}
-
-		f.required = false
-		f.hasDefault = true
-		f.defaultVal = reflect.Indirect(reflect.ValueOf(v))
-	}
-
-	if d, ok := t.Tag.Lookup("example"); ok {
-		var v any
-
-		err := json.Unmarshal([]byte(d), &v)
-		if err != nil {
-			panic("failed to parse tag `example` of `" + t.Name + "`: " + err.Error())
-		}
-
-		f.example = reflect.Indirect(reflect.ValueOf(v))
-	}
-
-	if d, ok := t.Tag.Lookup("description"); ok {
-		f.description = d
-	}
-
-	return f
+	return nil
 }
 
 func toHeaderName(name string) string {
@@ -347,4 +223,12 @@ func tagName(t reflect.StructTag, name string) string {
 	}
 
 	return name
+}
+
+func firstProp(s *jschema.Schema) (p *jschema.Schema) { //nolint: nonamedreturns
+	for _, p = range s.Properties {
+		break
+	}
+
+	return p
 }

@@ -7,16 +7,13 @@ import (
 
 	"github.com/NaturalSelectionLabs/goapi/lib/middlewares"
 	"github.com/NaturalSelectionLabs/goapi/lib/openapi"
+	"github.com/NaturalSelectionLabs/jschema"
+	"github.com/xeipuuv/gojsonschema"
 )
 
 // Router itself is a middleware.
 type Router struct {
-	// FormatResponse is a function that formats the response.
-	// The default format the structs implement [ResponseFormat].
-	// You can use this function override the default format.
-	FormatResponse FormatResponse
-	// Validate the parameters of each request.
-	Validate func(v interface{}) *openapi.Error
+	Schemas jschema.Schemas
 
 	middlewares []middlewares.Middleware
 	operations  []*Operation
@@ -31,9 +28,14 @@ func New() *Group {
 }
 
 func NewRouter() *Router {
+	s := NewSchemas()
+
+	s.AddTimeHandler()
+	s.AddJSONRawMessageHandler()
+
 	return &Router{
-		middlewares:    []middlewares.Middleware{},
-		FormatResponse: func(format openapi.ResponseFormat) any { return format },
+		middlewares: []middlewares.Middleware{},
+		Schemas:     s,
 	}
 }
 
@@ -70,15 +72,29 @@ func (r *Router) Use(middlewares ...middlewares.Middleware) {
 }
 
 func (r *Router) Handler(next http.Handler) http.Handler {
-	for i := len(r.middlewares) - 1; i >= 0; i-- {
-		next = r.middlewares[i].Handler(next)
-	}
-
-	return next
+	return middlewares.Chain(r.middlewares...).Handler(next)
 }
 
 // Group creates a new group with the given prefix.
 func (r *Router) Group(prefix string) *Group {
 	g := &Group{router: r}
 	return g.Group(prefix)
+}
+
+// AddFormatChecker for json schema validation.
+// Such as a struct:
+//
+//	type User struct {
+//		ID string `format:"my-id"`
+//	}
+//
+// You can add a format checker for "id" like:
+//
+//	AddFormatChecker("my-id", checker)
+func (r *Router) AddFormatChecker(name string, c gojsonschema.FormatChecker) {
+	gojsonschema.FormatCheckers.Add(name, c)
+}
+
+func NewSchemas() jschema.Schemas {
+	return jschema.NewWithInterfaces("#/components/schemas", interfaces)
 }

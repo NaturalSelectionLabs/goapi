@@ -3,11 +3,14 @@ package goapi
 import (
 	"context"
 	"net/http"
+	"reflect"
 	"regexp"
 	"strings"
 
+	ff "github.com/NaturalSelectionLabs/goapi/lib/flat-fields"
 	"github.com/NaturalSelectionLabs/goapi/lib/middlewares"
 	"github.com/NaturalSelectionLabs/goapi/lib/openapi"
+	"github.com/xeipuuv/gojsonschema"
 )
 
 type Group struct {
@@ -19,43 +22,40 @@ func (g *Group) Router() *Router {
 	return g.router
 }
 
-func (g *Group) GET(path string, handler any, opts ...ConfigOperation) {
-	g.Add(openapi.GET, path, handler, opts...)
+func (g *Group) Prefix() string {
+	return g.prefix
 }
 
-func (g *Group) POST(path string, handler any, opts ...ConfigOperation) {
-	g.Add(openapi.POST, path, handler, opts...)
+func (g *Group) GET(path string, handler OperationHandler) {
+	g.Add(openapi.GET, path, handler)
 }
 
-func (g *Group) PUT(path string, handler any, opts ...ConfigOperation) {
-	g.Add(openapi.PUT, path, handler, opts...)
+func (g *Group) POST(path string, handler OperationHandler) {
+	g.Add(openapi.POST, path, handler)
 }
 
-func (g *Group) PATCH(path string, handler any, opts ...ConfigOperation) {
-	g.Add(openapi.PATCH, path, handler, opts...)
+func (g *Group) PUT(path string, handler OperationHandler) {
+	g.Add(openapi.PUT, path, handler)
 }
 
-func (g *Group) DELETE(path string, handler any, opts ...ConfigOperation) {
-	g.Add(openapi.DELETE, path, handler, opts...)
+func (g *Group) PATCH(path string, handler OperationHandler) {
+	g.Add(openapi.PATCH, path, handler)
 }
 
-func (g *Group) OPTIONS(path string, handler any, opts ...ConfigOperation) {
-	g.Add(openapi.OPTIONS, path, handler, opts...)
+func (g *Group) DELETE(path string, handler OperationHandler) {
+	g.Add(openapi.DELETE, path, handler)
 }
 
-func (g *Group) HEAD(path string, handler any, opts ...ConfigOperation) {
-	g.Add(openapi.HEAD, path, handler, opts...)
+func (g *Group) OPTIONS(path string, handler OperationHandler) {
+	g.Add(openapi.OPTIONS, path, handler)
 }
 
-func (g *Group) Add(
-	method openapi.Method, path string, handler any, opts ...ConfigOperation,
-) {
+func (g *Group) HEAD(path string, handler OperationHandler) {
+	g.Add(openapi.HEAD, path, handler)
+}
+
+func (g *Group) Add(method openapi.Method, path string, handler OperationHandler) {
 	op := g.newOperation(method, g.prefix+path, handler)
-
-	for _, opt := range opts {
-		opt(op)
-	}
-
 	g.router.operations = append(g.router.operations, op)
 	g.Use(op)
 }
@@ -95,7 +95,7 @@ func (g *Group) Shutdown(ctx context.Context) error {
 	return g.router.Shutdown(ctx)
 }
 
-// Use is a shortcut for [Router.Use].
+// Use is similar to [Router.Use] but with he group prefix.
 func (g *Group) Use(m middlewares.Middleware) {
 	g.router.Use(middlewares.Func(func(h http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -111,4 +111,147 @@ func (g *Group) Use(m middlewares.Middleware) {
 // Use is a shortcut for [Router.Handler].
 func (g *Group) Handler(h http.Handler) http.Handler {
 	return g.router.Handler(h)
+}
+
+func (g *Group) parseParam(path *Path, p reflect.Type) *parsedParam {
+	if p == tContext {
+		return &parsedParam{isContext: true}
+	}
+
+	if p == tRequest {
+		return &parsedParam{isRequest: true}
+	}
+
+	if p.Kind() != reflect.Struct || !p.Implements(tParams) {
+		panic("expect parameter to be a struct and embedded with goapi.InHeader, goapi.InURL, or goapi.InBody," +
+			" but got: " + p.String())
+	}
+
+	parsed := &parsedParam{param: p}
+	fields := []*parsedField{}
+	flat := ff.Parse(p)
+
+	switch reflect.New(p).Interface().(Params).paramsIn() {
+	case inHeader:
+		parsed.in = inHeader
+
+		for _, f := range flat.Fields {
+			fields = append(fields, g.parseHeaderField(f))
+		}
+
+	case inURL:
+		parsed.in = inURL
+
+		for _, f := range flat.Fields {
+			fields = append(fields, g.parseURLField(path, f))
+		}
+
+		for _, n := range path.names {
+			has := false
+
+			for _, f := range fields {
+				if f.name == n {
+					has = true
+				}
+			}
+
+			if !has {
+				panic("expect to have path parameter for {" + n + "} in " + p.String())
+			}
+		}
+
+	case inBody:
+		parsed.in = inBody
+
+		scm := g.router.Schemas.ToStandAlone(g.router.Schemas.DefineT(p))
+
+		validator, _ := gojsonschema.NewSchema(gojsonschema.NewGoLoader(scm))
+		parsed.bodyValidator = validator
+	}
+
+	parsed.fields = fields
+
+	return parsed
+}
+
+func (g *Group) parseHeaderField(flatField *ff.FlattenedField) *parsedField {
+	f := flatField.Field
+	parsed := g.parseField(flatField)
+	parsed.name = toHeaderName(f.Name)
+	parsed.name = tagName(f.Tag, parsed.name)
+
+	return parsed
+}
+
+func (g *Group) parseURLField(path *Path, flatField *ff.FlattenedField) *parsedField {
+	f := g.parseField(flatField)
+
+	t := flatField.Field
+
+	f.name = toPathName(t.Name)
+	if path.contains(f.name) {
+		if f.hasDefault {
+			panic("path parameter cannot have tag `default`, param: " + t.Name)
+		}
+
+		if f.slice {
+			panic("path parameter cannot be an slice, param: " + t.Name)
+		}
+
+		if !f.required {
+			panic("path parameter cannot be optional, param: " + t.Name)
+		}
+
+		f.InPath = true
+	} else {
+		f.name = toQueryName(t.Name)
+	}
+
+	f.name = tagName(t.Tag, f.name)
+
+	return f
+}
+
+func (g *Group) parseField(flatField *ff.FlattenedField) *parsedField {
+	t := flatField.Field
+	f := &parsedField{flatField: flatField, required: true}
+	tf := t.Type
+
+	switch t.Type.Kind() { //nolint: exhaustive
+	case reflect.Ptr, reflect.Slice:
+		f.ptr = true
+	default:
+		f.ptr = false
+	}
+
+	if tf.Kind() == reflect.Ptr {
+		tf = tf.Elem()
+		f.required = false
+	}
+
+	if tf.Kind() == reflect.Slice {
+		f.slice = true
+		f.sliceType = tf
+		f.item = tf.Elem()
+		f.required = false
+	} else {
+		f.item = tf
+	}
+
+	f.schema = g.router.Schemas.ToStandAlone(firstProp(g.router.Schemas.DefineFieldT(t)))
+
+	if _, ok := t.Tag.Lookup("default"); ok {
+		f.required = false
+		f.hasDefault = true
+		f.defaultVal = reflect.ValueOf(f.schema.Default)
+	}
+
+	if _, ok := t.Tag.Lookup("example"); ok {
+		f.example = reflect.ValueOf(f.schema.Example)
+	}
+
+	validator, _ := gojsonschema.NewSchema(gojsonschema.NewGoLoader(f.schema))
+	f.validator = validator
+
+	return f
 }

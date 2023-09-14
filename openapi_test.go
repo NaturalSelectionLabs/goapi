@@ -45,6 +45,42 @@ type Res03 struct {
 	Meta string
 }
 
+type One struct {
+}
+
+func (One) OpenAPI(doc openapi.Operation) openapi.Operation {
+	doc.Summary = "test"
+	doc.Description = "test endpoint"
+	doc.OperationID = "test"
+	doc.Tags = []string{"test"}
+	doc.Security = []map[string][]string{{"auth": {"read"}}}
+
+	return doc
+}
+
+func (One) Handle(p struct {
+	goapi.InURL
+	ID string `default:"\"123\"" description:"id" example:"\"456\""`
+}, h struct {
+	goapi.InHeader
+	UA string
+}, b struct {
+	goapi.InBody
+	Data string `json:"data"`
+}) Res {
+	return Res01{}
+}
+
+type Three struct {
+	goapi.StatusOK
+	Data string `response:"direct"`
+}
+
+type Four struct {
+	goapi.StatusOK
+	Data goapi.DataBinary
+}
+
 func TestOpenAPI(t *testing.T) {
 	g := got.T(t)
 
@@ -56,24 +92,7 @@ func TestOpenAPI(t *testing.T) {
 
 	r.GET("/override", func(w http.ResponseWriter, r *http.Request) {})
 
-	r.GET("/one", func(p struct {
-		goapi.InURL
-		ID string `default:"\"123\"" description:"id" example:"\"456\""`
-	}, h struct {
-		goapi.InHeader
-		UA string
-	}, b struct {
-		goapi.InBody
-		Data string `json:"data"`
-	}) Res {
-		return Res01{}
-	},
-		goapi.Summary("test"),
-		goapi.Description("test endpoint"),
-		goapi.OperationID("test"),
-		goapi.Tags("test"),
-		goapi.Security(map[string][]string{"auth": {"read"}}),
-	)
+	r.GET("/one", One{})
 
 	r.GET("/two/{id}", func(struct {
 		goapi.InURL
@@ -82,34 +101,50 @@ func TestOpenAPI(t *testing.T) {
 		return Res03{}
 	})
 
-	doc := r.OpenAPI(nil).JSON()
+	r.GET("/three", func() Three {
+		return Three{}
+	})
+
+	r.GET("/four", func() Four {
+		return Four{}
+	})
+
+	doc := r.OpenAPI().JSON()
 
 	// Ensure you have nodejs installed
 	{
 		g.E(os.WriteFile("tmp/openapi.json", []byte(doc), 0666))
 		out, err := exec.Command("npx", strings.Split("rdme openapi:validate tmp/openapi.json", " ")...).CombinedOutput()
-		g.Desc("%s", out).E(err)
+		g.Desc("%s", out).True(err == nil)
 	}
 
+	//nolint: lll
 	g.Eq(g.JSON(doc), map[string]interface{} /* len=4 */ {
 		"components": map[string]interface{}{
-			"schemas": map[string]interface{} /* len=2 */ {
-				"Error": map[string]interface{} /* len=5 */ {
+			"schemas": map[string]interface{} /* len=3 */ {
+				"Code": map[string]interface{} /* len=3 */ {
+					"description": `github.com/NaturalSelectionLabs/goapi/lib/openapi.Code`, /* len=54 */
+					"enum": []interface{} /* len=3 cap=4 */ {
+						"not_found",
+						"invalid_param",
+						"internal_error",
+					},
+					"title": "Code",
+				},
+				"CommonError": map[string]interface{} /* len=6 */ {
 					`additionalProperties` /* len=20 */ : false,
-					"description":                        `github.com/NaturalSelectionLabs/goapi/lib/openapi.Error`, /* len=55 */
+					"description":                        `github.com/NaturalSelectionLabs/goapi/lib/openapi.CommonError[github.com/NaturalSelectionLabs/goapi/lib/openapi.Code]`, /* len=117 */
 					"properties": map[string]interface{} /* len=5 */ {
 						"code": map[string]interface{}{
-							"type": "string",
+							"$ref": `#/components/schemas/Code`, /* len=25 */
 						},
 						"details": map[string]interface{} /* len=2 */ {
 							"items": map[string]interface{}{
-								"$ref": `#/components/schemas/Error`, /* len=26 */
+								"$ref": `#/components/schemas/CommonError`, /* len=32 */
 							},
 							"type": "array",
 						},
-						"innererror": map[string]interface{}{
-							"type": "object",
-						},
+						"innererror": map[string]interface{}{},
 						"message": map[string]interface{}{
 							"type": "string",
 						},
@@ -117,14 +152,38 @@ func TestOpenAPI(t *testing.T) {
 							"type": "string",
 						},
 					},
-					"title": "Error",
+					"required": []interface{} /* len=1 cap=1 */ {
+						"code",
+					},
+					"title": `CommonError[github.com/NaturalSelectionLabs/goapi/lib/openapi.Code]`, /* len=67 */
 					"type":  "object",
 				},
-				"InBody": map[string]interface{} /* len=4 */ {
+				"Error": map[string]interface{} /* len=6 */ {
 					`additionalProperties` /* len=20 */ : false,
-					"description":                        `github.com/NaturalSelectionLabs/goapi.InBody`, /* len=44 */
-					"title":                              "InBody",
-					"type":                               "object",
+					"description":                        `github.com/NaturalSelectionLabs/goapi/lib/openapi.Error`, /* len=55 */
+					"properties": map[string]interface{} /* len=5 */ {
+						"code": map[string]interface{}{
+							"$ref": `#/components/schemas/Code`, /* len=25 */
+						},
+						"details": map[string]interface{} /* len=2 */ {
+							"items": map[string]interface{}{
+								"$ref": `#/components/schemas/CommonError`, /* len=32 */
+							},
+							"type": "array",
+						},
+						"innererror": map[string]interface{}{},
+						"message": map[string]interface{}{
+							"type": "string",
+						},
+						"target": map[string]interface{}{
+							"type": "string",
+						},
+					},
+					"required": []interface{} /* len=1 cap=1 */ {
+						"code",
+					},
+					"title": "Error",
+					"type":  "object",
 				},
 			},
 		},
@@ -133,7 +192,24 @@ func TestOpenAPI(t *testing.T) {
 			"version": "",
 		},
 		"openapi": "3.1.0",
-		"paths": map[string]interface{} /* len=2 */ {
+		"paths": map[string]interface{} /* len=4 */ {
+			"/four": map[string]interface{}{
+				"get": map[string]interface{}{
+					"responses": map[string]interface{}{
+						"200": map[string]interface{} /* len=2 */ {
+							"content": map[string]interface{}{
+								`application/octet-stream` /* len=24 */ : map[string]interface{}{
+									"schema": map[string]interface{} /* len=2 */ {
+										"format": "binary",
+										"type":   "string",
+									},
+								},
+							},
+							"description": "OK",
+						},
+					},
+				},
+			},
 			"/one": map[string]interface{}{
 				"get": map[string]interface{} /* len=8 */ {
 					"description": "test endpoint",
@@ -233,6 +309,22 @@ func TestOpenAPI(t *testing.T) {
 					"summary": "test",
 					"tags": []interface{} /* len=1 cap=1 */ {
 						"test",
+					},
+				},
+			},
+			"/three": map[string]interface{}{
+				"get": map[string]interface{}{
+					"responses": map[string]interface{}{
+						"200": map[string]interface{} /* len=2 */ {
+							"content": map[string]interface{}{
+								"application/json" /* len=16 */ : map[string]interface{}{
+									"schema": map[string]interface{}{
+										"type": "string",
+									},
+								},
+							},
+							"description": "OK",
+						},
 					},
 				},
 			},

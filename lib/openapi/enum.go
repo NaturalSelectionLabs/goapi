@@ -4,6 +4,15 @@ import (
 	"encoding/json"
 )
 
+//go:generate go run github.com/dmarkham/enumer@latest -type=Code -values -transform=snake -trimprefix=ErrCode -json
+type Code int
+
+const (
+	CodeNotFound Code = iota
+	CodeInvalidParam
+	CodeInternalError
+)
+
 //go:generate go run github.com/dmarkham/enumer@latest -type=Method -values
 type Method int
 

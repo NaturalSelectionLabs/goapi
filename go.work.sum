@@ -1,11 +1,11 @@
 github.com/NaturalSelectionLabs/goapi v0.3.2/go.mod h1:jAWqk2/n5dWMcvJZsdIjPDrll33Cnxxqv4j2f3Im13Y=
-github.com/NaturalSelectionLabs/jschema v0.7.4 h1:KQtNwK2NbTsrtcoQq5KQCQiV6EMpVIUCFIKqn5Q+K+s=
-github.com/NaturalSelectionLabs/jschema v0.7.4/go.mod h1:rDGjcRMk8DgfWET/kcPyL0ZRWM7HRh9OUYUgrZj4keM=
+github.com/NaturalSelectionLabs/jschema v0.7.9 h1:Tyq5k6WCp+n0ZNp5rh4zga1VA0N7BwQZ2t4g+56VOQE=
+github.com/NaturalSelectionLabs/jschema v0.7.9/go.mod h1:7l4ZhkX89M9ma6/ATvSsDRcj9DiVNEy6nbW4qwIfVPY=
+github.com/NaturalSelectionLabs/jschema v0.7.11 h1:fpNDxMm0wtHQx/bTbIkmrK3jEblYrQmFX6HCZoitC+8=
+github.com/NaturalSelectionLabs/jschema v0.7.11/go.mod h1:7l4ZhkX89M9ma6/ATvSsDRcj9DiVNEy6nbW4qwIfVPY=
 github.com/go-playground/assert/v2 v2.2.0/go.mod h1:VDjEfimB/XKnb+ZQfWdccd7VUvScMdVu0Titje2rxJ4=
 github.com/golang-jwt/jwt v3.2.2+incompatible h1:IfV12K8xAKAnZqdXVzCZ+TOjboZ2keLg81eXfW3O+oY=
 github.com/golang-jwt/jwt v3.2.2+incompatible/go.mod h1:8pz2t5EyA70fFQQSrl6XZXzqecmYZeUEB8OUGHkxJ+I=
-github.com/ysmood/vary v0.3.2 h1:oxUmATxrs4BPTHo1b3zNgyzTGZr/6s7zvdM9F9+M4kw=
-github.com/ysmood/vary v0.3.2/go.mod h1:X9WYOJwS8Hyeh7Qs08haaeelNru/UIOPUggUnRwxHmM=
 github.com/yuin/goldmark v1.4.13/go.mod h1:6yULJ656Px+3vBD8DxQVa3kxgyrAnzto9xy5taEt/CY=
 golang.org/x/mod v0.8.0/go.mod h1:iBbtSCu2XBx23ZKBPSOrRkjjQPZFPuis4dIYUhu/chs=
 golang.org/x/net v0.10.0/go.mod h1:0qNGK6F8kojg2nk9dLZ2mShWaEBan6FAoqfSigmmuDg=

@@ -20,6 +20,7 @@
     "gocognit",
     "gocritic",
     "gofumpt",
+    "gojsonschema",
     "golangci",
     "gommon",
     "iancoleman",
@@ -31,12 +32,14 @@
     "nestif",
     "noctx",
     "nolint",
+    "nonamedreturns",
     "openapi",
     "rdme",
     "strcase",
     "struct",
     "trimprefix",
-    "vitalik"
+    "vitalik",
+    "xeipuuv"
   ],
   "flagWords": []
 }
