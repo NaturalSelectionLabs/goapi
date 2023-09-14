@@ -124,6 +124,12 @@ type Error struct {
 	InnerError any `json:"innererror,omitempty"`
 }
 
+var _ error = (*Error)(nil)
+
+func (err Error) Error() string {
+	return err.Message
+}
+
 const (
 	CodeNotFound      = "not_found"
 	CodeInvalidParam  = "invalid_param"
