@@ -4,18 +4,17 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"net/http"
 
 	"github.com/NaturalSelectionLabs/goapi"
+	"github.com/NaturalSelectionLabs/goapi/lib/middlewares/apidoc"
+	"github.com/NaturalSelectionLabs/goapi/lib/openapi"
 )
 
 // To test the example, start the server
 //
 //	go run ./lib/examples/basic
 //
-// Then run
-//
-//	bash ./lib/examples/basic/test.sh
+// Then open http://127.0.0.1:3000 in your browser.
 func main() {
 	r := goapi.New()
 
@@ -34,7 +33,7 @@ func main() {
 				SetCookie: "token=123456",
 			},
 		}
-	}, goapi.Description("Login with username and password.")) // openapi description for the endpoint.
+	})
 
 	// You can use multiple parameters at the same time to get url values, headers, request context, or request body.
 	// The order of the parameters doesn't matter.
@@ -49,13 +48,11 @@ func main() {
 		}
 	})
 
-	// You can use func(http.ResponseWriter, *http.Request) to override the default handler behavior.
-	// Here we use it to return the openapi doc.
-	r.GET("/openapi.json", func(w http.ResponseWriter, rq *http.Request) {
-		doc := r.OpenAPI(nil)
+	// Install endpoints for openapi doc.
+	apidoc.Install(r, nil, func(doc *openapi.Document) *openapi.Document {
 		doc.Info.Title = "Basic Example"
 		doc.Info.Version = "0.0.1"
-		_, _ = w.Write([]byte(doc.JSON()))
+		return doc
 	})
 
 	log.Println(r.Start(":3000"))
