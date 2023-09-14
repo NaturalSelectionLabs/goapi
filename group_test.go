@@ -46,10 +46,6 @@ func TestMultipleGroups(t *testing.T) {
 		}), "expect prefix to not end with '/', but got: /user/")
 
 		g.Eq(g.Panic(func() {
-			gb.Group("/us_er")
-		}), "expect prefix be kebab-cased, but got: /us_er")
-
-		g.Eq(g.Panic(func() {
 			gb.Group("/{user}")
 		}), "expect prefix not contains braces, but got: /{user}")
 	}

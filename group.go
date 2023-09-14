@@ -8,7 +8,6 @@ import (
 
 	"github.com/NaturalSelectionLabs/goapi/lib/middlewares"
 	"github.com/NaturalSelectionLabs/goapi/lib/openapi"
-	"github.com/iancoleman/strcase"
 )
 
 type Group struct {
@@ -69,10 +68,6 @@ func (g *Group) Group(prefix string) *Group {
 
 	if len(prefix) > 0 && prefix[len(prefix)-1] == '/' {
 		panic("expect prefix to not end with '/', but got: " + prefix)
-	}
-
-	if strcase.ToKebab(prefix) != prefix {
-		panic("expect prefix be kebab-cased, but got: " + prefix)
 	}
 
 	if regexp.MustCompile(`[{}]`).MatchString(prefix) {
