@@ -1,44 +1,67 @@
+// Package openapi contains all the necessary types of an OpenAPI document.
 package openapi
 
 import (
 	"encoding/json"
 )
 
+// Code for common error
+//
 //go:generate go run github.com/dmarkham/enumer@latest -type=Code -values -transform=snake -trimprefix=Code -json
 type Code int
 
 const (
+	// CodeNotFound ...
 	CodeNotFound Code = iota
+	// CodeInvalidParam ...
 	CodeInvalidParam
+	// CodeInternalError ...
 	CodeInternalError
 )
 
+// Method for http request
+//
 //go:generate go run github.com/dmarkham/enumer@latest -type=Method -values
 type Method int
 
 const (
+	// GET ...
 	GET Method = iota
+	// POST ...
 	POST
+	// PUT ...
 	PUT
+	// DELETE ...
 	DELETE
+	// PATCH ...
 	PATCH
+	// HEAD ...
 	HEAD
+	// OPTIONS ...
 	OPTIONS
+	// TRACE ...
 	TRACE
 )
 
+// ParamIn types for openapi request parameter.
 type ParamIn int
 
 //go:generate go run github.com/dmarkham/enumer@latest -type=ParamIn -values -transform=lower -json
 const (
+	// PATH ...
 	PATH ParamIn = iota
+	// QUERY ...
 	QUERY
+	// HEADER ...
 	HEADER
 )
 
+// StatusCode for http response
+//
 //go:generate go run github.com/dmarkham/enumer@latest -type=StatusCode -values -trimprefix=Status
 type StatusCode int
 
+// MarshalJSON implements the [json.Marshaler].
 func (c StatusCode) MarshalJSON() ([]byte, error) {
 	return json.Marshal(int(c))
 }

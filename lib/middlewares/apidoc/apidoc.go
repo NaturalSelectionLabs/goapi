@@ -1,3 +1,4 @@
+// Package apidoc contains a middleware to serve the OpenAPI document.
 package apidoc
 
 import (
@@ -13,6 +14,7 @@ import (
 //go:embed swagger-ui
 var swaggerFiles embed.FS
 
+// Install the several endpoints to serve the openapi document for g.
 func Install(g *goapi.Group, config func(doc *openapi.Document) *openapi.Document) {
 	op := &Operation{}
 
@@ -56,19 +58,22 @@ type headerRedirect struct {
 	Location string
 }
 
+// Operation is the operation to serve the OpenAPI document.
 type Operation struct {
 	doc *openapi.Document
 }
 
 var _ goapi.OperationOpenAPI = &Operation{}
 
+// OpenAPI implements the [goapi.OperationOpenAPI] interface.
 func (*Operation) OpenAPI(doc openapi.Operation) openapi.Operation {
 	doc.Description = "It will auto redirect the browser to the Swagger UI to render the generated OpenAPI doc. " +
 		"If you request it with `Accept: application/json` header, it will return the OpenAPI doc in JSON format."
 	return doc
 }
 
-func (op *Operation) Handle(p params, r *http.Request) res {
+// Handle implements the [goapi.OperationHandler] interface.
+func (op *Operation) Handle(p params) res {
 	if strings.Contains(p.Accept, "application/json") {
 		return resOK{Data: op.doc}
 	}

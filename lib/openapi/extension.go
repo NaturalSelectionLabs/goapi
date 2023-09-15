@@ -21,18 +21,22 @@ func (e CommonError[E]) Error() string {
 	return e.Message
 }
 
+// Error ...
 type Error CommonError[Code]
 
+// ResponseFormat for the json response body.
 type ResponseFormat interface {
 	format()
 }
 
+// ResponseFormatErr is the error response format.
 type ResponseFormatErr struct {
 	Error any `json:"error"`
 }
 
 func (ResponseFormatErr) format() {}
 
+// ResponseFormatMeta is the data and meta response format.
 type ResponseFormatMeta struct {
 	Data any `json:"data"`
 	Meta any `json:"meta"`
@@ -40,6 +44,7 @@ type ResponseFormatMeta struct {
 
 func (ResponseFormatMeta) format() {}
 
+// ResponseFormatData is the data response format.
 type ResponseFormatData struct {
 	Data any `json:"data"`
 }

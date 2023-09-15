@@ -108,7 +108,7 @@ func Test_loadURL_err(t *testing.T) {
 	parsed := New().parseParam(path, reflect.TypeOf(testPath{}))
 
 	_, err = parsed.loadURL(url.Values{})
-	g.Eq(err.Error(), "missing parameter in request, param: a")
+	g.Eq(err.Error(), "missing url path param `a`")
 
 	type testQuery struct {
 		InURL
@@ -120,14 +120,14 @@ func Test_loadURL_err(t *testing.T) {
 	parsed = New().parseParam(path, reflect.TypeOf(testQuery{}))
 
 	_, err = parsed.loadURL(url.Values{"a": {"1"}})
-	g.Eq(err.Error(), "missing parameter in request, param: b")
+	g.Eq(err.Error(), "missing url query param `b`")
 
 	_, err = parsed.loadURL(url.Values{"a": {"true"}})
-	g.Eq(err.Error(), "failed to parse path param `a`: can't parse `true` to expected value,"+
-		" json: cannot unmarshal bool into Go value of type int")
+	g.Eq(err.Error(), "failed to parse url path param `a`: can't parse `true` to expected value, "+
+		"json: cannot unmarshal bool into Go value of type int")
 
 	_, err = parsed.loadURL(url.Values{"a": {"1"}, "b": {"2"}, "c": {"true"}})
-	g.Eq(err.Error(), "failed to parse param `c`: can't parse `true` to expected value, "+
+	g.Eq(err.Error(), "failed to parse url param `c`: can't parse `true` to expected value, "+
 		"json: cannot unmarshal bool into Go value of type int")
 
 	g.Eq(g.Panic(func() {

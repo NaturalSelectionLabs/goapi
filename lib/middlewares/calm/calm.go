@@ -1,3 +1,4 @@
+// Package calm implements a middleware to recover from panic.
 package calm
 
 import (
@@ -10,6 +11,7 @@ import (
 	"github.com/NaturalSelectionLabs/goapi/lib/openapi"
 )
 
+// Calm is a middleware to recover from panic.
 type Calm struct {
 	PrintStack bool
 	Logger     *slog.Logger
@@ -17,6 +19,7 @@ type Calm struct {
 
 var _ middlewares.Middleware = (*Calm)(nil)
 
+// New creates a new Calm middleware.
 func New() *Calm {
 	return &Calm{
 		PrintStack: true,
@@ -24,7 +27,7 @@ func New() *Calm {
 	}
 }
 
-// A middleware to recover from panic.
+// Handler implements the [middlewares.Middleware] interface.
 func (c *Calm) Handler(h http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, rq *http.Request) {
 		defer func() {

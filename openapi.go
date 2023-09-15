@@ -19,6 +19,7 @@ func Interface(i any, ts ...any) *vary.Interface {
 	return interfaces.New(i, ts...)
 }
 
+// Descriptioner is an interface that is use to specify the description in openapi.
 type Descriptioner interface {
 	Description() string
 }
@@ -26,8 +27,8 @@ type Descriptioner interface {
 var tDescriptioner = reflect.TypeOf((*Descriptioner)(nil)).Elem()
 
 // OpenAPI is a shortcut for [Router.OpenAPI].
-func (r *Group) OpenAPI() *openapi.Document {
-	return r.router.OpenAPI()
+func (g *Group) OpenAPI() *openapi.Document {
+	return g.router.OpenAPI()
 }
 
 // OpenAPI returns the OpenAPI doc of the router.

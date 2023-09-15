@@ -1,3 +1,4 @@
+// Package main ...
 package main
 
 import (
@@ -20,7 +21,7 @@ func TestStatusCode(t *testing.T) {`
 	for _, name := range openapi.StatusCode(0).Values() {
 		code, _ := openapi.StatusCodeString(name)
 		out += format(`
-// Status{{.Name}} {{.Code}}.
+// Status{{.Name}} represents http status code {{.Code}}.
 type Status{{.Name}} struct{}
 
 func (Status{{.Name}}) statusCode() int {

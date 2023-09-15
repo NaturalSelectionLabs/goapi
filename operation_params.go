@@ -3,7 +3,6 @@ package goapi
 import (
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -25,12 +24,15 @@ const (
 	inURL
 )
 
+// Params represents the parameter of a request.
 type Params interface {
 	paramsIn() paramsIn
 }
 
 var tParams = reflect.TypeOf(new(Params)).Elem()
 
+// InHeader is a flag that can be embedded into a struct to mark it
+// as a container for request header parameters.
 type InHeader struct{}
 
 var _ Params = InHeader{}
@@ -39,6 +41,8 @@ func (InHeader) paramsIn() paramsIn {
 	return inHeader
 }
 
+// InURL is a flag that can be embedded into a struct to mark it
+// as a container for request url parameters.
 type InURL struct{}
 
 var _ Params = InURL{}
@@ -47,6 +51,8 @@ func (InURL) paramsIn() paramsIn {
 	return inURL
 }
 
+// InBody is a flag that can be embedded into a struct to mark it
+// as a container for request body.
 type InBody struct{}
 
 var _ Params = InBody{}
@@ -70,8 +76,6 @@ type parsedParam struct {
 	bodyValidator *gojsonschema.Schema
 }
 
-var ErrMissingParam = errors.New("missing parameter in request")
-
 func (p *parsedParam) loadURL(qs url.Values) (reflect.Value, error) { //nolint: gocognit
 	val := reflect.New(p.param)
 
@@ -91,7 +95,7 @@ func (p *parsedParam) loadURL(qs url.Values) (reflect.Value, error) { //nolint: 
 			for i, v := range vs {
 				val, err := toValue(f.item, v)
 				if err != nil {
-					return reflect.Value{}, fmt.Errorf("failed to parse param `%s`: %w", f.name, err)
+					return reflect.Value{}, fmt.Errorf("failed to parse url param `%s`: %w", f.name, err)
 				}
 
 				fv.Index(i).Set(val)
@@ -102,10 +106,14 @@ func (p *parsedParam) loadURL(qs url.Values) (reflect.Value, error) { //nolint: 
 				var err error
 				fv, err = toValue(f.item, vs[0])
 				if err != nil {
-					return reflect.Value{}, fmt.Errorf("failed to parse path param `%s`: %w", f.name, err)
+					return reflect.Value{}, fmt.Errorf("failed to parse url path param `%s`: %w", f.name, err)
 				}
 			} else if f.required {
-				return reflect.Value{}, fmt.Errorf("%w, param: %s", ErrMissingParam, f.name)
+				if !f.InPath {
+					return reflect.Value{}, fmt.Errorf("missing url query param `%s`", f.name)
+				}
+
+				return reflect.Value{}, fmt.Errorf("missing url path param `%s`", f.name)
 			} else if f.hasDefault {
 				fv = f.defaultVal
 			}

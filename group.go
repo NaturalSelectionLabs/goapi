@@ -13,47 +13,59 @@ import (
 	"github.com/xeipuuv/gojsonschema"
 )
 
+// Group of handlers with the same url path prefix.
 type Group struct {
 	router *Router
 	prefix string
 }
 
+// Router returns the router of the group.
 func (g *Group) Router() *Router {
 	return g.router
 }
 
+// Prefix returns the prefix of the group.
 func (g *Group) Prefix() string {
 	return g.prefix
 }
 
+// GET is a shortcut for [Group.Add].
 func (g *Group) GET(path string, handler OperationHandler) {
 	g.Add(openapi.GET, path, handler)
 }
 
+// POST is a shortcut for [Group.Add].
 func (g *Group) POST(path string, handler OperationHandler) {
 	g.Add(openapi.POST, path, handler)
 }
 
+// PUT is a shortcut for [Group.Add].
 func (g *Group) PUT(path string, handler OperationHandler) {
 	g.Add(openapi.PUT, path, handler)
 }
 
+// PATCH is a shortcut for [Group.Add].
 func (g *Group) PATCH(path string, handler OperationHandler) {
 	g.Add(openapi.PATCH, path, handler)
 }
 
+// DELETE is a shortcut for [Group.Add].
 func (g *Group) DELETE(path string, handler OperationHandler) {
 	g.Add(openapi.DELETE, path, handler)
 }
 
+// OPTIONS is a shortcut for [Group.Add].
 func (g *Group) OPTIONS(path string, handler OperationHandler) {
 	g.Add(openapi.OPTIONS, path, handler)
 }
 
+// HEAD is a shortcut for [Group.Add].
 func (g *Group) HEAD(path string, handler OperationHandler) {
 	g.Add(openapi.HEAD, path, handler)
 }
 
+// Add adds a new http handler to the group.
+// If a request matches the path and method, the handler will be called.
 func (g *Group) Add(method openapi.Method, path string, handler OperationHandler) {
 	op := g.newOperation(method, g.prefix+path, handler)
 	g.router.operations = append(g.router.operations, op)
@@ -80,7 +92,7 @@ func (g *Group) Group(prefix string) *Group {
 	}
 }
 
-// Handler is a shortcut for [Router.Handler].
+// Server is a shortcut for [Router.Handler].
 func (g *Group) Server() http.Handler {
 	return g.router.ServerHandler()
 }
@@ -108,7 +120,7 @@ func (g *Group) Use(m middlewares.Middleware) {
 	}))
 }
 
-// Use is a shortcut for [Router.Handler].
+// Handler is a shortcut for [Router.Handler].
 func (g *Group) Handler(h http.Handler) http.Handler {
 	return g.router.Handler(h)
 }

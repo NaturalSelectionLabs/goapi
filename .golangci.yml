@@ -16,7 +16,6 @@ linters:
     - depguard
     - nlreturn
     - forcetypeassert
-    - revive
     - exhaustruct
     - varnamelen
     - gochecknoinits
@@ -44,9 +43,12 @@ gocyclo:
 issues:
   exclude-use-default: false
   exclude-rules:
-    - path: "status_code_test.go"
+    - path: "status_code_test\\.go$"
       linters:
         - staticcheck
-    - path: "lib/examples/basic/main.go"
+    - path: "lib/examples/.+\\.go$"
       linters:
-        - forbidigo
+        - revive
+    - path: ".+\\_test.go$"
+      linters:
+        - revive

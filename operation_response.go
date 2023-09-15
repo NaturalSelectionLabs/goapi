@@ -17,6 +17,9 @@ type Response interface {
 
 var tResponse = reflect.TypeOf((*Response)(nil)).Elem()
 
+// DataBinary is a flag for binary response body.
+// When Data field in the response struct is of this type,
+// the response body will be written directly to the [http.ResponseWriter].
 type DataBinary []byte
 
 var tDataBinary = reflect.TypeOf(DataBinary{})

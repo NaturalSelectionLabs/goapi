@@ -82,6 +82,7 @@ func (g *Group) newOperation(method openapi.Method, path string, handler Operati
 	}
 }
 
+// Handler implements the [middlewares.Middleware] interface.
 func (op *Operation) Handler(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != op.method.String() {
@@ -174,6 +175,7 @@ func (op *Operation) handle(w http.ResponseWriter, r *http.Request, qs url.Value
 // OperationHandler is a function to handle input and output of a http operation.
 type OperationHandler any
 
+// OperationOpenAPI allows a handler customize the OpenAPI doc of its corresponding operation.
 type OperationOpenAPI interface {
 	OpenAPI(doc openapi.Operation) openapi.Operation
 }

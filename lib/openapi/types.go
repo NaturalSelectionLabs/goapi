@@ -4,16 +4,18 @@ import (
 	"github.com/NaturalSelectionLabs/jschema"
 )
 
-type OpenAPIVersion string
+// Version represents the version of an OpenAPI document.
+type Version string
 
-func (v OpenAPIVersion) MarshalJSON() ([]byte, error) {
+// MarshalJSON implements the [json.Marshaler] interface.
+func (v Version) MarshalJSON() ([]byte, error) {
 	// We only support openapi 3.1.0 for now
 	return []byte(`"3.1.0"`), nil
 }
 
 // Document represents an OpenAPI document.
 type Document struct {
-	OpenAPI    OpenAPIVersion  `json:"openapi"`
+	OpenAPI    Version         `json:"openapi"`
 	Info       Info            `json:"info"`
 	Servers    []Server        `json:"servers,omitempty"`
 	Paths      map[string]Path `json:"paths"`
@@ -21,19 +23,23 @@ type Document struct {
 	Extension  Extension       `json:"x-extension,omitempty"` //nolint: tagliatelle
 }
 
+// Info represents the info section of an OpenAPI document.
 type Info struct {
 	Title       string `json:"title"`
 	Version     string `json:"version"`
 	Description string `json:"description,omitempty"`
 }
 
+// Path represents a path in an OpenAPI document.
 type Path map[Method]Operation
 
+// Server represents a server in an OpenAPI document.
 type Server struct {
 	URL         string `json:"url"`
 	Description string `json:"description,omitempty"`
 }
 
+// Operation represents an operation in an OpenAPI document.
 type Operation struct {
 	Parameters  []Parameter             `json:"parameters,omitempty"`
 	RequestBody *RequestBody            `json:"requestBody,omitempty"`
@@ -47,6 +53,7 @@ type Operation struct {
 	Extension   Extension             `json:"x-extension,omitempty"` //nolint: tagliatelle
 }
 
+// Parameter represents a parameter in an OpenAPI document.
 type Parameter struct {
 	Name        string          `json:"name"`
 	In          ParamIn         `json:"in"`
@@ -55,38 +62,46 @@ type Parameter struct {
 	Required    bool            `json:"required,omitempty"`
 }
 
+// RequestBody represents a request body in an OpenAPI document.
 type RequestBody struct {
 	Content  *Content `json:"content,omitempty"`
 	Required bool     `json:"required,omitempty"`
 }
 
+// Response represents a response in an OpenAPI document.
 type Response struct {
 	Description string   `json:"description"`
 	Headers     Headers  `json:"headers,omitempty"`
 	Content     *Content `json:"content,omitempty"`
 }
 
+// Headers represents a headers in an OpenAPI document.
 type Headers map[string]Header
 
+// Header represents a header in an OpenAPI document.
 type Header struct {
 	Description string          `json:"description,omitempty"`
 	Schema      *jschema.Schema `json:"schema"`
 }
 
+// Content represents a content in an OpenAPI document.
 type Content struct {
 	JSON   *Schema `json:"application/json,omitempty"`
 	Binary *Schema `json:"application/octet-stream,omitempty"` //nolint: tagliatelle
 }
 
+// Schema represents a schema in an OpenAPI document.
 type Schema struct {
 	Schema *jschema.Schema `json:"schema"`
 }
 
+// Components represents the components section of an OpenAPI document.
 type Components struct {
 	Schemas         map[string]*jschema.Schema `json:"schemas"`
 	SecuritySchemes map[string]SecurityScheme  `json:"securitySchemes,omitempty"`
 }
 
+// SecurityScheme represents a security scheme in an OpenAPI document.
 type SecurityScheme struct {
 	Type             string            `json:"type"`
 	Description      string            `json:"description,omitempty"`
@@ -95,9 +110,10 @@ type SecurityScheme struct {
 	Scheme           string            `json:"scheme,omitempty"`
 	BearerFormat     string            `json:"bearerFormat,omitempty"`
 	Flows            *OAuthFlowsObject `json:"flows,omitempty"`
-	OpenIdConnectUrl string            `json:"openIdConnectUrl,omitempty"`
+	OpenIDConnectURL string            `json:"openIdConnectUrl,omitempty"`
 }
 
+// OAuthFlowsObject represents a OAuthFlowsObject in an OpenAPI document.
 type OAuthFlowsObject struct {
 	Implicit          *OAuthFlowObject `json:"implicit,omitempty"`
 	Password          *OAuthFlowObject `json:"password,omitempty"`
@@ -105,11 +121,13 @@ type OAuthFlowsObject struct {
 	AuthorizationCode *OAuthFlowObject `json:"authorizationCode,omitempty"`
 }
 
+// OAuthFlowObject represents a OAuthFlowObject in an OpenAPI document.
 type OAuthFlowObject struct {
-	AuthorizationUrl string            `json:"authorizationUrl,omitempty"`
-	TokenUrl         string            `json:"tokenUrl,omitempty"`
-	RefreshUrl       string            `json:"refreshUrl,omitempty"`
+	AuthorizationURL string            `json:"authorizationUrl,omitempty"`
+	TokenURL         string            `json:"tokenUrl,omitempty"`
+	RefreshURL       string            `json:"refreshUrl,omitempty"`
 	Scopes           map[string]string `json:"scopes"`
 }
 
+// Extension represents an extension in an OpenAPI document.
 type Extension any

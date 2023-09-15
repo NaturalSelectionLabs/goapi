@@ -15,6 +15,7 @@ func (doc *Document) JSON() string {
 	return string(b)
 }
 
+// MarshalJSON implements the [json.Marshaler] interface.
 func (p Path) MarshalJSON() ([]byte, error) {
 	m := map[string]Operation{}
 

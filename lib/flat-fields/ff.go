@@ -1,14 +1,17 @@
+// Package ff contains a struct flattening utility.
 package ff
 
 import (
 	"reflect"
 )
 
+// FlattenedStruct is a struct that contains the flattened fields.
 type FlattenedStruct struct {
 	Type   reflect.Type
 	Fields []*FlattenedField
 }
 
+// Parse is to parse the embedding struct and return the flattened struct.
 func Parse(t reflect.Type) *FlattenedStruct {
 	paths := parse(t)
 
@@ -26,16 +29,17 @@ func Parse(t reflect.Type) *FlattenedStruct {
 	}
 }
 
+// FlattenedField is a struct that contains the path indices and the field.
 type FlattenedField struct {
 	Path  []int
 	Field reflect.StructField
 }
 
-// read is to read the embedding struct field.
+// Get the value of embedding struct field.
 func (f *FlattenedField) Get(target reflect.Value) reflect.Value {
 	path := f.Path
 
-	var value reflect.Value = target
+	value := target
 
 	for _, index := range path {
 		if value.Kind() == reflect.Ptr && value.Elem().Kind() == reflect.Struct {
@@ -48,7 +52,7 @@ func (f *FlattenedField) Get(target reflect.Value) reflect.Value {
 	return value
 }
 
-// set is used to set the value of the embedding struct field.
+// Set the value of embedding struct field.
 func (f *FlattenedField) Set(target reflect.Value, val reflect.Value) {
 	path := f.Path
 
@@ -100,10 +104,10 @@ func get(target reflect.Type, path []int) reflect.StructField {
 			fieldType = fieldType.Elem()
 		}
 
-		if i == len(path)-1 {
-			break
-		} else {
+		if i != len(path)-1 {
 			fieldType = fieldType.Field(path[i]).Type
+		} else {
+			break
 		}
 	}
 

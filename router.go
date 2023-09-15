@@ -1,3 +1,4 @@
+// Package goapi is a lightweight opinionated router to bridge function call and http api.
 package goapi
 
 import (
@@ -11,7 +12,8 @@ import (
 	"github.com/xeipuuv/gojsonschema"
 )
 
-// Router itself is a middleware.
+// Router for routing http requests to handlers.
+// It implements the [middlewares.Middleware] interface.
 type Router struct {
 	Schemas jschema.Schemas
 
@@ -27,8 +29,9 @@ func New() *Group {
 	return NewRouter().Group("")
 }
 
+// NewRouter creates a new router.
 func NewRouter() *Router {
-	s := NewSchemas()
+	s := jschema.NewWithInterfaces("#/components/schemas", interfaces)
 
 	s.AddTimeHandler()
 	s.AddJSONRawMessageHandler()
@@ -71,6 +74,8 @@ func (r *Router) Use(middlewares ...middlewares.Middleware) {
 	r.middlewares = append(r.middlewares, middlewares...)
 }
 
+// Handler implements the [middlewares.Middleware] interface.
+// It makes the router itself a middleware.
 func (r *Router) Handler(next http.Handler) http.Handler {
 	return middlewares.Chain(r.middlewares...).Handler(next)
 }
@@ -93,8 +98,4 @@ func (r *Router) Group(prefix string) *Group {
 //	AddFormatChecker("my-id", checker)
 func (r *Router) AddFormatChecker(name string, c gojsonschema.FormatChecker) {
 	gojsonschema.FormatCheckers.Add(name, c)
-}
-
-func NewSchemas() jschema.Schemas {
-	return jschema.NewWithInterfaces("#/components/schemas", interfaces)
 }
