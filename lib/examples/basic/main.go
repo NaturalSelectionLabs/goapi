@@ -49,7 +49,8 @@ func main() {
 	})
 
 	// Install endpoints for openapi doc.
-	apidoc.Install(r, nil, func(doc *openapi.Document) *openapi.Document {
+	apidoc.Install(r, func(doc *openapi.Document) *openapi.Document {
+		// Use this callback to customize the openapi document.
 		doc.Info.Title = "Basic Example"
 		doc.Info.Version = "0.0.1"
 		return doc

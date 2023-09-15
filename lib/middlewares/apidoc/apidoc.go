@@ -8,13 +8,12 @@ import (
 	"github.com/NaturalSelectionLabs/goapi"
 	"github.com/NaturalSelectionLabs/goapi/lib/middlewares"
 	"github.com/NaturalSelectionLabs/goapi/lib/openapi"
-	"github.com/NaturalSelectionLabs/jschema"
 )
 
 //go:embed swagger-ui
 var swaggerFiles embed.FS
 
-func Install(g *goapi.Group, schemas *jschema.Schemas, config func(doc *openapi.Document) *openapi.Document) {
+func Install(g *goapi.Group, config func(doc *openapi.Document) *openapi.Document) {
 	op := &Operation{}
 
 	g.GET("/", op)
