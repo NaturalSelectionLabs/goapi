@@ -10,11 +10,15 @@ import (
 	"github.com/NaturalSelectionLabs/goapi/lib/openapi"
 )
 
+// This example shows 2 simple endpoints for typical blog website, login and fetch posts.
 // To test the example, start the server
 //
 //	go run ./lib/examples/basic
 //
 // Then open http://127.0.0.1:3000 in your browser.
+// You can also run the test curl command in cli:
+//
+//	bash ./lib/examples/basic/test.sh
 func main() {
 	r := goapi.New()
 
@@ -29,7 +33,7 @@ func main() {
 			// goapi will automatically use the standard case conversion,
 			// Here SetCookie will be converted to Set-Cookie in http.
 			// Same works for url path and query.
-			Header: struct{ SetCookie string }{
+			Header: ResLoginHeader{
 				SetCookie: "token=123456",
 			},
 		}

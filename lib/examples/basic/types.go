@@ -59,6 +59,10 @@ func (ResLoginOK) Description() string {
 	return "Login successfully." // openapi description for the response.
 }
 
+type ResLoginHeader struct {
+	SetCookie string
+}
+
 type ResPosts interface {
 	goapi.Response
 }
