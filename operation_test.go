@@ -234,15 +234,17 @@ func TestOperation(t *testing.T) {
 
 	g.Eq(g.Req("", tr.URL("/res-missed-type")).JSON(), map[string]interface{}{
 		"error": map[string]interface{} /* len=2 */ {
-			"code":    "internal_error",
-			"message": `response of /res-missed-type should goapi.Interface(new(goapi_test.res), goapi_test.resEmpty{})`,
+			"code": "internal_error",
+			"message": "handler response of path `/res-missed-type` must " +
+				"goapi.Interface(new(goapi_test.res), goapi_test.resEmpty{})",
 		},
 	})
 
 	g.Eq(g.Req("", tr.URL("/forget-create-interface")).JSON(), map[string]interface{}{
 		"error": map[string]interface{} /* len=2 */ {
-			"code":    "internal_error",
-			"message": `response of /forget-create-interface should goapi.Interface(new(goapi_test.resForgetCreateInterface))`,
+			"code": "internal_error",
+			"message": "handler response of path `/forget-create-interface` " +
+				"must goapi.Interface(new(goapi_test.resForgetCreateInterface))",
 		},
 	})
 

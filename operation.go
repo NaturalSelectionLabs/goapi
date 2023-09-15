@@ -160,11 +160,11 @@ func (op *Operation) handle(w http.ResponseWriter, r *http.Request, qs url.Value
 		resType = res.Type()
 
 		if _, ok := interfaces[vary.ID(setType)]; !ok {
-			panic(fmt.Sprintf("response of %s should goapi.Interface(new(%s))", op.path.path, setType.String()))
+			panic(fmt.Sprintf("handler response of path `%s` must goapi.Interface(new(%s))", op.path.path, setType.String()))
 		}
 
 		if _, ok := interfaces[vary.ID(setType)].Implementations[vary.ID(resType)]; !ok {
-			panic(fmt.Sprintf("response of %s should goapi.Interface(new(%s), %s{})",
+			panic(fmt.Sprintf("handler response of path `%s` must goapi.Interface(new(%s), %s{})",
 				op.path.path, setType.String(), resType.String()))
 		}
 	}
