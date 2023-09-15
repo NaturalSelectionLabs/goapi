@@ -31,7 +31,7 @@ func New() *Group {
 
 // NewRouter creates a new router.
 func NewRouter() *Router {
-	s := jschema.NewWithInterfaces("#/components/schemas", interfaces)
+	s := jschema.NewWithInterfaces("#/components/schemas", Interfaces)
 
 	s.AddTimeHandler()
 	s.AddJSONRawMessageHandler()

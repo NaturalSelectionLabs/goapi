@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"reflect"
 	"strings"
 	"testing"
 
@@ -11,6 +12,7 @@ import (
 	"github.com/NaturalSelectionLabs/goapi/lib/middlewares"
 	"github.com/NaturalSelectionLabs/goapi/lib/openapi"
 	"github.com/ysmood/got"
+	"github.com/ysmood/vary"
 )
 
 type Res interface {
@@ -369,4 +371,19 @@ func TestOpenAPI(t *testing.T) {
 			},
 		},
 	})
+}
+
+func TestAddInterfaces(t *testing.T) {
+	g := got.T(t)
+
+	set := vary.NewInterfaces()
+
+	type AddInterfaces interface{}
+
+	set.New(new(AddInterfaces))
+
+	goapi.AddInterfaces(set)
+
+	g.Eq(goapi.Interfaces[vary.ID(reflect.TypeOf(new(AddInterfaces)).Elem())].ID(),
+		"github.com/NaturalSelectionLabs/goapi_test.AddInterfaces")
 }

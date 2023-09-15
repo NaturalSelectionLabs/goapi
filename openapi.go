@@ -10,13 +10,21 @@ import (
 	"github.com/ysmood/vary"
 )
 
-var interfaces = vary.NewInterfaces()
+// Interfaces is the global interface set.
+var Interfaces = vary.NewInterfaces()
 
 // Interface create a interface set of i. ts are the types that implement i.
 // For golang runtime we can't reflect all the implementations of an interface,
 // with it goapi can find out all the possible response type of an endpoint.
 func Interface(i any, ts ...any) *vary.Interface {
-	return interfaces.New(i, ts...)
+	return Interfaces.New(i, ts...)
+}
+
+// AddInterfaces to the global interface set.
+func AddInterfaces(is vary.Interfaces) {
+	for k, v := range is {
+		Interfaces[k] = v
+	}
 }
 
 // Descriptioner is an interface that is use to specify the description in openapi.
@@ -199,7 +207,7 @@ func resDoc(s jschema.Schemas, op *Operation) map[openapi.StatusCode]openapi.Res
 		list[code] = res
 	}
 
-	if it, has := interfaces[vary.ID(op.tRes)]; has {
+	if it, has := Interfaces[vary.ID(op.tRes)]; has {
 		for _, t := range it.Implementations {
 			add(t)
 		}
