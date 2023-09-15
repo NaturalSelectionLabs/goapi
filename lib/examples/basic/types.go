@@ -5,14 +5,15 @@ import "github.com/NaturalSelectionLabs/goapi"
 type ParamsPosts struct {
 	goapi.InURL
 	// Use description tag to describe the openapi parameter.
-	ID int `description:"User ID"`
+	ID int `description:"User ID" min:"1"`
 	// Type of the posts to fetch.
 	// You can use json tag to override the default parameter naming behavior.
 	Type PostType `json:"t"`
 	// Use default tag to mark this field as optional,
 	// you can also use pointer to mark it as optional.
-	// The default value should be a json string.
-	Keyword string `default:"\"go\""`
+	// Supported tags: min, max, format, pattern.
+	// You can also use [goapi.Router.AddFormatChecker] to add custom format checker.
+	Keyword string `default:"go" min:"1" pattern:"^[a-z]+$"`
 	// Use embedded struct to share common parameters.
 	ParamsPagination
 }
