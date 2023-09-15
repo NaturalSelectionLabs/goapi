@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 )
 
-//go:generate go run github.com/dmarkham/enumer@latest -type=Code -values -transform=snake -trimprefix=ErrCode -json
+//go:generate go run github.com/dmarkham/enumer@latest -type=Code -values -transform=snake -trimprefix=Code -json
 type Code int
 
 const (
