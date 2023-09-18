@@ -111,11 +111,15 @@ func urlParamDoc(s jschema.Schemas, p *parsedParam) []openapi.Parameter {
 			in = openapi.PATH
 		}
 
+		schema := fieldSchema(s, f.flatField.Field)
+		desc := schema.Description
+		schema.Description = ""
+
 		arr = append(arr, openapi.Parameter{
 			Name:        f.name,
 			In:          in,
-			Schema:      fieldSchema(s, f),
-			Description: f.schema.Description,
+			Schema:      schema,
+			Description: desc,
 			Required:    f.required,
 		})
 	}
@@ -127,11 +131,15 @@ func headerParamDoc(s jschema.Schemas, p *parsedParam) []openapi.Parameter {
 	arr := []openapi.Parameter{}
 
 	for _, f := range p.fields {
+		schema := fieldSchema(s, f.flatField.Field)
+		desc := schema.Description
+		schema.Description = ""
+
 		arr = append(arr, openapi.Parameter{
 			Name:        f.name,
 			In:          openapi.HEADER,
-			Schema:      fieldSchema(s, f),
-			Description: f.schema.Description,
+			Schema:      schema,
+			Description: desc,
 			Required:    f.required,
 		})
 	}
@@ -139,10 +147,13 @@ func headerParamDoc(s jschema.Schemas, p *parsedParam) []openapi.Parameter {
 	return arr
 }
 
-func fieldSchema(s jschema.Schemas, f *parsedField) *jschema.Schema {
-	scm := s.DefineFieldT(f.flatField.Field)
+func fieldSchema(s jschema.Schemas, f reflect.StructField) *jschema.Schema {
+	if f.Type.Kind() == reflect.Ptr {
+		f.Type = f.Type.Elem()
+	}
+
+	scm := s.DefineFieldT(f)
 	scm = firstProp(scm)
-	scm.Description = ""
 
 	return scm
 }

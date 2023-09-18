@@ -27,6 +27,7 @@
     "innererror",
     "jschema",
     "labstack",
+    "maintidx",
     "middlewares",
     "naturalselectionlabs",
     "nestif",

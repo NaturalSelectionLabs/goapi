@@ -1,5 +1,5 @@
-github.com/NaturalSelectionLabs/jschema v0.7.13 h1:gmUdcg5jRfEcxIxgUqEblXuukFhsfobqFQNq2vyEnxM=
-github.com/NaturalSelectionLabs/jschema v0.7.13/go.mod h1:wEGGnkhrfPASOY8PC2Ch2UM61zUobJS12Z6yh9q9KCQ=
+github.com/NaturalSelectionLabs/jschema v0.7.14 h1:7uVUWysGuI0KVlLUo1AcMA+nnnq0tDRrJKWv9Ir3aMw=
+github.com/NaturalSelectionLabs/jschema v0.7.14/go.mod h1:wEGGnkhrfPASOY8PC2Ch2UM61zUobJS12Z6yh9q9KCQ=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=

@@ -10,6 +10,7 @@ import (
 	ff "github.com/NaturalSelectionLabs/goapi/lib/flat-fields"
 	"github.com/NaturalSelectionLabs/goapi/lib/middlewares"
 	"github.com/NaturalSelectionLabs/goapi/lib/openapi"
+	"github.com/NaturalSelectionLabs/jschema"
 	"github.com/xeipuuv/gojsonschema"
 )
 
@@ -227,45 +228,53 @@ func (g *Group) parseURLField(path *Path, flatField *ff.FlattenedField) *parsedF
 }
 
 func (g *Group) parseField(flatField *ff.FlattenedField) *parsedField {
-	t := flatField.Field
-	f := &parsedField{flatField: flatField, required: true}
-	tf := t.Type
+	f := flatField.Field
+	parsed := &parsedField{flatField: flatField, required: true}
+	t := f.Type
 
-	switch t.Type.Kind() { //nolint: exhaustive
+	switch t.Kind() { //nolint: exhaustive
 	case reflect.Ptr, reflect.Slice:
-		f.ptr = true
+		parsed.ptr = true
 	default:
-		f.ptr = false
+		parsed.ptr = false
 	}
 
-	if tf.Kind() == reflect.Ptr {
-		tf = tf.Elem()
-		f.required = false
+	if t.Kind() == reflect.Ptr {
+		t = t.Elem()
+		parsed.required = false
 	}
 
-	if tf.Kind() == reflect.Slice {
-		f.slice = true
-		f.sliceType = tf
-		f.item = tf.Elem()
-		f.required = false
+	if t.Kind() == reflect.Slice {
+		parsed.slice = true
+		parsed.sliceType = t
+		parsed.item = t.Elem()
+		parsed.required = false
 	} else {
-		f.item = tf
+		parsed.item = t
 	}
 
-	f.schema = g.router.Schemas.ToStandAlone(firstProp(g.router.Schemas.DefineFieldT(t)))
+	parsed.schema = g.router.Schemas.ToStandAlone(fieldSchema(g.router.Schemas, f))
 
-	if _, ok := t.Tag.Lookup("default"); ok {
-		f.required = false
-		f.hasDefault = true
-		f.defaultVal = reflect.ValueOf(f.schema.Default)
+	if _, ok := f.Tag.Lookup("default"); ok {
+		parsed.required = false
+		parsed.hasDefault = true
+		parsed.defaultVal = reflect.ValueOf(parsed.schema.Default)
 	}
 
-	if _, ok := t.Tag.Lookup("example"); ok {
-		f.example = reflect.ValueOf(f.schema.Example)
+	if _, ok := f.Tag.Lookup("example"); ok {
+		parsed.example = reflect.ValueOf(parsed.schema.Example)
 	}
 
-	validator, _ := gojsonschema.NewSchema(gojsonschema.NewGoLoader(f.schema))
-	f.validator = validator
+	scm := parsed.schema
 
-	return f
+	if !parsed.required {
+		s := &jschema.Schema{Defs: parsed.schema.Defs}
+		s.AnyOf = []*jschema.Schema{parsed.schema, {Type: jschema.TypeNull}}
+		scm = s
+	}
+
+	validator, _ := gojsonschema.NewSchema(gojsonschema.NewGoLoader(scm))
+	parsed.validator = validator
+
+	return parsed
 }

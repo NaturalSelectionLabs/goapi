@@ -83,8 +83,8 @@ func (p *parsedParam) loadURL(qs url.Values) (reflect.Value, error) { //nolint: 
 		var fv reflect.Value
 
 		if !f.InPath && f.slice { //nolint: nestif
-			vs, ok := qs[f.name]
-			if ok { //nolint: gocritic
+			vs, has := qs[f.name]
+			if has { //nolint: gocritic
 				fv = reflect.MakeSlice(f.sliceType, len(vs), len(vs))
 			} else if f.hasDefault {
 				fv = f.defaultVal
@@ -185,7 +185,9 @@ type parsedField struct {
 }
 
 func (f *parsedField) validate(val reflect.Value) error {
-	res, _ := f.validator.Validate(gojsonschema.NewGoLoader(f.flatField.Get(val).Interface()))
+	v := f.flatField.Get(val).Interface()
+	res, _ := f.validator.Validate(gojsonschema.NewGoLoader(v))
+
 	if !res.Valid() {
 		return fmt.Errorf("param `%s` is invalid: %v", f.name, res.Errors())
 	}

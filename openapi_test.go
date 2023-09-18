@@ -62,7 +62,8 @@ func (One) OpenAPI(doc openapi.Operation) openapi.Operation {
 
 func (One) Handle(p struct {
 	goapi.InURL
-	ID string `default:"\"123\"" description:"id" example:"\"456\""`
+	ID   string `default:"\"123\"" description:"id" example:"\"456\""`
+	Type *openapi.Code
 }, h struct {
 	goapi.InHeader
 	UA string
@@ -216,7 +217,7 @@ func TestOpenAPI(t *testing.T) {
 				"get": map[string]interface{} /* len=8 */ {
 					"description": "test endpoint",
 					"operationId": "test",
-					"parameters": []interface{} /* len=2 cap=2 */ {
+					"parameters": []interface{} /* len=3 cap=4 */ {
 						map[string]interface{} /* len=4 */ {
 							"description": "id",
 							"in":          "query",
@@ -225,6 +226,13 @@ func TestOpenAPI(t *testing.T) {
 								"default": "123",
 								"example": "456",
 								"type":    "string",
+							},
+						},
+						map[string]interface{} /* len=3 */ {
+							"in":   "query",
+							"name": "type",
+							"schema": map[string]interface{}{
+								"$ref": `#/components/schemas/Code`, /* len=25 */
 							},
 						},
 						map[string]interface{} /* len=4 */ {
