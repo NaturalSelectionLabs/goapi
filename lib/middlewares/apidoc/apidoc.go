@@ -16,7 +16,12 @@ import (
 var swaggerFiles embed.FS
 
 // Install the several endpoints to serve the openapi document for g.
+// If config can be nil if you don't want to modify the generated doc.
 func Install(g *goapi.Group, config func(doc *openapi.Document) *openapi.Document) {
+	if config == nil {
+		config = func(doc *openapi.Document) *openapi.Document { return doc }
+	}
+
 	op := &Operation{}
 
 	g.GET("/", op)
