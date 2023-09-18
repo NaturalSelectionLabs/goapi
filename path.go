@@ -15,7 +15,7 @@ type Path struct {
 var regOpenAPIPath = regexp.MustCompile(`\{([^}]+)\}`)
 
 // Converts OpenAPI style path to Go Regexp and returns path parameters.
-func newPath(path string) (*Path, error) {
+func newPath(path string, optionalSlash bool) (*Path, error) {
 	params := []string{}
 
 	// Replace OpenAPI wildcards with Go RegExp named wildcards
@@ -27,6 +27,10 @@ func newPath(path string) (*Path, error) {
 
 	// Make sure the path starts with a "^", ends with a "$", and escape slashes
 	regexPath = "^" + strings.ReplaceAll(regexPath, "/", "\\/") + "$"
+
+	if optionalSlash && strings.HasSuffix(regexPath, "\\/$") {
+		regexPath = regexPath[:len(regexPath)-3] + "\\/?$"
+	}
 
 	// Compile the regular expression
 	r, err := regexp.Compile(regexPath)

@@ -60,3 +60,16 @@ func TestNotFound(t *testing.T) {
 
 	g.Eq(g.Req("", tr.URL("/test")).StatusCode, http.StatusNotFound)
 }
+
+func setupRouter(g got.G, setup func(r *goapi.Group)) *got.Router {
+	g.Helper()
+
+	r := goapi.New()
+	tr := g.Serve()
+
+	setup(r)
+
+	tr.Mux.Handle("/", r.Server())
+
+	return tr
+}

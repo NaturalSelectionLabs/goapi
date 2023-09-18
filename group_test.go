@@ -19,15 +19,10 @@ func TestPrefix(t *testing.T) {
 func TestMultipleGroups(t *testing.T) {
 	g := got.T(t)
 
-	r := goapi.New()
-
-	count := 0
-
-	{
+	tr := setupRouter(g, func(r *goapi.Group) {
 		ga := r.Router().Group("/a")
 		ga.Use(middlewares.Func(func(next http.Handler) http.Handler {
 			return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-				count++
 				next.ServeHTTP(w, r)
 			})
 		}))
@@ -54,10 +49,7 @@ func TestMultipleGroups(t *testing.T) {
 		g.Eq(g.Panic(func() {
 			gb.Group("/{user}")
 		}), "expect prefix not contains braces, but got: /{user}")
-	}
-
-	tr := g.Serve()
-	tr.Mux.Handle("/", r.Server())
+	})
 
 	g.Eq(g.Req("", tr.URL("/a/users")).JSON(), map[string]any{
 		"data": "a",
@@ -99,4 +91,27 @@ func TestGroupAsMiddleware(t *testing.T) {
 	tr.Mux.Handle("/", h)
 
 	g.Eq(g.Req("", tr.URL("/")).String(), "ok")
+}
+
+func TestGroupTrailingSlash(t *testing.T) {
+	g := got.T(t)
+
+	tr := setupRouter(g, func(r *goapi.Group) {
+		r.GET("/", func() resOK { return resOK{} })
+
+		ga := r.Group("/test")
+		ga.GET("/", func() resOK { return resOK{} })
+
+		ga.GET("/x", func() resOK { return resOK{Data: "x"} })
+		ga.GET("/x/", func() resOK { return resOK{Data: "x/"} })
+	})
+
+	g.Eq(g.Req("", tr.URL("")).StatusCode, 200)
+	g.Eq(g.Req("", tr.URL("/")).StatusCode, 200)
+
+	g.Eq(g.Req("", tr.URL("/test")).StatusCode, 200)
+	g.Eq(g.Req("", tr.URL("/test/")).StatusCode, 200)
+
+	g.Eq(g.Req("", tr.URL("/test/x")).JSON(), map[string]interface{}{"data": "x"})
+	g.Eq(g.Req("", tr.URL("/test/x/")).JSON(), map[string]interface{}{"data": "x/"})
 }

@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/url"
 	"reflect"
+	"strings"
 
 	"github.com/NaturalSelectionLabs/goapi/lib/middlewares"
 	"github.com/NaturalSelectionLabs/goapi/lib/openapi"
@@ -31,7 +32,15 @@ type Operation struct {
 }
 
 func (g *Group) newOperation(method openapi.Method, path string, handler OperationHandler) *Operation {
-	p, err := newPath(path)
+	optionalSlash := true
+
+	for _, op := range g.router.operations {
+		if path == strings.TrimRight(op.path.path, "/") {
+			optionalSlash = false
+		}
+	}
+
+	p, err := newPath(path, optionalSlash)
 	if err != nil {
 		panic(err)
 	}

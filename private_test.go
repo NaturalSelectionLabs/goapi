@@ -22,7 +22,7 @@ func Test_toValue(t *testing.T) {
 func Test_loadURL(t *testing.T) {
 	g := got.T(t)
 
-	path, err := newPath("/test/{a}/{d}")
+	path, err := newPath("/test/{a}/{d}", false)
 	g.E(err)
 
 	type testParams struct {
@@ -68,7 +68,7 @@ func Test_loadURL(t *testing.T) {
 func Test_loadURL_nil(t *testing.T) {
 	g := got.T(t)
 
-	path, err := newPath("/test")
+	path, err := newPath("/test", false)
 	g.E(err)
 
 	type testParams struct {
@@ -89,7 +89,7 @@ func Test_loadURL_nil(t *testing.T) {
 func Test_loadURL_err(t *testing.T) {
 	g := got.T(t)
 
-	path, err := newPath("/test/{a}")
+	path, err := newPath("/test/{a}", false)
 	g.E(err)
 
 	type testParams struct {
@@ -251,7 +251,7 @@ func Test_default_arr(t *testing.T) {
 		IDS []int `default:"[1, 2]"`
 	}
 
-	path, err := newPath("/test")
+	path, err := newPath("/test", false)
 	g.E(err)
 
 	parsed := New().parseParam(path, reflect.TypeOf(params{}))
@@ -282,7 +282,7 @@ func Test_custom_checker(t *testing.T) {
 		ID string `format:"my-id"`
 	}
 
-	path, err := newPath("/test")
+	path, err := newPath("/test", false)
 	g.E(err)
 
 	parsed := New().parseParam(path, reflect.TypeOf(params{}))
@@ -302,7 +302,7 @@ func Test_validation(t *testing.T) {
 		ID string `min:"5"`
 	}
 
-	path, err := newPath("/test")
+	path, err := newPath("/test", false)
 	g.E(err)
 
 	parsed := New().parseParam(path, reflect.TypeOf(A{}))

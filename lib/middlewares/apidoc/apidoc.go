@@ -4,6 +4,7 @@ package apidoc
 import (
 	"embed"
 	"net/http"
+	"net/url"
 	"strings"
 
 	"github.com/NaturalSelectionLabs/goapi"
@@ -26,7 +27,7 @@ func Install(g *goapi.Group, config func(doc *openapi.Document) *openapi.Documen
 
 	g.Group("/swagger-ui").Use(middlewares.Func(func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			r.URL.Path = strings.TrimLeft(r.URL.Path, g.Prefix())
+			r.URL.Path = strings.TrimPrefix(r.URL.Path, g.Prefix())
 			fs.ServeHTTP(w, r)
 		})
 	}))
@@ -35,7 +36,7 @@ func Install(g *goapi.Group, config func(doc *openapi.Document) *openapi.Documen
 type params struct {
 	goapi.InHeader
 
-	Accept string
+	Accept string `default:"application/json"`
 }
 
 type res interface {
@@ -49,13 +50,21 @@ type resOK struct {
 	Data any `response:"direct"`
 }
 
+func (resOK) Description() string {
+	return "It will return the OpenAPI doc in JSON format."
+}
+
 type resRedirect struct {
 	goapi.StatusFound
 	Header headerRedirect
 }
 
+func (resRedirect) Description() string {
+	return "It will redirect the browser to the Swagger UI to render the generated OpenAPI doc."
+}
+
 type headerRedirect struct {
-	Location string
+	Location string `description:"Redirect to ./swagger-ui"`
 }
 
 // Operation is the operation to serve the OpenAPI document.
@@ -73,14 +82,16 @@ func (*Operation) OpenAPI(doc openapi.Operation) openapi.Operation {
 }
 
 // Handle implements the [goapi.OperationHandler] interface.
-func (op *Operation) Handle(p params) res {
+func (op *Operation) Handle(p params, r *http.Request) res {
 	if strings.Contains(p.Accept, "application/json") {
 		return resOK{Data: op.doc}
 	}
 
+	u, _ := url.JoinPath(r.URL.Path, "swagger-ui")
+
 	return resRedirect{
 		Header: headerRedirect{
-			Location: "swagger-ui",
+			Location: u,
 		},
 	}
 }

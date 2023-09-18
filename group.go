@@ -66,6 +66,8 @@ func (g *Group) HEAD(path string, handler OperationHandler) {
 
 // Add adds a new http handler to the group.
 // If a request matches the path and method, the handler will be called.
+// The router will ignore the trailing slash of the path if a path without trailing slash
+// has not been defined.
 func (g *Group) Add(method openapi.Method, path string, handler OperationHandler) {
 	op := g.newOperation(method, g.prefix+path, handler)
 	g.router.operations = append(g.router.operations, op)
