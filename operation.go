@@ -8,7 +8,7 @@ import (
 
 	"github.com/NaturalSelectionLabs/goapi/lib/middlewares"
 	"github.com/NaturalSelectionLabs/goapi/lib/openapi"
-	"github.com/ysmood/vary"
+	"github.com/naturalselectionlabs/vary"
 )
 
 // Operation is a handler for a specific HTTP method and path.

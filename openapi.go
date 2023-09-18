@@ -7,7 +7,7 @@ import (
 	ff "github.com/NaturalSelectionLabs/goapi/lib/flat-fields"
 	"github.com/NaturalSelectionLabs/goapi/lib/openapi"
 	"github.com/NaturalSelectionLabs/jschema"
-	"github.com/ysmood/vary"
+	"github.com/naturalselectionlabs/vary"
 )
 
 // Interfaces is the global interface set.

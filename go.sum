@@ -1,5 +1,5 @@
-github.com/NaturalSelectionLabs/jschema v0.7.11 h1:fpNDxMm0wtHQx/bTbIkmrK3jEblYrQmFX6HCZoitC+8=
-github.com/NaturalSelectionLabs/jschema v0.7.11/go.mod h1:7l4ZhkX89M9ma6/ATvSsDRcj9DiVNEy6nbW4qwIfVPY=
+github.com/NaturalSelectionLabs/jschema v0.7.13 h1:gmUdcg5jRfEcxIxgUqEblXuukFhsfobqFQNq2vyEnxM=
+github.com/NaturalSelectionLabs/jschema v0.7.13/go.mod h1:wEGGnkhrfPASOY8PC2Ch2UM61zUobJS12Z6yh9q9KCQ=
 github.com/davecgh/go-spew v1.1.0/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
 github.com/davecgh/go-spew v1.1.1/go.mod h1:J7Y8YcW2NihsgmVo/mv3lAwl/skON4iLHjSsI+c5H38=
@@ -9,6 +9,8 @@ github.com/huandu/go-clone v1.6.0 h1:HMo5uvg4wgfiy5FoGOqlFLQED/VGRm2D9Pi8g1FXPGc
 github.com/huandu/go-clone v1.6.0/go.mod h1:ReGivhG6op3GYr+UY3lS6mxjKp7MIGTknuU5TbTVaXE=
 github.com/iancoleman/strcase v0.3.0 h1:nTXanmYxhfFAMjZL34Ov6gkzEsSJZ5DbhxWjvSASxEI=
 github.com/iancoleman/strcase v0.3.0/go.mod h1:iwCmte+B7n89clKwxIoIXy/HfoL7AsD47ZCWhYzw7ho=
+github.com/naturalselectionlabs/vary v0.3.4 h1:1Q5PZDYn85YBEFGaNH523ggCaEe7lZDCuW9kbplzqxI=
+github.com/naturalselectionlabs/vary v0.3.4/go.mod h1:Q8bR1thUFvwJKudCzD6Kn1ZjwsJo7Xrh2kYsTYAhkrg=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
@@ -26,8 +28,6 @@ github.com/ysmood/gop v0.1.0 h1:BkW6hF0j/hZNyZv+FOPU7op1zuDqRa7x7GJyygb5uf4=
 github.com/ysmood/gop v0.1.0/go.mod h1:rr5z2z27oGEbyB787hpEcx4ab8cCiPnKxn0SUHt6xzk=
 github.com/ysmood/got v0.35.1 h1:4EVnrjKziFs4XRxPLEsfQgIEy2Crvu5aTxnAL3cDrEg=
 github.com/ysmood/got v0.35.1/go.mod h1:R7naGpP/qR1i9b5xOCkQnfuEAUPq0TROuTffdxbJoIc=
-github.com/ysmood/vary v0.3.2 h1:oxUmATxrs4BPTHo1b3zNgyzTGZr/6s7zvdM9F9+M4kw=
-github.com/ysmood/vary v0.3.2/go.mod h1:X9WYOJwS8Hyeh7Qs08haaeelNru/UIOPUggUnRwxHmM=
 gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=
 gopkg.in/yaml.v2 v2.2.2/go.mod h1:hI93XBmqTisBFMUTm0b8Fm+jr3Dg1NNxqwp+5A1VGuI=
 gopkg.in/yaml.v3 v3.0.1 h1:fxVm/GzAzEWqLHuvctI91KS9hhNmmWOoWu0XTYJS7CA=

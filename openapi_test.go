@@ -11,8 +11,8 @@ import (
 	"github.com/NaturalSelectionLabs/goapi"
 	"github.com/NaturalSelectionLabs/goapi/lib/middlewares"
 	"github.com/NaturalSelectionLabs/goapi/lib/openapi"
+	"github.com/naturalselectionlabs/vary"
 	"github.com/ysmood/got"
-	"github.com/ysmood/vary"
 )
 
 type Res interface {
