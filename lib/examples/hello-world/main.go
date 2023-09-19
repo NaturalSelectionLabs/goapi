@@ -1,3 +1,4 @@
+// Package main .
 package main
 
 import (
@@ -6,6 +7,7 @@ import (
 	"github.com/NaturalSelectionLabs/goapi"
 )
 
+// Hello is the response for hello world.
 type Hello struct {
 	goapi.StatusOK // response http status code 200
 

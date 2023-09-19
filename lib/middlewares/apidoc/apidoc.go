@@ -22,7 +22,7 @@ func Install(g *goapi.Group, config func(doc *openapi.Document) *openapi.Documen
 		config = func(doc *openapi.Document) *openapi.Document { return doc }
 	}
 
-	op := &Operation{}
+	op := &operation{}
 
 	g.GET("/", op)
 
@@ -72,22 +72,22 @@ type headerRedirect struct {
 	Location string `description:"Redirect to ./swagger-ui"`
 }
 
-// Operation is the operation to serve the OpenAPI document.
-type Operation struct {
+// operation is the operation to serve the OpenAPI document.
+type operation struct {
 	doc *openapi.Document
 }
 
-var _ goapi.OperationOpenAPI = &Operation{}
+var _ goapi.OperationOpenAPI = &operation{}
 
 // OpenAPI implements the [goapi.OperationOpenAPI] interface.
-func (*Operation) OpenAPI(doc openapi.Operation) openapi.Operation {
+func (*operation) OpenAPI(doc openapi.Operation) openapi.Operation {
 	doc.Description = "It will auto redirect the browser to the Swagger UI to render the generated OpenAPI doc. " +
 		"If you request it with `Accept: application/json` header, it will return the OpenAPI doc in JSON format."
 	return doc
 }
 
 // Handle implements the [goapi.OperationHandler] interface.
-func (op *Operation) Handle(p params, r *http.Request) res {
+func (op *operation) Handle(p params, r *http.Request) res {
 	if strings.Contains(p.Accept, "application/json") {
 		return resOK{Data: op.doc}
 	}

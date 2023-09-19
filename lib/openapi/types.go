@@ -15,12 +15,14 @@ func (v Version) MarshalJSON() ([]byte, error) {
 
 // Document represents an OpenAPI document.
 type Document struct {
-	OpenAPI    Version         `json:"openapi"`
-	Info       Info            `json:"info"`
-	Servers    []Server        `json:"servers,omitempty"`
-	Paths      map[string]Path `json:"paths"`
-	Components Components      `json:"components"`
-	Extension  Extension       `json:"x-extension,omitempty"` //nolint: tagliatelle
+	OpenAPI      Version         `json:"openapi"`
+	Info         Info            `json:"info"`
+	Servers      []Server        `json:"servers,omitempty"`
+	Paths        map[string]Path `json:"paths"`
+	Components   Components      `json:"components"`
+	Tags         []Tag           `json:"tags,omitempty"`
+	ExternalDocs *ExternalDocs   `json:"externalDocs,omitempty"`
+	Extension    Extension       `json:"x-extension,omitempty"` //nolint: tagliatelle
 }
 
 // Info represents the info section of an OpenAPI document.
@@ -131,3 +133,16 @@ type OAuthFlowObject struct {
 
 // Extension represents an extension in an OpenAPI document.
 type Extension any
+
+// Tag represents a tag in an OpenAPI document.
+type Tag struct {
+	Name         string        `json:"name"`
+	Description  string        `json:"description,omitempty"`
+	ExternalDocs *ExternalDocs `json:"externalDocs,omitempty"`
+}
+
+// ExternalDocs represents an externalDocs in an OpenAPI document.
+type ExternalDocs struct {
+	URL         string `json:"url"`
+	Description string `json:"description,omitempty"`
+}

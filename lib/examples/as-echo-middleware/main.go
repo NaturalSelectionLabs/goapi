@@ -1,3 +1,4 @@
+// Package main .
 package main
 
 import (
@@ -19,6 +20,7 @@ func main() {
 	_ = e.Start(":3000")
 }
 
+// Res .
 type Res struct {
 	goapi.StatusOK
 	Data string
