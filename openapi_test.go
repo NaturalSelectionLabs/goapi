@@ -128,9 +128,9 @@ func TestOpenAPI(t *testing.T) {
 				"Code": map[string]interface{} /* len=3 */ {
 					"description": `github.com/NaturalSelectionLabs/goapi/lib/openapi.Code`, /* len=54 */
 					"enum": []interface{} /* len=3 cap=4 */ {
-						"not_found",
-						"invalid_param",
 						"internal_error",
+						"invalid_param",
+						"not_found",
 					},
 					"title": "Code",
 				},

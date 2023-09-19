@@ -3,8 +3,8 @@ github.com/NaturalSelectionLabs/jschema v0.7.9 h1:Tyq5k6WCp+n0ZNp5rh4zga1VA0N7Bw
 github.com/NaturalSelectionLabs/jschema v0.7.9/go.mod h1:7l4ZhkX89M9ma6/ATvSsDRcj9DiVNEy6nbW4qwIfVPY=
 github.com/NaturalSelectionLabs/jschema v0.7.13 h1:gmUdcg5jRfEcxIxgUqEblXuukFhsfobqFQNq2vyEnxM=
 github.com/NaturalSelectionLabs/jschema v0.7.13/go.mod h1:wEGGnkhrfPASOY8PC2Ch2UM61zUobJS12Z6yh9q9KCQ=
-github.com/NaturalSelectionLabs/jschema v0.7.14 h1:7uVUWysGuI0KVlLUo1AcMA+nnnq0tDRrJKWv9Ir3aMw=
-github.com/NaturalSelectionLabs/jschema v0.7.14/go.mod h1:wEGGnkhrfPASOY8PC2Ch2UM61zUobJS12Z6yh9q9KCQ=
+github.com/NaturalSelectionLabs/jschema v0.7.15 h1:+W6tDv2FtFJJ707bY70HJuCmODLHrcew0N/g0W6QDB8=
+github.com/NaturalSelectionLabs/jschema v0.7.15/go.mod h1:wEGGnkhrfPASOY8PC2Ch2UM61zUobJS12Z6yh9q9KCQ=
 github.com/go-playground/assert/v2 v2.2.0/go.mod h1:VDjEfimB/XKnb+ZQfWdccd7VUvScMdVu0Titje2rxJ4=
 github.com/go-playground/validator/v10 v10.15.3/go.mod h1:9iXMNT7sEkjXb0I+enO7QXmzG6QCsPWY4zveKFVRSyU=
 github.com/golang-jwt/jwt v3.2.2+incompatible h1:IfV12K8xAKAnZqdXVzCZ+TOjboZ2keLg81eXfW3O+oY=

@@ -3,7 +3,7 @@ module github.com/NaturalSelectionLabs/goapi
 go 1.20
 
 require (
-	github.com/NaturalSelectionLabs/jschema v0.7.14
+	github.com/NaturalSelectionLabs/jschema v0.7.15
 	github.com/iancoleman/strcase v0.3.0
 	github.com/naturalselectionlabs/vary v0.3.4
 	github.com/xeipuuv/gojsonschema v1.2.0
