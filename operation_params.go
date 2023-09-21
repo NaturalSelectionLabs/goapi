@@ -195,6 +195,10 @@ func (f *parsedField) validate(val reflect.Value) error {
 	return nil
 }
 
+func toOperationName(name string) string {
+	return strcase.ToLowerCamel(name)
+}
+
 func toHeaderName(name string) string {
 	return strcase.ToKebab(name)
 }

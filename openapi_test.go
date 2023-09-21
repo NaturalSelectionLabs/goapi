@@ -53,7 +53,6 @@ type One struct {
 func (One) OpenAPI(doc openapi.Operation) openapi.Operation {
 	doc.Summary = "test"
 	doc.Description = "test endpoint"
-	doc.OperationID = "test"
 	doc.Tags = []string{"test"}
 	doc.Security = []map[string][]string{{"auth": {"read"}}}
 
@@ -118,7 +117,7 @@ func TestOpenAPI(t *testing.T) {
 	{
 		g.E(os.WriteFile("tmp/openapi.json", []byte(doc), 0666))
 		out, err := exec.Command("npx", strings.Split("rdme openapi:validate tmp/openapi.json", " ")...).CombinedOutput()
-		g.Desc("%s", out).True(err == nil)
+		g.Desc("%s", out).Nil(err)
 	}
 
 	//nolint: lll
@@ -216,7 +215,7 @@ func TestOpenAPI(t *testing.T) {
 			"/one": map[string]interface{}{
 				"get": map[string]interface{} /* len=8 */ {
 					"description": "test endpoint",
-					"operationId": "test",
+					"operationId": "one",
 					"parameters": []interface{} /* len=3 cap=4 */ {
 						map[string]interface{} /* len=4 */ {
 							"description": "id",

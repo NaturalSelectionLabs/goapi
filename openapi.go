@@ -65,8 +65,9 @@ func (r *Router) OpenAPI() *openapi.Document {
 
 func operationDoc(s jschema.Schemas, op *Operation) openapi.Operation {
 	doc := openapi.Operation{
-		Parameters: []openapi.Parameter{},
-		Responses:  map[openapi.StatusCode]openapi.Response{},
+		OperationID: op.name,
+		Parameters:  []openapi.Parameter{},
+		Responses:   map[openapi.StatusCode]openapi.Response{},
 	}
 
 	for _, p := range op.params {

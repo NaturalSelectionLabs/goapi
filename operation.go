@@ -19,6 +19,7 @@ type Operation struct {
 	group  *Group
 	method openapi.Method
 	path   *Path
+	name   string
 
 	vHandler reflect.Value
 	tHandler reflect.Type
@@ -57,12 +58,15 @@ func (g *Group) newOperation(method openapi.Method, path string, handler Operati
 	vHandler := reflect.ValueOf(handler)
 	tHandler := vHandler.Type()
 
-	var doc OperationOpenAPI
+	var (
+		doc  OperationOpenAPI
+		name string
+	)
 
 	if _, has := tHandler.MethodByName("Handle"); has {
+		name = toOperationName(tHandler.Name())
 		vHandler = vHandler.MethodByName("Handle")
 		tHandler = vHandler.Type()
-
 		doc, _ = handler.(OperationOpenAPI)
 	} else if tHandler.Kind() != reflect.Func {
 		panic("handler must be a function or a struct with Handle method")
@@ -83,6 +87,7 @@ func (g *Group) newOperation(method openapi.Method, path string, handler Operati
 		group:    g,
 		method:   method,
 		path:     p,
+		name:     name,
 		vHandler: vHandler,
 		tHandler: tHandler,
 		params:   params,
