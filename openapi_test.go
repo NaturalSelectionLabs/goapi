@@ -121,28 +121,28 @@ func TestOpenAPI(t *testing.T) {
 	}
 
 	//nolint: lll
-	g.Eq(g.JSON(doc), map[string]interface{} /* len=4 */ {
+	g.Eq(g.JSON(doc), map[string]interface{}{
 		"components": map[string]interface{}{
-			"schemas": map[string]interface{} /* len=3 */ {
-				"Code": map[string]interface{} /* len=3 */ {
-					"description": `github.com/NaturalSelectionLabs/goapi/lib/openapi.Code`, /* len=54 */
-					"enum": []interface{} /* len=3 cap=4 */ {
+			"schemas": map[string]interface{}{
+				"Code": map[string]interface{}{
+					"description": "github.com/NaturalSelectionLabs/goapi/lib/openapi.Code",
+					"enum": []interface{}{
 						"internal_error",
 						"invalid_param",
 						"not_found",
 					},
 					"title": "Code",
 				},
-				"CommonError": map[string]interface{} /* len=6 */ {
-					`additionalProperties` /* len=20 */ : false,
-					"description":                        `github.com/NaturalSelectionLabs/goapi/lib/openapi.CommonError[github.com/NaturalSelectionLabs/goapi/lib/openapi.Code]`, /* len=117 */
-					"properties": map[string]interface{} /* len=5 */ {
+				"CommonError": map[string]interface{}{
+					"additionalProperties": false,
+					"description":          "github.com/NaturalSelectionLabs/goapi/lib/openapi.CommonError[github.com/NaturalSelectionLabs/goapi/lib/openapi.Code]",
+					"properties": map[string]interface{}{
 						"code": map[string]interface{}{
-							"$ref": `#/components/schemas/Code`, /* len=25 */
+							"$ref": "#/components/schemas/Code",
 						},
-						"details": map[string]interface{} /* len=2 */ {
+						"details": map[string]interface{}{
 							"items": map[string]interface{}{
-								"$ref": `#/components/schemas/CommonError`, /* len=32 */
+								"$ref": "#/components/schemas/CommonError",
 							},
 							"type": "array",
 						},
@@ -154,22 +154,22 @@ func TestOpenAPI(t *testing.T) {
 							"type": "string",
 						},
 					},
-					"required": []interface{} /* len=1 cap=1 */ {
+					"required": []interface{}{
 						"code",
 					},
-					"title": `CommonError[github.com/NaturalSelectionLabs/goapi/lib/openapi.Code]`, /* len=67 */
+					"title": "CommonError[github.com/NaturalSelectionLabs/goapi/lib/openapi.Code]",
 					"type":  "object",
 				},
-				"Error": map[string]interface{} /* len=6 */ {
-					`additionalProperties` /* len=20 */ : false,
-					"description":                        `github.com/NaturalSelectionLabs/goapi/lib/openapi.Error`, /* len=55 */
-					"properties": map[string]interface{} /* len=5 */ {
+				"Error": map[string]interface{}{
+					"additionalProperties": false,
+					"description":          "github.com/NaturalSelectionLabs/goapi/lib/openapi.Error",
+					"properties": map[string]interface{}{
 						"code": map[string]interface{}{
-							"$ref": `#/components/schemas/Code`, /* len=25 */
+							"$ref": "#/components/schemas/Code",
 						},
-						"details": map[string]interface{} /* len=2 */ {
+						"details": map[string]interface{}{
 							"items": map[string]interface{}{
-								"$ref": `#/components/schemas/CommonError`, /* len=32 */
+								"$ref": "#/components/schemas/CommonError",
 							},
 							"type": "array",
 						},
@@ -181,7 +181,7 @@ func TestOpenAPI(t *testing.T) {
 							"type": "string",
 						},
 					},
-					"required": []interface{} /* len=1 cap=1 */ {
+					"required": []interface{}{
 						"code",
 					},
 					"title": "Error",
@@ -189,19 +189,19 @@ func TestOpenAPI(t *testing.T) {
 				},
 			},
 		},
-		"info": map[string]interface{} /* len=2 */ {
+		"info": map[string]interface{}{
 			"title":   "",
 			"version": "",
 		},
 		"openapi": "3.1.0",
-		"paths": map[string]interface{} /* len=4 */ {
+		"paths": map[string]interface{}{
 			"/four": map[string]interface{}{
 				"get": map[string]interface{}{
 					"responses": map[string]interface{}{
-						"200": map[string]interface{} /* len=2 */ {
+						"200": map[string]interface{}{
 							"content": map[string]interface{}{
-								`application/octet-stream` /* len=24 */ : map[string]interface{}{
-									"schema": map[string]interface{} /* len=2 */ {
+								"application/octet-stream": map[string]interface{}{
+									"schema": map[string]interface{}{
 										"format": "binary",
 										"type":   "string",
 									},
@@ -213,28 +213,28 @@ func TestOpenAPI(t *testing.T) {
 				},
 			},
 			"/one": map[string]interface{}{
-				"get": map[string]interface{} /* len=8 */ {
+				"get": map[string]interface{}{
 					"description": "test endpoint",
 					"operationId": "one",
-					"parameters": []interface{} /* len=3 cap=4 */ {
-						map[string]interface{} /* len=4 */ {
+					"parameters": []interface{}{
+						map[string]interface{}{
 							"description": "id",
 							"in":          "query",
 							"name":        "id",
-							"schema": map[string]interface{} /* len=3 */ {
+							"schema": map[string]interface{}{
 								"default": "123",
 								"example": "456",
 								"type":    "string",
 							},
 						},
-						map[string]interface{} /* len=3 */ {
+						map[string]interface{}{
 							"in":   "query",
 							"name": "type",
 							"schema": map[string]interface{}{
-								"$ref": `#/components/schemas/Code`, /* len=25 */
+								"$ref": "#/components/schemas/Code",
 							},
 						},
-						map[string]interface{} /* len=4 */ {
+						map[string]interface{}{
 							"in":       "header",
 							"name":     "ua",
 							"required": true,
@@ -245,34 +245,35 @@ func TestOpenAPI(t *testing.T) {
 					},
 					"requestBody": map[string]interface{}{
 						"content": map[string]interface{}{
-							"application/json" /* len=16 */ : map[string]interface{}{
-								"schema": map[string]interface{} /* len=4 */ {
-									`additionalProperties` /* len=20 */ : false,
+							"application/json": map[string]interface{}{
+								"schema": map[string]interface{}{
+									"additionalProperties": false,
 									"properties": map[string]interface{}{
 										"data": map[string]interface{}{
 											"type": "string",
 										},
 									},
-									"required": []interface{} /* len=1 cap=1 */ {
+									"required": []interface{}{
 										"data",
 									},
 									"type": "object",
 								},
 							},
 						},
+						"required": true,
 					},
-					"responses": map[string]interface{} /* len=2 */ {
-						"200": map[string]interface{} /* len=3 */ {
+					"responses": map[string]interface{}{
+						"200": map[string]interface{}{
 							"content": map[string]interface{}{
-								"application/json" /* len=16 */ : map[string]interface{}{
-									"schema": map[string]interface{} /* len=4 */ {
-										`additionalProperties` /* len=20 */ : false,
+								"application/json": map[string]interface{}{
+									"schema": map[string]interface{}{
+										"additionalProperties": false,
 										"properties": map[string]interface{}{
 											"data": map[string]interface{}{
 												"type": "string",
 											},
 										},
-										"required": []interface{} /* len=1 cap=1 */ {
+										"required": []interface{}{
 											"data",
 										},
 										"type": "object",
@@ -288,17 +289,17 @@ func TestOpenAPI(t *testing.T) {
 								},
 							},
 						},
-						"403": map[string]interface{} /* len=2 */ {
+						"403": map[string]interface{}{
 							"content": map[string]interface{}{
-								"application/json" /* len=16 */ : map[string]interface{}{
-									"schema": map[string]interface{} /* len=4 */ {
-										`additionalProperties` /* len=20 */ : false,
+								"application/json": map[string]interface{}{
+									"schema": map[string]interface{}{
+										"additionalProperties": false,
 										"properties": map[string]interface{}{
 											"error": map[string]interface{}{
-												"$ref": `#/components/schemas/Error`, /* len=26 */
+												"$ref": "#/components/schemas/Error",
 											},
 										},
-										"required": []interface{} /* len=1 cap=1 */ {
+										"required": []interface{}{
 											"error",
 										},
 										"type": "object",
@@ -308,15 +309,15 @@ func TestOpenAPI(t *testing.T) {
 							"description": "returns 403",
 						},
 					},
-					"security": []interface{} /* len=1 cap=1 */ {
+					"security": []interface{}{
 						map[string]interface{}{
-							"auth": []interface{} /* len=1 cap=1 */ {
+							"auth": []interface{}{
 								"read",
 							},
 						},
 					},
 					"summary": "test",
-					"tags": []interface{} /* len=1 cap=1 */ {
+					"tags": []interface{}{
 						"test",
 					},
 				},
@@ -324,9 +325,9 @@ func TestOpenAPI(t *testing.T) {
 			"/three": map[string]interface{}{
 				"get": map[string]interface{}{
 					"responses": map[string]interface{}{
-						"200": map[string]interface{} /* len=2 */ {
+						"200": map[string]interface{}{
 							"content": map[string]interface{}{
-								"application/json" /* len=16 */ : map[string]interface{}{
+								"application/json": map[string]interface{}{
 									"schema": map[string]interface{}{
 										"type": "string",
 									},
@@ -338,9 +339,9 @@ func TestOpenAPI(t *testing.T) {
 				},
 			},
 			"/two/{id}": map[string]interface{}{
-				"get": map[string]interface{} /* len=2 */ {
-					"parameters": []interface{} /* len=1 cap=1 */ {
-						map[string]interface{} /* len=4 */ {
+				"get": map[string]interface{}{
+					"parameters": []interface{}{
+						map[string]interface{}{
 							"in":       "path",
 							"name":     "id",
 							"required": true,
@@ -350,12 +351,12 @@ func TestOpenAPI(t *testing.T) {
 						},
 					},
 					"responses": map[string]interface{}{
-						"200": map[string]interface{} /* len=2 */ {
+						"200": map[string]interface{}{
 							"content": map[string]interface{}{
-								"application/json" /* len=16 */ : map[string]interface{}{
-									"schema": map[string]interface{} /* len=4 */ {
-										`additionalProperties` /* len=20 */ : false,
-										"properties": map[string]interface{} /* len=2 */ {
+								"application/json": map[string]interface{}{
+									"schema": map[string]interface{}{
+										"additionalProperties": false,
+										"properties": map[string]interface{}{
 											"data": map[string]interface{}{
 												"type": "string",
 											},
@@ -363,7 +364,7 @@ func TestOpenAPI(t *testing.T) {
 												"type": "string",
 											},
 										},
-										"required": []interface{} /* len=2 cap=2 */ {
+										"required": []interface{}{
 											"data",
 											"meta",
 										},

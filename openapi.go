@@ -87,6 +87,7 @@ func operationDoc(s jschema.Schemas, op *Operation) openapi.Operation {
 						Schema: s.DefineT(p.param),
 					},
 				},
+				Required: true,
 			}
 		}
 
