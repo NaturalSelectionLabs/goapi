@@ -4,7 +4,6 @@ package apidoc
 import (
 	"embed"
 	"net/http"
-	"net/url"
 	"strings"
 
 	"github.com/NaturalSelectionLabs/goapi"
@@ -87,16 +86,14 @@ func (*operation) OpenAPI(doc openapi.Operation) openapi.Operation {
 }
 
 // Handle implements the [goapi.OperationHandler] interface.
-func (op *operation) Handle(p params, r *http.Request) res {
+func (op *operation) Handle(p params, _ *http.Request) res {
 	if strings.Contains(p.Accept, "application/json") {
 		return resOK{Data: op.doc}
 	}
 
-	u, _ := url.JoinPath(r.URL.Path, "swagger-ui")
-
 	return resRedirect{
 		Header: headerRedirect{
-			Location: u,
+			Location: "swagger-ui",
 		},
 	}
 }
