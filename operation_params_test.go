@@ -7,6 +7,7 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/NaturalSelectionLabs/jschema"
 	"github.com/ysmood/got"
 )
 
@@ -35,7 +36,9 @@ func Test_loadURL(t *testing.T) {
 		F []int
 	}
 
-	parsed := New().parseParam(path, reflect.TypeOf(testParams{}))
+	s := jschema.New("")
+
+	parsed := parseParam(s, path, reflect.TypeOf(testParams{}))
 
 	v, err := parsed.loadURL(url.Values{
 		"a": []string{"10"},
@@ -60,7 +63,7 @@ func Test_loadURL(t *testing.T) {
 	})
 
 	g.Eq(g.Panic(func() {
-		New().parseParam(path, reflect.TypeOf(struct{}{}))
+		parseParam(s, path, reflect.TypeOf(struct{}{}))
 	}), "expect parameter to be a struct and embedded with "+
 		"goapi.InHeader, goapi.InURL, or goapi.InBody, but got: struct {}")
 }
@@ -76,7 +79,9 @@ func Test_loadURL_nil(t *testing.T) {
 		A *string
 	}
 
-	parsed := New().parseParam(path, reflect.TypeOf(testParams{}))
+	s := jschema.New("")
+
+	parsed := parseParam(s, path, reflect.TypeOf(testParams{}))
 
 	v, err := parsed.loadURL(url.Values{})
 	g.E(err)
@@ -96,8 +101,10 @@ func Test_loadURL_err(t *testing.T) {
 		InURL
 	}
 
+	s := jschema.New("")
+
 	g.Eq(g.Panic(func() {
-		New().parseParam(path, reflect.TypeOf(testParams{}))
+		parseParam(s, path, reflect.TypeOf(testParams{}))
 	}), "expect to have path parameter for {a} in goapi.testParams")
 
 	type testPath struct {
@@ -105,7 +112,7 @@ func Test_loadURL_err(t *testing.T) {
 		A int
 	}
 
-	parsed := New().parseParam(path, reflect.TypeOf(testPath{}))
+	parsed := parseParam(s, path, reflect.TypeOf(testPath{}))
 
 	_, err = parsed.loadURL(url.Values{})
 	g.Eq(err.Error(), "missing url path param `a`")
@@ -117,7 +124,7 @@ func Test_loadURL_err(t *testing.T) {
 		C []int
 	}
 
-	parsed = New().parseParam(path, reflect.TypeOf(testQuery{}))
+	parsed = parseParam(s, path, reflect.TypeOf(testQuery{}))
 
 	_, err = parsed.loadURL(url.Values{"a": {"1"}})
 	g.Eq(err.Error(), "missing url query param `b`")
@@ -131,21 +138,21 @@ func Test_loadURL_err(t *testing.T) {
 		"json: cannot unmarshal bool into Go value of type int")
 
 	g.Eq(g.Panic(func() {
-		New().parseParam(path, reflect.TypeOf(struct {
+		parseParam(s, path, reflect.TypeOf(struct {
 			InURL
 			A []int
 		}{}))
 	}), "path parameter cannot be an slice, param: A")
 
 	g.Eq(g.Panic(func() {
-		New().parseParam(path, reflect.TypeOf(struct {
+		parseParam(s, path, reflect.TypeOf(struct {
 			InURL
 			A *int
 		}{}))
 	}), "path parameter cannot be optional, param: A")
 
 	g.Eq(g.Panic(func() {
-		New().parseParam(path, reflect.TypeOf(struct {
+		parseParam(s, path, reflect.TypeOf(struct {
 			InURL
 			A int `default:"1"`
 		}{}))
@@ -161,7 +168,9 @@ func Test_loadHeader(t *testing.T) {
 		Z   string `default:"default"`
 	}
 
-	parsed := New().parseParam(nil, reflect.TypeOf(header{}))
+	s := jschema.New("")
+
+	parsed := parseParam(s, nil, reflect.TypeOf(header{}))
 
 	v, err := parsed.loadHeader(http.Header{
 		"X-Y": []string{"10"},
@@ -188,7 +197,9 @@ func Test_loadBody(t *testing.T) {
 		Name string `json:"name"`
 	}
 
-	parsed := New().parseParam(nil, reflect.TypeOf(body{}))
+	s := jschema.New("")
+
+	parsed := parseParam(s, nil, reflect.TypeOf(body{}))
 
 	v, err := parsed.loadBody(bytes.NewBufferString(`{"id": 1, "name": "test"}`))
 	g.E(err)
@@ -201,6 +212,15 @@ func Test_loadBody(t *testing.T) {
 
 	_, err = parsed.loadBody(bytes.NewBufferString(`{`))
 	g.Eq(err.Error(), "failed to parse json body: unexpected EOF")
+
+	type defaultErr struct {
+		InBody
+		A int `default:"1"`
+	}
+
+	g.Has(g.Panic(func() {
+		parseParam(s, nil, reflect.TypeOf(defaultErr{}))
+	}), "goapi.InBody field `goapi.defaultErr.A` don't support default field tag")
 }
 
 func Test_parseResponse_err(t *testing.T) {
@@ -254,7 +274,9 @@ func Test_default_arr(t *testing.T) {
 	path, err := newPath("/test", false)
 	g.E(err)
 
-	parsed := New().parseParam(path, reflect.TypeOf(params{}))
+	s := jschema.New("")
+
+	parsed := parseParam(s, path, reflect.TypeOf(params{}))
 
 	v, err := parsed.loadURL(url.Values{})
 	g.E(err)
@@ -285,7 +307,9 @@ func Test_custom_checker(t *testing.T) {
 	path, err := newPath("/test", false)
 	g.E(err)
 
-	parsed := New().parseParam(path, reflect.TypeOf(params{}))
+	s := jschema.New("")
+
+	parsed := parseParam(s, path, reflect.TypeOf(params{}))
 
 	_, err = parsed.loadURL(url.Values{"id": {"ok"}})
 	g.Nil(err)
@@ -305,7 +329,9 @@ func Test_validation(t *testing.T) {
 	path, err := newPath("/test", false)
 	g.E(err)
 
-	parsed := New().parseParam(path, reflect.TypeOf(A{}))
+	s := jschema.New("")
+
+	parsed := parseParam(s, path, reflect.TypeOf(A{}))
 
 	_, err = parsed.loadBody(bytes.NewBufferString(`{"id": "ok"}`))
 	g.Eq(err.Error(), "request body is invalid: [ID: String length must be greater than or equal to 5]")

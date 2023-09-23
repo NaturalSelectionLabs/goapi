@@ -239,7 +239,7 @@ func (g *Group) resHeaderDoc(s jschema.Schemas, t reflect.Type) openapi.Headers 
 	headers := openapi.Headers{}
 
 	for _, flat := range ff.Parse(t).Fields {
-		f := g.parseHeaderField(flat)
+		f := parseHeaderField(g.router.Schemas, flat)
 		headers[f.name] = openapi.Header{
 			Description: f.schema.Description,
 			Schema:      s.DefineT(f.item),

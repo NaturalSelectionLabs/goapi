@@ -74,7 +74,7 @@ func (g *Group) newOperation(method openapi.Method, path string, handler Operati
 
 	params := []*parsedParam{}
 	for i := 0; i < tHandler.NumIn(); i++ {
-		params = append(params, g.parseParam(p, tHandler.In(i)))
+		params = append(params, parseParam(g.router.Schemas, p, tHandler.In(i)))
 	}
 
 	if tHandler.NumOut() != 1 {

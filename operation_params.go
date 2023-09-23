@@ -246,3 +246,184 @@ func firstProp(s *jschema.Schema) (p *jschema.Schema) { //nolint: nonamedreturns
 
 	return p
 }
+
+func parseParam(s jschema.Schemas, path *Path, p reflect.Type) *parsedParam {
+	if p == tContext {
+		return &parsedParam{isContext: true}
+	}
+
+	if p == tRequest {
+		return &parsedParam{isRequest: true}
+	}
+
+	if p.Kind() != reflect.Struct || !p.Implements(tParams) {
+		panic("expect parameter to be a struct and embedded with goapi.InHeader, goapi.InURL, or goapi.InBody," +
+			" but got: " + p.String())
+	}
+
+	parsed := &parsedParam{param: p}
+	fields := []*parsedField{}
+	flat := ff.Parse(p)
+
+	switch reflect.New(p).Interface().(Params).paramsIn() {
+	case inHeader:
+		parsed.in = inHeader
+
+		for _, f := range flat.Fields {
+			fields = append(fields, parseHeaderField(s, f))
+		}
+
+	case inURL:
+		parsed.in = inURL
+
+		for _, f := range flat.Fields {
+			fields = append(fields, parseURLField(s, path, f))
+		}
+
+		for _, n := range path.names {
+			has := false
+
+			for _, f := range fields {
+				if f.name == n {
+					has = true
+				}
+			}
+
+			if !has {
+				panic("expect to have path parameter for {" + n + "} in " + p.String())
+			}
+		}
+
+	case inBody:
+		validateBodyParam(p)
+
+		parsed.in = inBody
+
+		scm := s.ToStandAlone(s.DefineT(p))
+
+		validator, _ := gojsonschema.NewSchema(gojsonschema.NewGoLoader(scm))
+		parsed.bodyValidator = validator
+	}
+
+	parsed.fields = fields
+
+	return parsed
+}
+
+func parseHeaderField(s jschema.Schemas, flatField *ff.FlattenedField) *parsedField {
+	f := flatField.Field
+	parsed := parseField(s, flatField)
+	parsed.name = toHeaderName(f.Name)
+	parsed.name = tagName(f.Tag, parsed.name)
+
+	return parsed
+}
+
+func parseURLField(s jschema.Schemas, path *Path, flatField *ff.FlattenedField) *parsedField {
+	f := parseField(s, flatField)
+
+	t := flatField.Field
+
+	f.name = toPathName(t.Name)
+	if path.contains(f.name) {
+		if f.hasDefault {
+			panic("path parameter cannot have tag `default`, param: " + t.Name)
+		}
+
+		if f.slice {
+			panic("path parameter cannot be an slice, param: " + t.Name)
+		}
+
+		if !f.required {
+			panic("path parameter cannot be optional, param: " + t.Name)
+		}
+
+		f.InPath = true
+	} else {
+		f.name = toQueryName(t.Name)
+	}
+
+	f.name = tagName(t.Tag, f.name)
+
+	return f
+}
+
+func parseField(s jschema.Schemas, flatField *ff.FlattenedField) *parsedField {
+	f := flatField.Field
+	parsed := &parsedField{flatField: flatField, required: true}
+	t := f.Type
+
+	switch t.Kind() { //nolint: exhaustive
+	case reflect.Ptr, reflect.Slice:
+		parsed.ptr = true
+	default:
+		parsed.ptr = false
+	}
+
+	if t.Kind() == reflect.Ptr {
+		t = t.Elem()
+		parsed.required = false
+	}
+
+	if t.Kind() == reflect.Slice {
+		parsed.slice = true
+		parsed.sliceType = t
+		parsed.item = t.Elem()
+		parsed.required = false
+	} else {
+		parsed.item = t
+	}
+
+	parsed.schema = s.ToStandAlone(fieldSchema(s, f))
+
+	if _, ok := f.Tag.Lookup("default"); ok {
+		parsed.required = false
+		parsed.hasDefault = true
+		parsed.defaultVal = reflect.ValueOf(parsed.schema.Default)
+	}
+
+	if _, ok := f.Tag.Lookup("example"); ok {
+		parsed.example = reflect.ValueOf(parsed.schema.Example)
+	}
+
+	scm := parsed.schema
+
+	if !parsed.required {
+		s := &jschema.Schema{Defs: parsed.schema.Defs}
+		s.AnyOf = []*jschema.Schema{parsed.schema, {Type: jschema.TypeNull}}
+		scm = s
+	}
+
+	validator, _ := gojsonschema.NewSchema(gojsonschema.NewGoLoader(scm))
+	parsed.validator = validator
+
+	return parsed
+}
+
+func validateBodyParam(p reflect.Type) {
+	p = indirectType(p)
+
+	if p.Kind() != reflect.Struct {
+		return
+	}
+
+	for i := 0; i < p.NumField(); i++ {
+		f := p.Field(i)
+		if _, has := f.Tag.Lookup(string(jschema.JTagDefault)); has {
+			panic(fmt.Sprintf("goapi.InBody field `%s.%s` don't support default field tag, "+
+				"it should be treated as common json field, "+
+				"if you want to make this field as optional you should use omitempty or pointer type",
+				p.String(),
+				f.Name,
+			))
+		}
+	}
+}
+
+func indirectType(t reflect.Type) reflect.Type {
+	if t.Kind() == reflect.Ptr {
+		return t.Elem()
+	}
+
+	return t
+}
