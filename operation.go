@@ -149,7 +149,7 @@ func (op *Operation) handle(w http.ResponseWriter, r *http.Request, qs url.Value
 			param, err = p.loadHeader(r.Header)
 		case inURL:
 			param, err = p.loadURL(qs)
-		case inBody:
+		case inDefault:
 			param, err = p.loadBody(r.Body)
 		}
 

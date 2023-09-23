@@ -80,7 +80,7 @@ func operationDoc(s jschema.Schemas, op *Operation) openapi.Operation {
 		case inURL:
 			params = append(params, urlParamDoc(s, p)...)
 
-		case inBody:
+		case inDefault:
 			doc.RequestBody = &openapi.RequestBody{
 				Content: &openapi.Content{
 					JSON: &openapi.Schema{

@@ -4,9 +4,19 @@ import (
 	"github.com/NaturalSelectionLabs/goapi"
 )
 
+// ParamsHeader is the parameters for fetching posts.
+type ParamsHeader struct {
+	// Use goapi.InHeader to get headers values into rest of the fields.
+	goapi.InHeader
+
+	Cookie string
+}
+
 // ParamsPosts is the parameters for fetching posts.
 type ParamsPosts struct {
+	// Use goapi.InURL to get url parameters in path or query into rest of the fields.
 	goapi.InURL
+
 	// Use description tag to describe the openapi parameter.
 	ID int `description:"User ID" min:"1"`
 	// Type of the posts to fetch.
@@ -27,6 +37,16 @@ type ParamsPagination struct {
 	Offset int `default:"0"`
 }
 
+// ParamsLogin is the parameters for login.
+// If we don't embed goapi.InURL or goapi.InHeader to the struct,
+// It will be treated as the request body json.
+// It should be treated as a common json struct of golang, goapi won't do any special handling for it,
+// such as default field tag won't work.
+type ParamsLogin struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+}
+
 // PostType of a post.
 // When using enumer with -json and -values flags, the generated openapi will respect it.
 //
@@ -41,13 +61,6 @@ const (
 	// PostTypeMusic .
 	PostTypeMusic
 )
-
-// ParamsLogin is the parameters for login.
-type ParamsLogin struct {
-	goapi.InBody
-	Username string
-	Password string
-}
 
 // ResLogin is the response for login.
 type ResLogin interface {
@@ -90,10 +103,4 @@ type ResPostsOK struct {
 	// Use Meta to store info like pagination.
 	// Here we use it to store the total number of posts.
 	Meta int
-}
-
-// ParamsHeader is the parameters for fetching posts.
-type ParamsHeader struct {
-	goapi.InHeader
-	Cookie string
 }

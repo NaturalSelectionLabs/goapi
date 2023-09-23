@@ -67,7 +67,6 @@ func (One) Handle(p struct {
 	goapi.InHeader
 	UA string
 }, b struct {
-	goapi.InBody
 	Data string `json:"data"`
 }) Res {
 	return Res01{}

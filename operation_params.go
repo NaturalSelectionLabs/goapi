@@ -19,47 +19,24 @@ import (
 type paramsIn int
 
 const (
-	inHeader paramsIn = iota
-	inBody
+	inDefault paramsIn = iota
+	inHeader
 	inURL
 )
 
-// Params represents the parameter of a request.
-type Params interface {
-	paramsIn() paramsIn
-}
-
-var tParams = reflect.TypeOf(new(Params)).Elem()
+type paramsInGuard struct{}
 
 // InHeader is a flag that can be embedded into a struct to mark it
 // as a container for request header parameters.
 type InHeader struct{}
 
-var _ Params = InHeader{}
-
-func (InHeader) paramsIn() paramsIn {
-	return inHeader
-}
+func (InHeader) inHeader() paramsInGuard { return struct{}{} }
 
 // InURL is a flag that can be embedded into a struct to mark it
 // as a container for request url parameters.
 type InURL struct{}
 
-var _ Params = InURL{}
-
-func (InURL) paramsIn() paramsIn {
-	return inURL
-}
-
-// InBody is a flag that can be embedded into a struct to mark it
-// as a container for request body.
-type InBody struct{}
-
-var _ Params = InBody{}
-
-func (InBody) paramsIn() paramsIn {
-	return inBody
-}
+func (InURL) inURL() paramsInGuard { return struct{}{} }
 
 var tContext = reflect.TypeOf(new(context.Context)).Elem()
 
@@ -256,24 +233,27 @@ func parseParam(s jschema.Schemas, path *Path, p reflect.Type) *parsedParam {
 		return &parsedParam{isRequest: true}
 	}
 
-	if p.Kind() != reflect.Struct || !p.Implements(tParams) {
-		panic("expect parameter to be a struct and embedded with goapi.InHeader, goapi.InURL, or goapi.InBody," +
-			" but got: " + p.String())
+	type InHeader interface {
+		inHeader() paramsInGuard
+	}
+
+	type InURL interface {
+		inURL() paramsInGuard
 	}
 
 	parsed := &parsedParam{param: p}
 	fields := []*parsedField{}
 	flat := ff.Parse(p)
 
-	switch reflect.New(p).Interface().(Params).paramsIn() {
-	case inHeader:
+	switch reflect.New(p).Elem().Interface().(type) {
+	case InHeader:
 		parsed.in = inHeader
 
 		for _, f := range flat.Fields {
 			fields = append(fields, parseHeaderField(s, f))
 		}
 
-	case inURL:
+	case InURL:
 		parsed.in = inURL
 
 		for _, f := range flat.Fields {
@@ -294,10 +274,8 @@ func parseParam(s jschema.Schemas, path *Path, p reflect.Type) *parsedParam {
 			}
 		}
 
-	case inBody:
-		validateBodyParam(p)
-
-		parsed.in = inBody
+	default:
+		parsed.in = inDefault
 
 		scm := s.ToStandAlone(s.DefineT(p))
 
@@ -398,32 +376,4 @@ func parseField(s jschema.Schemas, flatField *ff.FlattenedField) *parsedField {
 	parsed.validator = validator
 
 	return parsed
-}
-
-func validateBodyParam(p reflect.Type) {
-	p = indirectType(p)
-
-	if p.Kind() != reflect.Struct {
-		return
-	}
-
-	for i := 0; i < p.NumField(); i++ {
-		f := p.Field(i)
-		if _, has := f.Tag.Lookup(string(jschema.JTagDefault)); has {
-			panic(fmt.Sprintf("goapi.InBody field `%s.%s` don't support default field tag, "+
-				"it should be treated as common json field, "+
-				"if you want to make this field as optional you should use omitempty or pointer type",
-				p.String(),
-				f.Name,
-			))
-		}
-	}
-}
-
-func indirectType(t reflect.Type) reflect.Type {
-	if t.Kind() == reflect.Ptr {
-		return t.Elem()
-	}
-
-	return t
 }

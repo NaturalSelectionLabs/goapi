@@ -11,6 +11,16 @@ import (
 	"github.com/ysmood/got"
 )
 
+func Test_paramsInGuard(t *testing.T) {
+	g := got.T(t)
+
+	_ = InHeader{}.inHeader()
+
+	_ = InURL{}.inURL()
+
+	g.Eq(1, 1)
+}
+
 func Test_toValue(t *testing.T) {
 	g := got.T(t)
 
@@ -61,11 +71,6 @@ func Test_loadURL(t *testing.T) {
 		},
 		F: nil,
 	})
-
-	g.Eq(g.Panic(func() {
-		parseParam(s, path, reflect.TypeOf(struct{}{}))
-	}), "expect parameter to be a struct and embedded with "+
-		"goapi.InHeader, goapi.InURL, or goapi.InBody, but got: struct {}")
 }
 
 func Test_loadURL_nil(t *testing.T) {
@@ -192,7 +197,6 @@ func Test_loadBody(t *testing.T) {
 	g := got.T(t)
 
 	type body struct {
-		InBody
 		ID   int    `json:"id"`
 		Name string `json:"name"`
 	}
@@ -205,22 +209,12 @@ func Test_loadBody(t *testing.T) {
 	g.E(err)
 
 	g.Eq(v.Interface(), body{
-		InBody: InBody{},
-		ID:     1,
-		Name:   "test",
+		ID:   1,
+		Name: "test",
 	})
 
 	_, err = parsed.loadBody(bytes.NewBufferString(`{`))
 	g.Eq(err.Error(), "failed to parse json body: unexpected EOF")
-
-	type defaultErr struct {
-		InBody
-		A int `default:"1"`
-	}
-
-	g.Has(g.Panic(func() {
-		parseParam(s, nil, reflect.TypeOf(defaultErr{}))
-	}), "goapi.InBody field `goapi.defaultErr.A` don't support default field tag")
 }
 
 func Test_parseResponse_err(t *testing.T) {
@@ -322,7 +316,6 @@ func Test_validation(t *testing.T) {
 	g := got.T(t)
 
 	type A struct {
-		InBody
 		ID string `min:"5"`
 	}
 

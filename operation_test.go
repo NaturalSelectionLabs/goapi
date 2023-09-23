@@ -120,7 +120,6 @@ func TestOperation(t *testing.T) {
 		})
 
 		r.POST("/req-body", func(params struct {
-			goapi.InBody
 			A string
 		},
 		) res {
