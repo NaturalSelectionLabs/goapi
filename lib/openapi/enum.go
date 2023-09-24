@@ -7,7 +7,7 @@ import (
 
 // Code for common error
 //
-//go:generate go run github.com/dmarkham/enumer@latest -type=Code -values -transform=snake -trimprefix=Code -json
+//go:generate go run github.com/ysmood/enumer@v0.1.0 -type=Code -values -transform=snake -trimprefix=Code -json
 type Code int
 
 const (
@@ -21,7 +21,7 @@ const (
 
 // Method for http request
 //
-//go:generate go run github.com/dmarkham/enumer@latest -type=Method -values
+//go:generate go run github.com/ysmood/enumer@v0.1.0 -type=Method -values
 type Method int
 
 const (
@@ -46,7 +46,7 @@ const (
 // ParamIn types for openapi request parameter.
 type ParamIn int
 
-//go:generate go run github.com/dmarkham/enumer@latest -type=ParamIn -values -transform=lower -json
+//go:generate go run github.com/ysmood/enumer@v0.1.0 -type=ParamIn -values -transform=lower -json
 const (
 	// PATH ...
 	PATH ParamIn = iota
@@ -58,7 +58,7 @@ const (
 
 // StatusCode for http response
 //
-//go:generate go run github.com/dmarkham/enumer@latest -type=StatusCode -values -trimprefix=Status
+//go:generate go run github.com/ysmood/enumer@v0.1.0 -type=StatusCode -values -trimprefix=Status
 type StatusCode int
 
 // MarshalJSON implements the [json.Marshaler].

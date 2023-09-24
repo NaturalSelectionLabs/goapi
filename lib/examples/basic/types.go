@@ -50,7 +50,7 @@ type ParamsLogin struct {
 // PostType of a post.
 // When using enumer with -json and -values flags, the generated openapi will respect it.
 //
-//go:generate go run github.com/dmarkham/enumer@latest -type=PostType -trimprefix=PostType -transform=lower -json -values
+//go:generate go run github.com/ysmood/enumer@v0.1.0 -type=PostType -trimprefix=PostType -transform=lower -json -values
 type PostType int
 
 const (

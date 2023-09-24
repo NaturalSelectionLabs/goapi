@@ -55,3 +55,13 @@ func TestPointer(t *testing.T) {
 
 	g.Eq(val.Interface(), &Cat{Animal: &Animal{Name: "test"}, Breed: "test"})
 }
+
+func TestAny(t *testing.T) {
+	g := got.T(t)
+
+	var a any
+
+	s := ff.Parse(reflect.TypeOf(a))
+
+	g.Eq(len(s.Fields), 0)
+}

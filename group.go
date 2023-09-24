@@ -3,7 +3,9 @@ package goapi
 import (
 	"context"
 	"net/http"
+	"reflect"
 	"regexp"
+	"runtime"
 	"strings"
 
 	"github.com/NaturalSelectionLabs/goapi/lib/middlewares"
@@ -24,6 +26,25 @@ func (g *Group) Router() *Router {
 // Prefix returns the prefix of the group.
 func (g *Group) Prefix() string {
 	return g.prefix
+}
+
+// Add is a shortcut for [Group.Add] for a random golang function.
+// It will use the function name as the url path name.
+// It will treat the input and output of the function as the request and response body.
+func Add[P, S any](g *Group, fn func(P) S) {
+	fv := reflect.ValueOf(fn)
+
+	fi := runtime.FuncForPC(fv.Pointer())
+	name := toPathName(regexp.MustCompile(`^.+\.`).ReplaceAllString(fi.Name(), ""))
+
+	type res struct {
+		StatusOK
+		Data S `response:"direct"`
+	}
+
+	g.POST("/"+name, func(p P) res {
+		return res{Data: fn(p)}
+	})
 }
 
 // GET is a shortcut for [Group.Add].

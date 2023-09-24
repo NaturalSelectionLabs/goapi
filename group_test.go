@@ -115,3 +115,17 @@ func TestGroupTrailingSlash(t *testing.T) {
 	g.Eq(g.Req("", tr.URL("/test/x")).JSON(), map[string]interface{}{"data": "x"})
 	g.Eq(g.Req("", tr.URL("/test/x/")).JSON(), map[string]interface{}{"data": "x/"})
 }
+
+func double(num int) int {
+	return num * 2
+}
+
+func TestAdd(t *testing.T) {
+	g := got.T(t)
+
+	tr := setupRouter(g, func(r *goapi.Group) {
+		goapi.Add(r, double)
+	})
+
+	g.Eq(g.Req(http.MethodPost, tr.URL("/double"), "3").JSON(), 6)
+}

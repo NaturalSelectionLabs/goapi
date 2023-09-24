@@ -42,6 +42,13 @@ type parsedRes struct {
 	meta   reflect.Type
 }
 
+const (
+	// TagResponse is one tag name for Data field.
+	TagResponse = "response"
+	// TagResponseDirect is one value for [TagResponse].
+	TagResponseDirect = "direct"
+)
+
 func (op *Operation) parseResponse(t reflect.Type) *parsedRes {
 	if !t.Implements(tResponse) {
 		panic("handler must return a goapi.Response")
@@ -70,7 +77,7 @@ func (op *Operation) parseResponse(t reflect.Type) *parsedRes {
 			res.isBinary = true
 		}
 
-		if f.Tag.Get("response") == "direct" {
+		if f.Tag.Get(TagResponse) == TagResponseDirect {
 			res.isDirect = true
 		}
 

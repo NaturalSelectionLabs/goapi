@@ -73,6 +73,10 @@ func (f *FlattenedField) Set(target reflect.Value, val reflect.Value) {
 func parse(target reflect.Type) [][]int {
 	var paths [][]int
 
+	if target == nil || target.Kind() != reflect.Struct {
+		return paths
+	}
+
 	for i := 0; i < target.NumField(); i++ {
 		field := target.Field(i)
 		if field.Anonymous {

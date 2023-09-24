@@ -10,6 +10,11 @@ import (
 	"github.com/naturalselectionlabs/vary"
 )
 
+// OperationOpenAPI allows a handler customize the OpenAPI doc of its corresponding operation.
+type OperationOpenAPI interface {
+	OpenAPI(doc openapi.Operation) openapi.Operation
+}
+
 // Interfaces is the global interface set.
 var Interfaces = vary.NewInterfaces()
 

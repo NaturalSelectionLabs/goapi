@@ -2,7 +2,7 @@ echo
 echo
 echo '== print openapi doc =='
 
-curl localhost:3000 -H 'Accept: application/json'
+curl localhost:3000/openapi.json
 
 echo
 echo
