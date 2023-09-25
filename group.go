@@ -29,6 +29,7 @@ func (g *Group) Prefix() string {
 }
 
 // Add is a shortcut for [Group.Add] for a random golang function.
+// It only accepts POST request method.
 // It will use the function name as the url path name.
 // It will treat the input and output of the function as the request and response body.
 func Add[P, S any](g *Group, fn func(P) S) {

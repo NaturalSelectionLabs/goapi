@@ -13,12 +13,12 @@ import (
 func main() {
 	g := goapi.New()
 
-	goapi.Add(g, Double)
+	goapi.Add(g, double)
 
 	log.Println(g.Start(":3000"))
 }
 
-// Double for "POST /double" which doubles the input to response.
-func Double(num int) int {
+// Handler for "POST /double" which doubles the input to response.
+func double(num int) int {
 	return num * 2
 }

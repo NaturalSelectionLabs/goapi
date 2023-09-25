@@ -11,17 +11,13 @@ func main() {
 
 	g := goapi.New()
 
-	g.GET("/hello", func() Res {
-		return Res{Data: "World"}
-	})
+	goapi.Add(g, hello)
 
 	e.Use(echo.WrapMiddleware(g.Handler))
 
 	_ = e.Start(":3000")
 }
 
-// Res .
-type Res struct {
-	goapi.StatusOK
-	Data string
+func hello(any) string {
+	return "World"
 }

@@ -13,9 +13,7 @@ func main() {
 
 	g := goapi.New()
 
-	g.GET("/hello", func() Res {
-		return Res{Data: "World"}
-	})
+	goapi.Add(g, hello)
 
 	e.Use(func(ctx *gin.Context) {
 		g.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -26,8 +24,6 @@ func main() {
 	_ = e.Run(":3000")
 }
 
-// Res .
-type Res struct {
-	goapi.StatusOK
-	Data string
+func hello(any) string {
+	return "World"
 }
