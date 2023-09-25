@@ -8,7 +8,7 @@ echo
 echo
 echo '== login =='
 
-curl localhost:3000/login -id '{"username": "admin", "password": "123456"}'
+curl localhost:3000/login -id '{"username": "a@a.com", "password": "123456"}'
 
 echo
 echo

@@ -11,11 +11,11 @@ import (
 //
 //	curl 'localhost:3000/double' -d 3
 func main() {
-	r := goapi.New()
+	g := goapi.New()
 
-	goapi.Add(r, Double)
+	goapi.Add(g, Double)
 
-	log.Println(r.Start(":3000"))
+	log.Println(g.Start(":3000"))
 }
 
 // Double for "POST /double" which doubles the input to response.

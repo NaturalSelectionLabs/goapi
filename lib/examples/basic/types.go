@@ -43,8 +43,9 @@ type ParamsPagination struct {
 // It should be treated as a common json struct of golang, goapi won't do any special handling for it,
 // such as default field tag won't work.
 type ParamsLogin struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
+	Username string `json:"username" format:"email"`
+	// Here format:"password" is a custom format checker added by [goapi.Router.AddFormatChecker].
+	Password string `json:"password" format:"password"`
 }
 
 // PostType of a post.

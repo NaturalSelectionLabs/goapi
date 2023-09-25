@@ -9,13 +9,13 @@ import (
 func main() {
 	e := echo.New()
 
-	router := goapi.New()
+	g := goapi.New()
 
-	router.GET("/hello", func() Res {
+	g.GET("/hello", func() Res {
 		return Res{Data: "World"}
 	})
 
-	e.Use(echo.WrapMiddleware(router.Handler))
+	e.Use(echo.WrapMiddleware(g.Handler))
 
 	_ = e.Start(":3000")
 }

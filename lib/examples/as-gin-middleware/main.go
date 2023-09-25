@@ -11,14 +11,14 @@ import (
 func main() {
 	e := gin.New()
 
-	router := goapi.New()
+	g := goapi.New()
 
-	router.GET("/hello", func() Res {
+	g.GET("/hello", func() Res {
 		return Res{Data: "World"}
 	})
 
 	e.Use(func(ctx *gin.Context) {
-		router.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		g.Handler(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			ctx.Next()
 		})).ServeHTTP(ctx.Writer, ctx.Request)
 	})

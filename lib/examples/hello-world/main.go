@@ -15,11 +15,11 @@ type Hello struct {
 }
 
 func main() {
-	r := goapi.New()
+	g := goapi.New()
 
-	r.GET("/", func() Hello {
+	g.GET("/", func() Hello {
 		return Hello{Data: "Hello World!"}
 	})
 
-	log.Println(r.Start(":3000"))
+	log.Println(g.Start(":3000"))
 }

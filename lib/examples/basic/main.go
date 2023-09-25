@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"regexp"
 
 	"github.com/NaturalSelectionLabs/goapi"
 	"github.com/NaturalSelectionLabs/goapi/lib/middlewares/apidoc"
@@ -21,11 +22,13 @@ import (
 //
 //	bash ./lib/examples/basic/test.sh
 func main() {
-	r := goapi.New()
+	g := goapi.New()
 
-	r.POST("/login", func(p ParamsLogin) ResLogin {
+	g.Router().AddFormatChecker("password", passwordChecker{})
+
+	g.POST("/login", func(p ParamsLogin) ResLogin {
 		// If the username and password are not correct, return a LoginFail response.
-		if p.Username != "admin" || p.Password != "123456" {
+		if p.Username != "a@a.com" || p.Password != "123456" {
 			return goapi.StatusUnauthorized{}
 		}
 
@@ -42,17 +45,17 @@ func main() {
 
 	// You can use multiple parameters at the same time to get url values, headers, request context, or request body.
 	// The order of the parameters doesn't matter.
-	r.GET("/users/{id}/posts", GetPosts{})
+	g.GET("/users/{id}/posts", GetPosts{})
 
 	// Install endpoints for openapi doc.
-	apidoc.Install(r, func(doc *openapi.Document) *openapi.Document {
+	apidoc.Install(g, func(doc *openapi.Document) *openapi.Document {
 		// Use this callback to customize the openapi document.
 		doc.Info.Title = "Basic Example"
 		doc.Info.Version = "0.0.1"
 		return doc
 	})
 
-	log.Println(r.Start(":3000"))
+	log.Println(g.Start(":3000"))
 }
 
 // GetPosts is the handler for fetching posts of a user.
@@ -93,4 +96,11 @@ func fetchPosts(c context.Context, id int, keyword, typ string) []string {
 	}
 
 	return posts
+}
+
+type passwordChecker struct {
+}
+
+func (passwordChecker) IsFormat(input interface{}) bool {
+	return regexp.MustCompile(`^\d+$`).MatchString(input.(string))
 }
