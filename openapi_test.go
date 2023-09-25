@@ -1,6 +1,7 @@
 package goapi_test
 
 import (
+	"context"
 	"net/http"
 	"os"
 	"os/exec"
@@ -59,7 +60,7 @@ func (One) OpenAPI(doc openapi.Operation) openapi.Operation {
 	return doc
 }
 
-func (One) Handle(p struct {
+func (One) Handle(_ context.Context, p struct {
 	goapi.InURL
 	ID   string `default:"\"123\"" description:"id" example:"\"456\""`
 	Type *openapi.Code

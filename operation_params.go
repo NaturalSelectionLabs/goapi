@@ -19,9 +19,9 @@ import (
 type paramsIn int
 
 const (
-	inDefault paramsIn = iota
-	inHeader
+	inHeader paramsIn = iota + 1
 	inURL
+	inBody
 )
 
 type paramsInGuard struct{}
@@ -275,7 +275,7 @@ func parseParam(s jschema.Schemas, path *Path, p reflect.Type) *parsedParam {
 		}
 
 	default:
-		parsed.in = inDefault
+		parsed.in = inBody
 
 		scm := s.ToStandAlone(s.DefineT(p))
 
