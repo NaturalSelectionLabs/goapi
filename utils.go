@@ -16,7 +16,7 @@ func fnName(fn interface{}) string {
 
 	fi := runtime.FuncForPC(fv.Pointer())
 
-	return toPathName(regexp.MustCompile(`^.+\.`).ReplaceAllString(fi.Name(), ""))
+	return regexp.MustCompile(`^.+\.`).ReplaceAllString(fi.Name(), "")
 }
 
 var tUnmarshaler = reflect.TypeOf((*json.Unmarshaler)(nil)).Elem()

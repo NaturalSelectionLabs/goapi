@@ -74,7 +74,9 @@ func (g *Group) newOperation(method openapi.Method, path string, handler Operati
 		vHandler = vHandler.MethodByName(HandleName)
 		tHandler = vHandler.Type()
 		doc, _ = handler.(OperationOpenAPI)
-	} else if tHandler.Kind() != reflect.Func {
+	} else if tHandler.Kind() == reflect.Func {
+		name = toOperationName(fnName(handler))
+	} else {
 		panic("handler must be a function or a struct with Handle method")
 	}
 

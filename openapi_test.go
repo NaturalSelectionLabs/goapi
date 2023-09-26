@@ -83,6 +83,10 @@ type Four struct {
 	Data goapi.DataBinary
 }
 
+func fnFour() Four {
+	return Four{}
+}
+
 func TestOpenAPI(t *testing.T) { //nolint: maintidx
 	g := got.T(t)
 
@@ -107,9 +111,7 @@ func TestOpenAPI(t *testing.T) { //nolint: maintidx
 		return Three{}
 	})
 
-	r.GET("/four", func() Four {
-		return Four{}
-	})
+	r.GET("/four", fnFour)
 
 	doc := r.OpenAPI().JSON()
 
@@ -197,6 +199,7 @@ func TestOpenAPI(t *testing.T) { //nolint: maintidx
 		"paths": map[string]interface{}{
 			"/four": map[string]interface{}{
 				"get": map[string]interface{}{
+					"operationId": "fnFour",
 					"responses": map[string]interface{}{
 						"200": map[string]interface{}{
 							"content": map[string]interface{}{
@@ -326,6 +329,7 @@ func TestOpenAPI(t *testing.T) { //nolint: maintidx
 			},
 			"/three": map[string]interface{}{
 				"get": map[string]interface{}{
+					"operationId": "func3",
 					"responses": map[string]interface{}{
 						"200": map[string]interface{}{
 							"content": map[string]interface{}{
@@ -342,6 +346,7 @@ func TestOpenAPI(t *testing.T) { //nolint: maintidx
 			},
 			"/two/{id}": map[string]interface{}{
 				"get": map[string]interface{}{
+					"operationId": "func2",
 					"parameters": []interface{}{
 						map[string]interface{}{
 							"in":       "path",
