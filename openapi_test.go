@@ -62,7 +62,7 @@ func (One) OpenAPI(doc openapi.Operation) openapi.Operation {
 
 func (One) Handle(_ context.Context, p struct {
 	goapi.InURL
-	ID   string `default:"\"123\"" description:"id" example:"\"456\""`
+	ID   string `default:"123" description:"id" examples:"[\"456\"]"`
 	Type *openapi.Code
 }, h struct {
 	goapi.InHeader
@@ -83,7 +83,7 @@ type Four struct {
 	Data goapi.DataBinary
 }
 
-func TestOpenAPI(t *testing.T) {
+func TestOpenAPI(t *testing.T) { //nolint: maintidx
 	g := got.T(t)
 
 	r := goapi.New()
@@ -223,8 +223,10 @@ func TestOpenAPI(t *testing.T) {
 							"name":        "id",
 							"schema": map[string]interface{}{
 								"default": "123",
-								"example": "456",
-								"type":    "string",
+								"examples": []interface{}{
+									"456",
+								},
+								"type": "string",
 							},
 						},
 						map[string]interface{}{

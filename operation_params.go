@@ -155,7 +155,6 @@ type parsedField struct {
 	InPath     bool
 	hasDefault bool
 	defaultVal reflect.Value
-	example    reflect.Value
 
 	schema    *jschema.Schema
 	validator *gojsonschema.Schema
@@ -354,14 +353,10 @@ func parseField(s jschema.Schemas, flatField *ff.FlattenedField) *parsedField {
 
 	parsed.schema = s.ToStandAlone(fieldSchema(s, f))
 
-	if _, ok := f.Tag.Lookup("default"); ok {
+	if _, ok := f.Tag.Lookup(string(jschema.JTagDefault)); ok {
 		parsed.required = false
 		parsed.hasDefault = true
 		parsed.defaultVal = reflect.ValueOf(parsed.schema.Default)
-	}
-
-	if _, ok := f.Tag.Lookup("example"); ok {
-		parsed.example = reflect.ValueOf(parsed.schema.Example)
 	}
 
 	scm := parsed.schema

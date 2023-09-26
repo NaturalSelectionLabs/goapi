@@ -22,7 +22,7 @@ type Document struct {
 	Components   Components      `json:"components"`
 	Tags         []Tag           `json:"tags,omitempty"`
 	ExternalDocs *ExternalDocs   `json:"externalDocs,omitempty"`
-	Extension    Extension       `json:"x-extension,omitempty"` //nolint: tagliatelle
+	Extension    Extension       `json:"x-extension,omitempty"`
 }
 
 // Info represents the info section of an OpenAPI document.
@@ -52,7 +52,7 @@ type Operation struct {
 	Description string                `json:"description,omitempty"`
 	OperationID string                `json:"operationId,omitempty"`
 	Tags        []string              `json:"tags,omitempty"`
-	Extension   Extension             `json:"x-extension,omitempty"` //nolint: tagliatelle
+	Extension   Extension             `json:"x-extension,omitempty"`
 }
 
 // Parameter represents a parameter in an OpenAPI document.
@@ -89,7 +89,7 @@ type Header struct {
 // Content represents a content in an OpenAPI document.
 type Content struct {
 	JSON   *Schema `json:"application/json,omitempty"`
-	Binary *Schema `json:"application/octet-stream,omitempty"` //nolint: tagliatelle
+	Binary *Schema `json:"application/octet-stream,omitempty"`
 }
 
 // Schema represents a schema in an OpenAPI document.

@@ -33,8 +33,9 @@ func New() *Group {
 func NewRouter() *Router {
 	s := jschema.NewWithInterfaces("#/components/schemas", Interfaces)
 
-	s.AddTimeHandler()
-	s.AddJSONRawMessageHandler()
+	s.HijackTime()
+	s.HijackJSONRawMessage()
+	s.HijackBigInt()
 
 	return &Router{
 		middlewares: []middlewares.Middleware{},
