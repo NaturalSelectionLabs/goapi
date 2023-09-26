@@ -1,5 +1,5 @@
-github.com/NaturalSelectionLabs/jschema v0.9.1 h1:4XnakmoETshTCqq0V+/goYuGMbjQZbsNsrgv+KZpvUw=
-github.com/NaturalSelectionLabs/jschema v0.9.1/go.mod h1:bfXOYPFt7ih34QVwML9QEFxbeVxLCpfrj6P5M97Sbzk=
+github.com/NaturalSelectionLabs/jschema v0.9.2 h1:wbmhHVNFzgOoRtqxzQWR/+TnNi1YRmtCAACpg8snmpE=
+github.com/NaturalSelectionLabs/jschema v0.9.2/go.mod h1:bfXOYPFt7ih34QVwML9QEFxbeVxLCpfrj6P5M97Sbzk=
 github.com/go-playground/assert/v2 v2.2.0/go.mod h1:VDjEfimB/XKnb+ZQfWdccd7VUvScMdVu0Titje2rxJ4=
 github.com/go-playground/validator/v10 v10.15.3/go.mod h1:9iXMNT7sEkjXb0I+enO7QXmzG6QCsPWY4zveKFVRSyU=
 github.com/golang-jwt/jwt v3.2.2+incompatible/go.mod h1:8pz2t5EyA70fFQQSrl6XZXzqecmYZeUEB8OUGHkxJ+I=
