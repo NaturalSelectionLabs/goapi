@@ -8,11 +8,9 @@ import (
 	"net/http"
 	"net/url"
 	"reflect"
-	"strconv"
 
 	ff "github.com/NaturalSelectionLabs/goapi/lib/flat-fields"
 	"github.com/NaturalSelectionLabs/jschema"
-	"github.com/iancoleman/strcase"
 	"github.com/xeipuuv/gojsonschema"
 )
 
@@ -169,58 +167,6 @@ func (f *parsedField) validate(val reflect.Value) error {
 	}
 
 	return nil
-}
-
-func toOperationName(name string) string {
-	return strcase.ToLowerCamel(name)
-}
-
-func toHeaderName(name string) string {
-	return strcase.ToKebab(name)
-}
-
-func toPathName(name string) string {
-	return strcase.ToKebab(name)
-}
-
-func toQueryName(name string) string {
-	return strcase.ToSnake(name)
-}
-
-var tUnmarshaler = reflect.TypeOf((*json.Unmarshaler)(nil)).Elem()
-
-// converts the val to the kind of value.
-func toValue(t reflect.Type, val string) (reflect.Value, error) {
-	if t.Kind() == reflect.String || t.Implements(tUnmarshaler) || reflect.New(t).Type().Implements(tUnmarshaler) {
-		val = strconv.Quote(val)
-	}
-
-	v := reflect.New(t)
-
-	err := json.Unmarshal([]byte(val), v.Interface())
-	if err != nil {
-		return reflect.Value{}, fmt.Errorf("can't parse `%s` to expected value, %w", val, err)
-	}
-
-	return v.Elem(), nil
-}
-
-func tagName(t reflect.StructTag, name string) string {
-	tag := jschema.ParseJSONTag(t)
-
-	if tag != nil && tag.Name != "" {
-		return tag.Name
-	}
-
-	return name
-}
-
-func firstProp(s *jschema.Schema) (p *jschema.Schema) { //nolint: nonamedreturns
-	for _, p = range s.Properties {
-		break
-	}
-
-	return p
 }
 
 func parseParam(s jschema.Schemas, path *Path, p reflect.Type) *parsedParam {

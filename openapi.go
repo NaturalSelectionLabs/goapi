@@ -7,6 +7,7 @@ import (
 	ff "github.com/NaturalSelectionLabs/goapi/lib/flat-fields"
 	"github.com/NaturalSelectionLabs/goapi/lib/openapi"
 	"github.com/NaturalSelectionLabs/jschema"
+	"github.com/iancoleman/strcase"
 	"github.com/naturalselectionlabs/vary"
 )
 
@@ -264,4 +265,20 @@ func getDescription(t reflect.Type, code openapi.StatusCode) string {
 
 func ptr[T any](v T) *T {
 	return &v
+}
+
+func toOperationName(name string) string {
+	return strcase.ToLowerCamel(name)
+}
+
+func toHeaderName(name string) string {
+	return strcase.ToKebab(name)
+}
+
+func toPathName(name string) string {
+	return strcase.ToKebab(name)
+}
+
+func toQueryName(name string) string {
+	return strcase.ToSnake(name)
 }
