@@ -12,9 +12,6 @@ import (
 	"github.com/naturalselectionlabs/vary"
 )
 
-// HandleName is the name of the function to handle a http operation.
-const HandleName = "Handle"
-
 // OperationHandler is a function to handle input and output of a http operation.
 type OperationHandler any
 
@@ -35,7 +32,7 @@ type Operation struct {
 
 	override http.HandlerFunc
 
-	openapi OperationOpenAPI
+	configOpenAPI ConfigOpenAPI
 }
 
 func (g *Group) newOperation(method openapi.Method, path string, handler OperationHandler) *Operation {
@@ -64,17 +61,9 @@ func (g *Group) newOperation(method openapi.Method, path string, handler Operati
 	vHandler := reflect.ValueOf(handler)
 	tHandler := vHandler.Type()
 
-	var (
-		doc  OperationOpenAPI
-		name string
-	)
+	var name string
 
-	if _, has := tHandler.MethodByName(HandleName); has {
-		name = toOperationName(tHandler.Name())
-		vHandler = vHandler.MethodByName(HandleName)
-		tHandler = vHandler.Type()
-		doc, _ = handler.(OperationOpenAPI)
-	} else if tHandler.Kind() == reflect.Func {
+	if tHandler.Kind() == reflect.Func {
 		name = toOperationName(fnName(handler))
 	} else {
 		panic("handler must be a function or a struct with Handle method")
@@ -100,7 +89,6 @@ func (g *Group) newOperation(method openapi.Method, path string, handler Operati
 		tHandler: tHandler,
 		params:   params,
 		tRes:     tRes,
-		openapi:  doc,
 	}
 }
 

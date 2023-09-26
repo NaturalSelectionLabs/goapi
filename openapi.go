@@ -11,10 +11,8 @@ import (
 	"github.com/naturalselectionlabs/vary"
 )
 
-// OperationOpenAPI allows a handler customize the OpenAPI doc of its corresponding operation.
-type OperationOpenAPI interface {
-	OpenAPI(doc openapi.Operation) openapi.Operation
-}
+// ConfigOpenAPI is a function to modify the generated OpenAPI doc.
+type ConfigOpenAPI func(doc *openapi.Operation)
 
 // Interfaces is the global interface set.
 var Interfaces = vary.NewInterfaces()
@@ -69,6 +67,11 @@ func (r *Router) OpenAPI() *openapi.Document {
 	return doc
 }
 
+// OpenAPI sets the config function to modify the generated OpenAPI doc.
+func (op *Operation) OpenAPI(config ConfigOpenAPI) {
+	op.configOpenAPI = config
+}
+
 func operationDoc(s jschema.Schemas, op *Operation) openapi.Operation {
 	doc := openapi.Operation{
 		OperationID: op.name,
@@ -102,8 +105,8 @@ func operationDoc(s jschema.Schemas, op *Operation) openapi.Operation {
 
 	doc.Responses = resDoc(s, op)
 
-	if op.openapi != nil {
-		doc = op.openapi.OpenAPI(doc)
+	if op.configOpenAPI != nil {
+		op.configOpenAPI(&doc)
 	}
 
 	return doc

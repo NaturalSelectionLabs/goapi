@@ -48,31 +48,6 @@ type Res03 struct {
 	Meta string
 }
 
-type One struct {
-}
-
-func (One) OpenAPI(doc openapi.Operation) openapi.Operation {
-	doc.Summary = "test"
-	doc.Description = "test endpoint"
-	doc.Tags = []string{"test"}
-	doc.Security = []map[string][]string{{"auth": {"read"}}}
-
-	return doc
-}
-
-func (One) Handle(_ context.Context, p struct {
-	goapi.InURL
-	ID   string `default:"123" description:"id" examples:"[\"456\"]"`
-	Type *openapi.Code
-}, h struct {
-	goapi.InHeader
-	UA string
-}, b struct {
-	Data string `json:"data"`
-}) Res {
-	return Res01{}
-}
-
 type Three struct {
 	goapi.StatusOK
 	Data string `response:"direct"`
@@ -98,7 +73,24 @@ func TestOpenAPI(t *testing.T) { //nolint: maintidx
 
 	r.GET("/override", func(w http.ResponseWriter, r *http.Request) {})
 
-	r.GET("/one", One{})
+	r.GET("/one", func(_ context.Context, p struct {
+		goapi.InURL
+		ID   string `default:"123" description:"id" examples:"[\"456\"]"`
+		Type *openapi.Code
+	}, h struct {
+		goapi.InHeader
+		UA string
+	}, b struct {
+		Data string `json:"data"`
+	}) Res {
+		return Res01{}
+	}).OpenAPI(func(doc *openapi.Operation) {
+		doc.OperationID = "one"
+		doc.Summary = "test"
+		doc.Description = "test endpoint"
+		doc.Tags = []string{"test"}
+		doc.Security = []map[string][]string{{"auth": {"read"}}}
+	})
 
 	r.GET("/two/{id}", func(struct {
 		goapi.InURL
@@ -329,7 +321,7 @@ func TestOpenAPI(t *testing.T) { //nolint: maintidx
 			},
 			"/three": map[string]interface{}{
 				"get": map[string]interface{}{
-					"operationId": "func3",
+					"operationId": "func5",
 					"responses": map[string]interface{}{
 						"200": map[string]interface{}{
 							"content": map[string]interface{}{
@@ -346,7 +338,7 @@ func TestOpenAPI(t *testing.T) { //nolint: maintidx
 			},
 			"/two/{id}": map[string]interface{}{
 				"get": map[string]interface{}{
-					"operationId": "func2",
+					"operationId": "func4",
 					"parameters": []interface{}{
 						map[string]interface{}{
 							"in":       "path",

@@ -30,7 +30,7 @@ func (g *Group) Prefix() string {
 // It only accepts POST request method.
 // It will use the function name as the url path name.
 // It will treat the input and output of the function as the request and response body.
-func Add[P, S any](g *Group, fn func(P) S) {
+func Add[P, S any](g *Group, fn func(P) S) *Operation {
 	name := toPathName(fnName(fn))
 
 	type res struct {
@@ -38,54 +38,56 @@ func Add[P, S any](g *Group, fn func(P) S) {
 		Data S `response:"direct"`
 	}
 
-	g.POST("/"+name, func(p P) res {
+	return g.POST("/"+name, func(p P) res {
 		return res{Data: fn(p)}
 	})
 }
 
 // GET is a shortcut for [Group.Add].
-func (g *Group) GET(path string, handler OperationHandler) {
-	g.Add(openapi.GET, path, handler)
+func (g *Group) GET(path string, handler OperationHandler) *Operation {
+	return g.Add(openapi.GET, path, handler)
 }
 
 // POST is a shortcut for [Group.Add].
-func (g *Group) POST(path string, handler OperationHandler) {
-	g.Add(openapi.POST, path, handler)
+func (g *Group) POST(path string, handler OperationHandler) *Operation {
+	return g.Add(openapi.POST, path, handler)
 }
 
 // PUT is a shortcut for [Group.Add].
-func (g *Group) PUT(path string, handler OperationHandler) {
-	g.Add(openapi.PUT, path, handler)
+func (g *Group) PUT(path string, handler OperationHandler) *Operation {
+	return g.Add(openapi.PUT, path, handler)
 }
 
 // PATCH is a shortcut for [Group.Add].
-func (g *Group) PATCH(path string, handler OperationHandler) {
-	g.Add(openapi.PATCH, path, handler)
+func (g *Group) PATCH(path string, handler OperationHandler) *Operation {
+	return g.Add(openapi.PATCH, path, handler)
 }
 
 // DELETE is a shortcut for [Group.Add].
-func (g *Group) DELETE(path string, handler OperationHandler) {
-	g.Add(openapi.DELETE, path, handler)
+func (g *Group) DELETE(path string, handler OperationHandler) *Operation {
+	return g.Add(openapi.DELETE, path, handler)
 }
 
 // OPTIONS is a shortcut for [Group.Add].
-func (g *Group) OPTIONS(path string, handler OperationHandler) {
-	g.Add(openapi.OPTIONS, path, handler)
+func (g *Group) OPTIONS(path string, handler OperationHandler) *Operation {
+	return g.Add(openapi.OPTIONS, path, handler)
 }
 
 // HEAD is a shortcut for [Group.Add].
-func (g *Group) HEAD(path string, handler OperationHandler) {
-	g.Add(openapi.HEAD, path, handler)
+func (g *Group) HEAD(path string, handler OperationHandler) *Operation {
+	return g.Add(openapi.HEAD, path, handler)
 }
 
 // Add adds a new http handler to the group.
 // If a request matches the path and method, the handler will be called.
 // The router will ignore the trailing slash of the path if a path without trailing slash
 // has not been defined.
-func (g *Group) Add(method openapi.Method, path string, handler OperationHandler) {
+func (g *Group) Add(method openapi.Method, path string, handler OperationHandler) *Operation {
 	op := g.newOperation(method, g.prefix+path, handler)
 	g.router.operations = append(g.router.operations, op)
 	g.Use(op)
+
+	return op
 }
 
 // Group creates a sub group of current group.

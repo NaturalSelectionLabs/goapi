@@ -45,7 +45,20 @@ func main() {
 
 	// You can use multiple parameters at the same time to get url values, headers, request context, or request body.
 	// The order of the parameters doesn't matter.
-	g.GET("/users/{id}/posts", GetPosts{})
+	g.GET("/users/{id}/posts", func(c context.Context, f ParamsPosts, h ParamsHeader) ResPosts {
+		if h.Cookie != "token=123456" {
+			return goapi.StatusUnauthorized{}
+		}
+
+		return ResPostsOK{
+			Data: fetchPosts(c, f.ID, f.Type.String(), f.Keyword),
+			Meta: 100,
+		}
+	}).OpenAPI(func(doc *openapi.Operation) { // Customize the generated openapi doc.
+		doc.OperationID = "GetPosts"
+		doc.Description = "Fetch posts of a user."
+		doc.Tags = []string{"posts"}
+	})
 
 	// Install endpoints for openapi doc.
 	apidoc.Install(g, func(doc *openapi.Document) *openapi.Document {
@@ -56,31 +69,6 @@ func main() {
 	})
 
 	log.Println(g.Start(":3000"))
-}
-
-// GetPosts is the handler for fetching posts of a user.
-type GetPosts struct{}
-
-// Handle implements [goapi.OperationHandler] which let us to handle the request.
-func (GetPosts) Handle(c context.Context, f ParamsPosts, h ParamsHeader) ResPosts {
-	if h.Cookie != "token=123456" {
-		return goapi.StatusUnauthorized{}
-	}
-
-	return ResPostsOK{
-		Data: fetchPosts(c, f.ID, f.Type.String(), f.Keyword),
-		Meta: 100,
-	}
-}
-
-// OpenAPI implements [goapi.OperationOpenAPI] which let us to customize the generated openapi document
-// for the current handler.
-func (GetPosts) OpenAPI(doc openapi.Operation) openapi.Operation {
-	doc.OperationID = "GetPosts"
-	doc.Description = "Fetch posts of a user."
-	doc.Tags = []string{"posts"}
-
-	return doc
 }
 
 // Simulate slow data fetching from database.

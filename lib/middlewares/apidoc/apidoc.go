@@ -22,11 +22,17 @@ func Install(g *goapi.Group, config func(doc *openapi.Document) *openapi.Documen
 		config = func(doc *openapi.Document) *openapi.Document { return doc }
 	}
 
-	op := &operation{}
+	var cache *openapi.Document
 
-	g.GET("/openapi.json", op)
+	g.GET("/openapi.json", func() resOK {
+		if cache == nil {
+			cache = config(g.OpenAPI())
+		}
 
-	op.doc = config(g.OpenAPI())
+		return resOK{Data: cache}
+	}).OpenAPI(func(doc *openapi.Operation) {
+		doc.Description = "It responds the OpenAPI doc for this service in JSON format."
+	})
 
 	dir, _ := fs.Sub(swaggerFiles, "swagger-ui")
 
@@ -47,23 +53,4 @@ type resOK struct {
 
 func (resOK) Description() string {
 	return "It will return the OpenAPI doc in JSON format."
-}
-
-// operation is the operation to serve the OpenAPI document.
-type operation struct {
-	doc *openapi.Document
-}
-
-var _ goapi.OperationOpenAPI = &operation{}
-var _ goapi.OperationHandler = &operation{}
-
-// OpenAPI implements the [goapi.OperationOpenAPI] interface.
-func (*operation) OpenAPI(doc openapi.Operation) openapi.Operation {
-	doc.Description = "It responds the OpenAPI doc for this service in JSON format."
-	return doc
-}
-
-// Handle implements the [goapi.OperationHandler] interface.
-func (op *operation) Handle() resOK {
-	return resOK{Data: op.doc}
 }
