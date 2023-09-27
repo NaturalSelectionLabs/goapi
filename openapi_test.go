@@ -103,6 +103,10 @@ func TestOpenAPI(t *testing.T) { //nolint: maintidx
 		return Three{}
 	})
 
+	r.POST("/three", func() Three {
+		return Three{}
+	})
+
 	r.GET("/four", fnFour)
 
 	doc := r.OpenAPI().JSON()
@@ -322,6 +326,21 @@ func TestOpenAPI(t *testing.T) { //nolint: maintidx
 			"/three": map[string]interface{}{
 				"get": map[string]interface{}{
 					"operationId": "func5",
+					"responses": map[string]interface{}{
+						"200": map[string]interface{}{
+							"content": map[string]interface{}{
+								"application/json": map[string]interface{}{
+									"schema": map[string]interface{}{
+										"type": "string",
+									},
+								},
+							},
+							"description": "OK",
+						},
+					},
+				},
+				"post": map[string]interface{}{
+					"operationId": "func6",
 					"responses": map[string]interface{}{
 						"200": map[string]interface{}{
 							"content": map[string]interface{}{
