@@ -324,8 +324,24 @@ func Test_validation(t *testing.T) {
 
 	s := jschema.New("")
 
-	parsed := parseParam(s, path, reflect.TypeOf(A{}))
+	{
+		parsed := parseParam(s, path, reflect.TypeOf(A{}))
 
-	_, err = parsed.loadBody(bytes.NewBufferString(`{"id": "ok"}`))
-	g.Eq(err.Error(), "request body is invalid: [ID: String length must be greater than or equal to 5]")
+		_, err := parsed.loadBody(bytes.NewBufferString(`{"id": "ok"}`))
+		g.Eq(err.Error(), "request body is invalid: [ID: String length must be greater than or equal to 5]")
+	}
+
+	{
+		type B struct {
+			InURL
+			ID int `min:"1" max:"10"`
+		}
+
+		parsed := parseParam(s, path, reflect.TypeOf(B{}))
+		_, err := parsed.loadURL(url.Values{"id": {"0"}})
+		g.Eq(err.Error(), "param `id` is invalid: [(root): Must be greater than or equal to 1]")
+
+		_, err = parsed.loadURL(url.Values{"id": {"20"}})
+		g.Eq(err.Error(), "param `id` is invalid: [(root): Must be less than or equal to 10]")
+	}
 }
