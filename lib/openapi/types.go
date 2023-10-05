@@ -57,11 +57,20 @@ type Operation struct {
 
 // Parameter represents a parameter in an OpenAPI document.
 type Parameter struct {
-	Name        string          `json:"name"`
-	In          ParamIn         `json:"in"`
-	Schema      *jschema.Schema `json:"schema"`
-	Description string          `json:"description,omitempty"`
-	Required    bool            `json:"required,omitempty"`
+	Name        string             `json:"name"`
+	In          ParamIn            `json:"in"`
+	Schema      *jschema.Schema    `json:"schema"`
+	Description string             `json:"description,omitempty"`
+	Required    bool               `json:"required,omitempty"`
+	Examples    map[string]Example `json:"examples,omitempty"`
+}
+
+// Example represents an example in an OpenAPI document.
+type Example struct {
+	Value         jschema.JVal `json:"value"`
+	Summary       string       `json:"summary,omitempty"`
+	Description   string       `json:"description,omitempty"`
+	ExternalValue string       `json:"externalValue,omitempty"`
 }
 
 // RequestBody represents a request body in an OpenAPI document.

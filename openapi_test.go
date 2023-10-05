@@ -218,8 +218,14 @@ func TestOpenAPI(t *testing.T) { //nolint: maintidx
 					"parameters": []interface{}{
 						map[string]interface{}{
 							"description": "id",
-							"in":          "query",
-							"name":        "id",
+							"examples": map[string]interface{}{
+								"0": map[string]interface{}{
+									"summary": `"456"`,
+									"value":   "456",
+								},
+							},
+							"in":   "query",
+							"name": "id",
 							"schema": map[string]interface{}{
 								"default": "123",
 								"examples": []interface{}{

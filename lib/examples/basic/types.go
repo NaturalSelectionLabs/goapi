@@ -18,7 +18,7 @@ type ParamsPosts struct {
 	goapi.InURL
 
 	// Use description tag to describe the openapi parameter.
-	ID int `description:"User ID" min:"1"`
+	ID int `description:"User ID" min:"1" examples:"[1, 2]"`
 	// Type of the posts to fetch.
 	// You can use json tag to override the default parameter naming behavior.
 	Type PostType `json:"t"`

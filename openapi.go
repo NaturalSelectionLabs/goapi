@@ -1,6 +1,8 @@
 package goapi
 
 import (
+	"encoding/json"
+	"fmt"
 	"net/http"
 	"reflect"
 
@@ -125,6 +127,19 @@ func urlParamDoc(s jschema.Schemas, p *parsedParam) []openapi.Parameter {
 		schema := fieldSchema(s, f.flatField.Field)
 		desc := schema.Description
 		schema.Description = ""
+		examples := map[string]openapi.Example{}
+
+		if len(schema.Examples) > 0 {
+			for i, e := range schema.Examples {
+				b, _ := json.Marshal(e)
+				k := fmt.Sprintf("%d", i)
+
+				examples[k] = openapi.Example{
+					Summary: string(b),
+					Value:   e,
+				}
+			}
+		}
 
 		arr = append(arr, openapi.Parameter{
 			Name:        f.name,
@@ -132,6 +147,7 @@ func urlParamDoc(s jschema.Schemas, p *parsedParam) []openapi.Parameter {
 			Schema:      schema,
 			Description: desc,
 			Required:    f.required,
+			Examples:    examples,
 		})
 	}
 
