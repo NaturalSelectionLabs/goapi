@@ -316,7 +316,7 @@ func Test_validation(t *testing.T) {
 	g := got.T(t)
 
 	type A struct {
-		ID string `min:"5"`
+		ID string `minLen:"5"`
 	}
 
 	path, err := newPath("/test", false)

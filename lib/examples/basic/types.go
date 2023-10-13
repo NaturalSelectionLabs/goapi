@@ -28,7 +28,7 @@ type ParamsPosts struct {
 	// You can also use [goapi.Router.AddFormatChecker] to add custom format checker.
 	// Please use json string for default and examples tags if possible, if you forget to quote strings
 	// goapi will help to quote it, but it only works for plain string.
-	Keyword string `default:"go" min:"1" pattern:"^[a-z]+$" examples:"[\"a\", \"b\"]"`
+	Keyword string `default:"go" minLen:"1" pattern:"^[a-z]+$" examples:"[\"a\", \"b\"]"`
 	// Use embedded struct to share common parameters.
 	ParamsPagination
 }

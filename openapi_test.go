@@ -75,8 +75,8 @@ func TestOpenAPI(t *testing.T) { //nolint: maintidx
 
 	r.GET("/one", func(_ context.Context, p struct {
 		goapi.InURL
-		ID   string `default:"123" description:"id" examples:"[\"456\"]"`
-		Type *openapi.Code
+		ID   string        `default:"123" description:"id" examples:"[\"456\"]"`
+		Type *openapi.Code `description:"type code"`
 	}, h struct {
 		goapi.InHeader
 		UA string
@@ -235,8 +235,9 @@ func TestOpenAPI(t *testing.T) { //nolint: maintidx
 							},
 						},
 						map[string]interface{}{
-							"in":   "query",
-							"name": "type",
+							"in":          "query",
+							"name":        "type",
+							"description": "type code",
 							"schema": map[string]interface{}{
 								"$ref": "#/components/schemas/Code",
 							},
