@@ -7,7 +7,7 @@ require (
 	github.com/iancoleman/strcase v0.3.0
 	github.com/naturalselectionlabs/vary v0.3.4
 	github.com/xeipuuv/gojsonschema v1.2.0
-	github.com/ysmood/got v0.36.0
+	github.com/ysmood/got v0.36.2
 )
 
 require (

@@ -1,0 +1,288 @@
+{
+  "Name": "openapi",
+  "Value": {
+    "openapi": "3.1.0",
+    "info": {
+      "title": "",
+      "version": ""
+    },
+    "paths": {
+      "/four": {
+        "get": {
+          "responses": {
+            "200": {
+              "description": "OK",
+              "content": {
+                "application/octet-stream": {
+                  "schema": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              }
+            }
+          },
+          "operationId": "fnFour"
+        }
+      },
+      "/one": {
+        "get": {
+          "parameters": [
+            {
+              "name": "id",
+              "in": "query",
+              "schema": {
+                "default": "123",
+                "examples": [
+                  "456"
+                ],
+                "type": "string"
+              },
+              "description": "id",
+              "examples": {
+                "0": {
+                  "value": "456",
+                  "summary": "\"456\""
+                }
+              }
+            },
+            {
+              "name": "type",
+              "in": "query",
+              "schema": {
+                "$ref": "#/components/schemas/Code"
+              },
+              "description": "type code"
+            },
+            {
+              "name": "ua",
+              "in": "header",
+              "schema": {
+                "type": "string"
+              },
+              "required": true
+            }
+          ],
+          "requestBody": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "data"
+                  ],
+                  "additionalProperties": false
+                }
+              }
+            },
+            "required": true
+          },
+          "responses": {
+            "200": {
+              "description": "OK",
+              "headers": {
+                "set-cookie": {
+                  "schema": {
+                    "type": "string"
+                  }
+                }
+              },
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "data": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "data"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              }
+            },
+            "403": {
+              "description": "returns 403",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "error": {
+                        "$ref": "#/components/schemas/Error"
+                      }
+                    },
+                    "required": [
+                      "error"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              }
+            }
+          },
+          "summary": "test",
+          "security": [
+            {
+              "auth": [
+                "read"
+              ]
+            }
+          ],
+          "description": "test endpoint",
+          "operationId": "one",
+          "tags": [
+            "test"
+          ]
+        }
+      },
+      "/three": {
+        "get": {
+          "responses": {
+            "200": {
+              "description": "OK",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "operationId": "func5"
+        },
+        "post": {
+          "responses": {
+            "200": {
+              "description": "OK",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "operationId": "func6"
+        }
+      },
+      "/two/{id}": {
+        "get": {
+          "parameters": [
+            {
+              "name": "id",
+              "in": "path",
+              "schema": {
+                "type": "string"
+              },
+              "required": true
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "OK",
+              "content": {
+                "application/json": {
+                  "schema": {
+                    "type": "object",
+                    "properties": {
+                      "data": {
+                        "type": "string"
+                      },
+                      "meta": {
+                        "type": "string"
+                      }
+                    },
+                    "required": [
+                      "data",
+                      "meta"
+                    ],
+                    "additionalProperties": false
+                  }
+                }
+              }
+            }
+          },
+          "operationId": "func4"
+        }
+      }
+    },
+    "components": {
+      "schemas": {
+        "Code": {
+          "title": "Code",
+          "description": "github.com/NaturalSelectionLabs/goapi/lib/openapi.Code",
+          "enum": [
+            "internal_error",
+            "invalid_param",
+            "not_found"
+          ]
+        },
+        "CommonError": {
+          "title": "CommonError[github.com/NaturalSelectionLabs/goapi/lib/openapi.Code]",
+          "description": "github.com/NaturalSelectionLabs/goapi/lib/openapi.CommonError[github.com/NaturalSelectionLabs/goapi/lib/openapi.Code]",
+          "type": "object",
+          "properties": {
+            "code": {
+              "$ref": "#/components/schemas/Code"
+            },
+            "details": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/CommonError"
+              }
+            },
+            "innererror": {},
+            "message": {
+              "type": "string"
+            },
+            "target": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "code"
+          ],
+          "additionalProperties": false
+        },
+        "Error": {
+          "title": "Error",
+          "description": "github.com/NaturalSelectionLabs/goapi/lib/openapi.Error",
+          "type": "object",
+          "properties": {
+            "code": {
+              "$ref": "#/components/schemas/Code"
+            },
+            "details": {
+              "type": "array",
+              "items": {
+                "$ref": "#/components/schemas/CommonError"
+              }
+            },
+            "innererror": {},
+            "message": {
+              "type": "string"
+            },
+            "target": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "code"
+          ],
+          "additionalProperties": false
+        }
+      }
+    }
+  }
+}

@@ -26,8 +26,8 @@ github.com/xeipuuv/gojsonschema v1.2.0 h1:LhYJRs+L4fBtjZUfuSZIKGeVu0QRy8e5Xi7D17
 github.com/xeipuuv/gojsonschema v1.2.0/go.mod h1:anYRn/JVcOK2ZgGU+IjEV4nwlhoK5sQluxsYJ78Id3Y=
 github.com/ysmood/gop v0.2.0 h1:+tFrG0TWPxT6p9ZaZs+VY+opCvHU8/3Fk6BaNv6kqKg=
 github.com/ysmood/gop v0.2.0/go.mod h1:rr5z2z27oGEbyB787hpEcx4ab8cCiPnKxn0SUHt6xzk=
-github.com/ysmood/got v0.36.0 h1:pP00CUHf4SE/nUQtCkovq3f665YIaZ9iC6Uk3vEXYI0=
-github.com/ysmood/got v0.36.0/go.mod h1:dkEyTWZWvj5OJxtJdNlK2xme1EitYf8GOePYS6XQQBg=
+github.com/ysmood/got v0.36.2 h1:AzQ8ZGp6RDxqmZQRzTRqvc09ioOPA538utDKKZ+vKjY=
+github.com/ysmood/got v0.36.2/go.mod h1:dkEyTWZWvj5OJxtJdNlK2xme1EitYf8GOePYS6XQQBg=
 gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=
 gopkg.in/yaml.v2 v2.2.2/go.mod h1:hI93XBmqTisBFMUTm0b8Fm+jr3Dg1NNxqwp+5A1VGuI=
 gopkg.in/yaml.v3 v3.0.1 h1:fxVm/GzAzEWqLHuvctI91KS9hhNmmWOoWu0XTYJS7CA=
