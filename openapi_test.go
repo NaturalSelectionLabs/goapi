@@ -62,6 +62,15 @@ func fnFour() Four {
 	return Four{}
 }
 
+type Five struct {
+	goapi.StatusOK
+	Data goapi.DataBinary
+}
+
+func (Five) ContentType() string {
+	return "image/png"
+}
+
 func TestOpenAPI(t *testing.T) {
 	g := got.T(t)
 
@@ -108,6 +117,10 @@ func TestOpenAPI(t *testing.T) {
 	})
 
 	r.GET("/four", fnFour)
+
+	r.GET("/five", func() Five {
+		return Five{}
+	})
 
 	doc := r.OpenAPI().JSON()
 

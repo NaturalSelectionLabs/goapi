@@ -1,73 +1,160 @@
 {
   "Name": "openapi",
   "Value": {
-    "openapi": "3.1.0",
+    "components": {
+      "schemas": {
+        "Code": {
+          "description": "github.com/NaturalSelectionLabs/goapi/lib/openapi.Code",
+          "enum": [
+            "internal_error",
+            "invalid_param",
+            "not_found"
+          ],
+          "title": "Code"
+        },
+        "CommonError": {
+          "additionalProperties": false,
+          "description": "github.com/NaturalSelectionLabs/goapi/lib/openapi.CommonError[github.com/NaturalSelectionLabs/goapi/lib/openapi.Code]",
+          "properties": {
+            "code": {
+              "$ref": "#/components/schemas/Code"
+            },
+            "details": {
+              "items": {
+                "$ref": "#/components/schemas/CommonError"
+              },
+              "type": "array"
+            },
+            "innererror": {},
+            "message": {
+              "type": "string"
+            },
+            "target": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "code"
+          ],
+          "title": "CommonError[github.com/NaturalSelectionLabs/goapi/lib/openapi.Code]",
+          "type": "object"
+        },
+        "Error": {
+          "additionalProperties": false,
+          "description": "github.com/NaturalSelectionLabs/goapi/lib/openapi.Error",
+          "properties": {
+            "code": {
+              "$ref": "#/components/schemas/Code"
+            },
+            "details": {
+              "items": {
+                "$ref": "#/components/schemas/CommonError"
+              },
+              "type": "array"
+            },
+            "innererror": {},
+            "message": {
+              "type": "string"
+            },
+            "target": {
+              "type": "string"
+            }
+          },
+          "required": [
+            "code"
+          ],
+          "title": "Error",
+          "type": "object"
+        }
+      }
+    },
     "info": {
       "title": "",
       "version": ""
     },
+    "openapi": "3.1.0",
     "paths": {
-      "/four": {
+      "/five": {
         "get": {
+          "operationId": "func7",
           "responses": {
             "200": {
-              "description": "OK",
+              "content": {
+                "image/png": {
+                  "schema": {
+                    "format": "binary",
+                    "type": "string"
+                  }
+                }
+              },
+              "description": "OK"
+            }
+          }
+        }
+      },
+      "/four": {
+        "get": {
+          "operationId": "fnFour",
+          "responses": {
+            "200": {
               "content": {
                 "application/octet-stream": {
                   "schema": {
-                    "type": "string",
-                    "format": "binary"
+                    "format": "binary",
+                    "type": "string"
                   }
                 }
-              }
+              },
+              "description": "OK"
             }
-          },
-          "operationId": "fnFour"
+          }
         }
       },
       "/one": {
         "get": {
+          "description": "test endpoint",
+          "operationId": "one",
           "parameters": [
             {
-              "name": "id",
+              "description": "id",
+              "examples": {
+                "0": {
+                  "summary": "\"456\"",
+                  "value": "456"
+                }
+              },
               "in": "query",
+              "name": "id",
               "schema": {
                 "default": "123",
                 "examples": [
                   "456"
                 ],
                 "type": "string"
-              },
-              "description": "id",
-              "examples": {
-                "0": {
-                  "value": "456",
-                  "summary": "\"456\""
-                }
               }
             },
             {
-              "name": "type",
+              "description": "type code",
               "in": "query",
+              "name": "type",
               "schema": {
                 "$ref": "#/components/schemas/Code"
-              },
-              "description": "type code"
+              }
             },
             {
-              "name": "ua",
               "in": "header",
+              "name": "ua",
+              "required": true,
               "schema": {
                 "type": "string"
-              },
-              "required": true
+              }
             }
           ],
           "requestBody": {
             "content": {
               "application/json": {
                 "schema": {
-                  "type": "object",
+                  "additionalProperties": false,
                   "properties": {
                     "data": {
                       "type": "string"
@@ -76,7 +163,7 @@
                   "required": [
                     "data"
                   ],
-                  "additionalProperties": false
+                  "type": "object"
                 }
               }
             },
@@ -84,18 +171,10 @@
           },
           "responses": {
             "200": {
-              "description": "OK",
-              "headers": {
-                "set-cookie": {
-                  "schema": {
-                    "type": "string"
-                  }
-                }
-              },
               "content": {
                 "application/json": {
                   "schema": {
-                    "type": "object",
+                    "additionalProperties": false,
                     "properties": {
                       "data": {
                         "type": "string"
@@ -104,17 +183,24 @@
                     "required": [
                       "data"
                     ],
-                    "additionalProperties": false
+                    "type": "object"
+                  }
+                }
+              },
+              "description": "OK",
+              "headers": {
+                "set-cookie": {
+                  "schema": {
+                    "type": "string"
                   }
                 }
               }
             },
             "403": {
-              "description": "returns 403",
               "content": {
                 "application/json": {
                   "schema": {
-                    "type": "object",
+                    "additionalProperties": false,
                     "properties": {
                       "error": {
                         "$ref": "#/components/schemas/Error"
@@ -123,13 +209,13 @@
                     "required": [
                       "error"
                     ],
-                    "additionalProperties": false
+                    "type": "object"
                   }
                 }
-              }
+              },
+              "description": "returns 403"
             }
           },
-          "summary": "test",
           "security": [
             {
               "auth": [
@@ -137,8 +223,7 @@
               ]
             }
           ],
-          "description": "test endpoint",
-          "operationId": "one",
+          "summary": "test",
           "tags": [
             "test"
           ]
@@ -146,55 +231,55 @@
       },
       "/three": {
         "get": {
+          "operationId": "func5",
           "responses": {
             "200": {
-              "description": "OK",
               "content": {
                 "application/json": {
                   "schema": {
                     "type": "string"
                   }
                 }
-              }
+              },
+              "description": "OK"
             }
-          },
-          "operationId": "func5"
+          }
         },
         "post": {
+          "operationId": "func6",
           "responses": {
             "200": {
-              "description": "OK",
               "content": {
                 "application/json": {
                   "schema": {
                     "type": "string"
                   }
                 }
-              }
+              },
+              "description": "OK"
             }
-          },
-          "operationId": "func6"
+          }
         }
       },
       "/two/{id}": {
         "get": {
+          "operationId": "func4",
           "parameters": [
             {
-              "name": "id",
               "in": "path",
+              "name": "id",
+              "required": true,
               "schema": {
                 "type": "string"
-              },
-              "required": true
+              }
             }
           ],
           "responses": {
             "200": {
-              "description": "OK",
               "content": {
                 "application/json": {
                   "schema": {
-                    "type": "object",
+                    "additionalProperties": false,
                     "properties": {
                       "data": {
                         "type": "string"
@@ -207,80 +292,13 @@
                       "data",
                       "meta"
                     ],
-                    "additionalProperties": false
+                    "type": "object"
                   }
                 }
-              }
+              },
+              "description": "OK"
             }
-          },
-          "operationId": "func4"
-        }
-      }
-    },
-    "components": {
-      "schemas": {
-        "Code": {
-          "title": "Code",
-          "description": "github.com/NaturalSelectionLabs/goapi/lib/openapi.Code",
-          "enum": [
-            "internal_error",
-            "invalid_param",
-            "not_found"
-          ]
-        },
-        "CommonError": {
-          "title": "CommonError[github.com/NaturalSelectionLabs/goapi/lib/openapi.Code]",
-          "description": "github.com/NaturalSelectionLabs/goapi/lib/openapi.CommonError[github.com/NaturalSelectionLabs/goapi/lib/openapi.Code]",
-          "type": "object",
-          "properties": {
-            "code": {
-              "$ref": "#/components/schemas/Code"
-            },
-            "details": {
-              "type": "array",
-              "items": {
-                "$ref": "#/components/schemas/CommonError"
-              }
-            },
-            "innererror": {},
-            "message": {
-              "type": "string"
-            },
-            "target": {
-              "type": "string"
-            }
-          },
-          "required": [
-            "code"
-          ],
-          "additionalProperties": false
-        },
-        "Error": {
-          "title": "Error",
-          "description": "github.com/NaturalSelectionLabs/goapi/lib/openapi.Error",
-          "type": "object",
-          "properties": {
-            "code": {
-              "$ref": "#/components/schemas/Code"
-            },
-            "details": {
-              "type": "array",
-              "items": {
-                "$ref": "#/components/schemas/CommonError"
-              }
-            },
-            "innererror": {},
-            "message": {
-              "type": "string"
-            },
-            "target": {
-              "type": "string"
-            }
-          },
-          "required": [
-            "code"
-          ],
-          "additionalProperties": false
+          }
         }
       }
     }

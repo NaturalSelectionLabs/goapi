@@ -40,6 +40,13 @@ type Descriptioner interface {
 
 var tDescriptioner = reflect.TypeOf((*Descriptioner)(nil)).Elem()
 
+// ContentTyper is an interface that is use to specify the http Content-Type in openapi.
+type ContentTyper interface {
+	ContentType() string
+}
+
+var tContentTyper = reflect.TypeOf((*ContentTyper)(nil)).Elem()
+
 // OpenAPI is a shortcut for [Router.OpenAPI].
 func (g *Group) OpenAPI() *openapi.Document {
 	return g.router.OpenAPI()
@@ -94,7 +101,7 @@ func operationDoc(s jschema.Schemas, op *Operation) openapi.Operation {
 		case inBody:
 			doc.RequestBody = &openapi.RequestBody{
 				Content: &openapi.Content{
-					JSON: &openapi.Schema{
+					getContentType(p.param, openapi.ContentTypeJSON): &openapi.Schema{
 						Schema: s.DefineT(p.param),
 					},
 				},
@@ -195,7 +202,7 @@ func resDoc(s jschema.Schemas, op *Operation) map[openapi.StatusCode]openapi.Res
 
 		if parsedRes.isBinary { //nolint: gocritic,nestif
 			content = &openapi.Content{
-				Binary: &openapi.Schema{
+				getContentType(t, openapi.ContentTypeBin): &openapi.Schema{
 					Schema: &jschema.Schema{
 						Type:   jschema.TypeString,
 						Format: "binary",
@@ -204,7 +211,7 @@ func resDoc(s jschema.Schemas, op *Operation) map[openapi.StatusCode]openapi.Res
 			}
 		} else if parsedRes.isDirect {
 			content = &openapi.Content{
-				JSON: &openapi.Schema{
+				getContentType(t, openapi.ContentTypeJSON): &openapi.Schema{
 					Schema: s.DefineT(parsedRes.data),
 				},
 			}
@@ -228,7 +235,7 @@ func resDoc(s jschema.Schemas, op *Operation) map[openapi.StatusCode]openapi.Res
 			}
 
 			content = &openapi.Content{
-				JSON: &openapi.Schema{
+				getContentType(t, openapi.ContentTypeJSON): &openapi.Schema{
 					Schema: scm,
 				},
 			}
@@ -280,6 +287,14 @@ func getDescription(t reflect.Type, code openapi.StatusCode) string {
 	}
 
 	return http.StatusText(int(code))
+}
+
+func getContentType(t reflect.Type, defaultType string) string {
+	if t.Implements(tContentTyper) {
+		return reflect.New(t).Elem().Interface().(ContentTyper).ContentType()
+	}
+
+	return defaultType
 }
 
 func ptr[T any](v T) *T {

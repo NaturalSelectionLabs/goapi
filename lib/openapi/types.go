@@ -95,11 +95,15 @@ type Header struct {
 	Schema      *jschema.Schema `json:"schema"`
 }
 
+const (
+	// ContentTypeJSON represents the JSON http content type.
+	ContentTypeJSON = "application/json"
+	// ContentTypeBin represents the binary http content type.
+	ContentTypeBin = "application/octet-stream"
+)
+
 // Content represents a content in an OpenAPI document.
-type Content struct {
-	JSON   *Schema `json:"application/json,omitempty"`
-	Binary *Schema `json:"application/octet-stream,omitempty"`
-}
+type Content map[string]*Schema
 
 // Schema represents a schema in an OpenAPI document.
 type Schema struct {
