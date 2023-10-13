@@ -192,7 +192,7 @@ func TestOperation(t *testing.T) {
 		r.GET("/res-image", func() resImage {
 			return resImage{
 				Header: struct{ ContentType string }{ContentType: "image/png"},
-				Data:   bytes.NewBufferString("ok"),
+				Data:   g.Open(false, "LICENSE"),
 			}
 		})
 
@@ -274,6 +274,6 @@ func TestOperation(t *testing.T) {
 	g.Eq(g.Req("", tr.URL("/res-direct")).JSON(), "ok")
 
 	res = g.Req("", tr.URL("/res-image"))
-	g.Eq(res.String(), "ok")
+	g.Gt(res.Bytes().Len(), 1000)
 	g.Eq(res.Header.Get("Content-Type"), "image/png")
 }

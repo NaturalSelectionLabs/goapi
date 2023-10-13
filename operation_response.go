@@ -128,8 +128,14 @@ func (s *parsedRes) write(w http.ResponseWriter, res reflect.Value) {
 			w.Header().Set("Content-Type", "application/octet-stream")
 		}
 
+		data := res.FieldByName("Data").Interface()
+
 		w.WriteHeader(s.statusCode)
-		_, _ = io.Copy(w, res.FieldByName("Data").Interface().(DataStream))
+		_, _ = io.Copy(w, data.(DataStream))
+
+		if closer, ok := data.(io.Closer); ok {
+			_ = closer.Close()
+		}
 
 		return
 	}
