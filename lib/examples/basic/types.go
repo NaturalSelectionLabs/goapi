@@ -107,3 +107,15 @@ type ResPostsOK struct {
 	// Here we use it to store the total number of posts.
 	Meta int
 }
+
+// ResFavicon is the response for favicon.
+type ResFavicon struct {
+	goapi.StatusOK
+	// We can use [goapi.DataStream] to return binary data directly.
+	Data goapi.DataStream
+}
+
+// ContentType implements [goapi.ContentTyper] which let us to customize the content type of the response.
+func (ResFavicon) ContentType() string {
+	return "image/x-icon"
+}

@@ -2,6 +2,7 @@
 package main
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"log"
@@ -58,6 +59,12 @@ func main() {
 		doc.OperationID = "GetPosts"
 		doc.Description = "Fetch posts of a user."
 		doc.Tags = []string{"posts"}
+	})
+
+	g.GET("/favicon.ico", func() ResFavicon {
+		return ResFavicon{
+			Data: bytes.NewBufferString("ok"),
+		}
 	})
 
 	// Install endpoints for openapi doc.

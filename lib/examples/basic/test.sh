@@ -6,6 +6,12 @@ curl localhost:3000/openapi.json
 
 echo
 echo
+echo '== favicon =='
+
+curl localhost:3000/favicon.ico -i
+
+echo
+echo
 echo '== login =='
 
 curl localhost:3000/login -id '{"username": "a@a.com", "password": "123456"}'

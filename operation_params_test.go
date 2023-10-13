@@ -251,10 +251,10 @@ func Test_parseResponse_err(t *testing.T) {
 	g.Eq(g.Panic(func() {
 		op.parseResponse(reflect.TypeOf(struct {
 			StatusOK
-			Data DataBinary
+			Data DataStream
 			Meta int
 		}{}))
-	}), "response Meta field cannot exist when Data field is goapi.DataBinary")
+	}), "response Meta field cannot exist when Data field is goapi.DataStream")
 }
 
 func Test_default_arr(t *testing.T) {

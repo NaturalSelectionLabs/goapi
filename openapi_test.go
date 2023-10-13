@@ -55,7 +55,7 @@ type Three struct {
 
 type Four struct {
 	goapi.StatusOK
-	Data goapi.DataBinary
+	Data goapi.DataStream
 }
 
 func fnFour() Four {
@@ -64,7 +64,7 @@ func fnFour() Four {
 
 type Five struct {
 	goapi.StatusOK
-	Data goapi.DataBinary
+	Data goapi.DataStream
 }
 
 func (Five) ContentType() string {

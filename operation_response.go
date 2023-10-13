@@ -2,6 +2,7 @@ package goapi
 
 import (
 	"encoding/json"
+	"io"
 	"net/http"
 	"reflect"
 
@@ -17,12 +18,12 @@ type Response interface {
 
 var tResponse = reflect.TypeOf((*Response)(nil)).Elem()
 
-// DataBinary is a flag for binary response body.
+// DataStream is a flag for binary response body.
 // When Data field in the response struct is of this type,
 // the response body will be written directly to the [http.ResponseWriter].
-type DataBinary []byte
+type DataStream io.Reader
 
-var tDataBinary = reflect.TypeOf(DataBinary{})
+var tDataStream = reflect.TypeOf(new(DataStream)).Elem()
 
 type parsedRes struct {
 	operation  *Operation
@@ -32,7 +33,9 @@ type parsedRes struct {
 	hasData    bool
 	hasMeta    bool
 	isDirect   bool
-	isBinary   bool
+
+	isStream    bool
+	contentType string
 
 	typ reflect.Type
 
@@ -63,6 +66,8 @@ func (op *Operation) parseResponse(t reflect.Type) *parsedRes {
 		res.header = header.Type
 	}
 
+	res.contentType = getContentType(t, "")
+
 	if err, has := t.FieldByName("Error"); has {
 		res.hasErr = true
 		res.err = err.Type
@@ -73,8 +78,8 @@ func (op *Operation) parseResponse(t reflect.Type) *parsedRes {
 			panic("response Data field should not exist when Error field exists")
 		}
 
-		if f.Type == tDataBinary {
-			res.isBinary = true
+		if f.Type == tDataStream {
+			res.isStream = true
 		}
 
 		if f.Tag.Get(TagResponse) == TagResponseDirect {
@@ -94,8 +99,8 @@ func (op *Operation) parseResponse(t reflect.Type) *parsedRes {
 			panic("response Meta field requires Data field")
 		}
 
-		if res.isBinary {
-			panic("response Meta field cannot exist when Data field is goapi.DataBinary")
+		if res.isStream {
+			panic("response Meta field cannot exist when Data field is goapi.DataStream")
 		}
 
 		res.hasMeta = true
@@ -106,6 +111,10 @@ func (op *Operation) parseResponse(t reflect.Type) *parsedRes {
 }
 
 func (s *parsedRes) write(w http.ResponseWriter, res reflect.Value) {
+	if s.contentType != "" {
+		w.Header().Set("Content-Type", s.contentType)
+	}
+
 	if s.hasHeader {
 		h := res.FieldByName("Header")
 		for i := 0; i < h.NumField(); i++ {
@@ -114,10 +123,13 @@ func (s *parsedRes) write(w http.ResponseWriter, res reflect.Value) {
 		}
 	}
 
-	if s.isBinary {
-		w.Header().Set("Content-Type", "application/octet-stream")
+	if s.isStream {
+		if w.Header().Get("Content-Type") == "" {
+			w.Header().Set("Content-Type", "application/octet-stream")
+		}
+
 		w.WriteHeader(s.statusCode)
-		_, _ = w.Write(res.FieldByName("Data").Interface().(DataBinary))
+		_, _ = io.Copy(w, res.FieldByName("Data").Interface().(DataStream))
 
 		return
 	}

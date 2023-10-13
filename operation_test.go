@@ -1,6 +1,7 @@
 package goapi_test
 
 import (
+	"bytes"
 	"context"
 	"net/http"
 	"testing"
@@ -62,12 +63,24 @@ type resForgetCreateInterface interface{ goapi.Response }
 
 type resBin struct {
 	goapi.StatusOK
-	Data goapi.DataBinary
+	Data goapi.DataStream
 }
 
 type resDirect struct {
 	goapi.StatusOK
 	Data string `response:"direct"`
+}
+
+type resImage struct {
+	goapi.StatusOK
+	Header struct {
+		ContentType string
+	}
+	Data goapi.DataStream
+}
+
+func (resImage) ContentType() string {
+	return "image/*"
 }
 
 func TestOperation(t *testing.T) {
@@ -166,13 +179,20 @@ func TestOperation(t *testing.T) {
 
 		r.GET("/res-bin", func() resBin {
 			return resBin{
-				Data: []byte("ok"),
+				Data: bytes.NewBufferString("ok"),
 			}
 		})
 
 		r.GET("/res-direct", func() resDirect {
 			return resDirect{
 				Data: "ok",
+			}
+		})
+
+		r.GET("/res-image", func() resImage {
+			return resImage{
+				Header: struct{ ContentType string }{ContentType: "image/png"},
+				Data:   bytes.NewBufferString("ok"),
 			}
 		})
 
@@ -252,4 +272,8 @@ func TestOperation(t *testing.T) {
 	g.Eq(res.Header.Get("Content-Type"), "application/octet-stream")
 
 	g.Eq(g.Req("", tr.URL("/res-direct")).JSON(), "ok")
+
+	res = g.Req("", tr.URL("/res-image"))
+	g.Eq(res.String(), "ok")
+	g.Eq(res.Header.Get("Content-Type"), "image/png")
 }

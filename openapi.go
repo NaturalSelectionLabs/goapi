@@ -200,7 +200,7 @@ func resDoc(s jschema.Schemas, op *Operation) map[openapi.StatusCode]openapi.Res
 
 		var content *openapi.Content
 
-		if parsedRes.isBinary { //nolint: gocritic,nestif
+		if parsedRes.isStream { //nolint: gocritic,nestif
 			content = &openapi.Content{
 				getContentType(t, openapi.ContentTypeBin): &openapi.Schema{
 					Schema: &jschema.Schema{
