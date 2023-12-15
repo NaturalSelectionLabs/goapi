@@ -18,18 +18,25 @@ var regOpenAPIPath = regexp.MustCompile(`\{([^}]+)\}`)
 func newPath(path string, optionalSlash bool) (*Path, error) {
 	params := []string{}
 
-	// Replace OpenAPI wildcards with Go RegExp named wildcards
-	regexPath := regOpenAPIPath.ReplaceAllStringFunc(path, func(m string) string {
-		param := m[1 : len(m)-1]          // Strip outer braces from parameter
-		params = append(params, param)    // Add param to list
-		return "(?P<" + param + ">[^/]+)" // Replace with Go Regexp named wildcard
-	})
+	var regexPath string
+	if strings.HasSuffix(path, "/*") {
+		regexPath = "^" + strings.ReplaceAll(path[:len(path)-2], "/", "\\/") + "(?:\\/(?P<wildcard>.*))?$"
 
-	// Make sure the path starts with a "^", ends with a "$", and escape slashes
-	regexPath = "^" + strings.ReplaceAll(regexPath, "/", "\\/") + "$"
+		params = append(params, "wildcard")
+	} else {
+		// Replace OpenAPI wildcards with Go RegExp named wildcards
+		regexPath = regOpenAPIPath.ReplaceAllStringFunc(path, func(m string) string {
+			param := m[1 : len(m)-1]          // Strip outer braces from parameter
+			params = append(params, param)    // Add param to list
+			return "(?P<" + param + ">[^/]+)" // Replace with Go Regexp named wildcard
+		})
 
-	if optionalSlash && strings.HasSuffix(regexPath, "\\/$") {
-		regexPath = regexPath[:len(regexPath)-3] + "\\/?$"
+		// Make sure the path starts with a "^", ends with a "$", and escape slashes
+		regexPath = "^" + strings.ReplaceAll(regexPath, "/", "\\/") + "$"
+
+		if optionalSlash && strings.HasSuffix(regexPath, "\\/$") {
+			regexPath = regexPath[:len(regexPath)-3] + "\\/?$"
+		}
 	}
 
 	// Compile the regular expression
@@ -48,13 +55,21 @@ func (p *Path) match(path string) map[string]string {
 		return nil
 	}
 
-	params := map[string]string{}
+	matches := map[string]string{}
 
-	for i, m := range ms[1:] {
-		params[p.names[i]] = m
+	for i, name := range p.reg.SubexpNames() {
+		if i == 0 || name == "" {
+			continue
+		}
+
+		if name == "wildcard" {
+			matches["*"] = ms[i]
+		} else {
+			matches[name] = ms[i]
+		}
 	}
 
-	return params
+	return matches
 }
 
 func (p *Path) contains(v string) bool {

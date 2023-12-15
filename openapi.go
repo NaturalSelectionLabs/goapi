@@ -2,9 +2,9 @@ package goapi
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"reflect"
+	"strconv"
 
 	ff "github.com/NaturalSelectionLabs/goapi/lib/flat-fields"
 	"github.com/NaturalSelectionLabs/goapi/lib/openapi"
@@ -139,7 +139,7 @@ func urlParamDoc(s jschema.Schemas, p *parsedParam) []openapi.Parameter {
 		if len(schema.Examples) > 0 {
 			for i, e := range schema.Examples {
 				b, _ := json.Marshal(e)
-				k := fmt.Sprintf("%d", i)
+				k := strconv.Itoa(i)
 
 				examples[k] = openapi.Example{
 					Summary: string(b),
