@@ -19,4 +19,9 @@ func TestPath(t *testing.T) {
 	g.E(err)
 
 	g.Eq(p.match("/a/x/c/y"), map[string]string{"b": "x", "d": "y"})
+
+	p, err = newPath("/a/*", false)
+	g.E(err)
+
+	g.Eq(p.match("/a/x/y"), map[string]string{"*": "x/y"})
 }
