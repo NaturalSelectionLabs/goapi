@@ -73,6 +73,33 @@ func Test_loadURL(t *testing.T) {
 	})
 }
 
+func Test_loadURL_any(t *testing.T) {
+	g := got.T(t)
+
+	type params struct {
+		InURL
+
+		Path string `path:"*"`
+	}
+
+	path, err := newPath("/test/*", false)
+	g.E(err)
+
+	s := jschema.New("")
+
+	parsed := parseParam(s, path, reflect.TypeOf(params{}))
+
+	v, err := parsed.loadURL(url.Values{
+		"*": []string{"a/b/c"},
+	})
+	g.E(err)
+
+	g.Eq(v.Interface(), params{
+		InURL: InURL{},
+		Path:  "a/b/c",
+	})
+}
+
 func Test_loadURL_nil(t *testing.T) {
 	g := got.T(t)
 

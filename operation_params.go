@@ -55,9 +55,22 @@ func (p *parsedParam) loadURL(qs url.Values) (reflect.Value, error) { //nolint: 
 	val := reflect.New(p.param)
 
 	for _, f := range p.fields {
-		var fv reflect.Value
+		var (
+			fv  reflect.Value
+			err error
+		)
 
-		if !f.InPath && f.slice { //nolint: nestif
+		if f.name == "path" {
+			vs, has := qs["*"]
+			if !has {
+				continue
+			}
+
+			fv, err = toValue(f.item, vs[0])
+			if err != nil {
+				return reflect.Value{}, fmt.Errorf("failed to parse url path param `%s`: %w", f.name, err)
+			}
+		} else if !f.InPath && f.slice {
 			vs, has := qs[f.name]
 			if has { //nolint: gocritic
 				fv = reflect.MakeSlice(f.sliceType, len(vs), len(vs))
@@ -78,7 +91,6 @@ func (p *parsedParam) loadURL(qs url.Values) (reflect.Value, error) { //nolint: 
 		} else {
 			vs, has := qs[f.name]
 			if has { //nolint: gocritic
-				var err error
 				fv, err = toValue(f.item, vs[0])
 				if err != nil {
 					return reflect.Value{}, fmt.Errorf("failed to parse url path param `%s`: %w", f.name, err)

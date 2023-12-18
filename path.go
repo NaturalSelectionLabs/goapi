@@ -20,9 +20,9 @@ func newPath(path string, optionalSlash bool) (*Path, error) {
 
 	var regexPath string
 	if strings.HasSuffix(path, "/*") {
-		regexPath = "^" + strings.ReplaceAll(path[:len(path)-2], "/", "\\/") + "(?:\\/(?P<wildcard>.*))?$"
+		regexPath = "^" + strings.ReplaceAll(path[:len(path)-2], "/", "\\/") + "(?:\\/(?P<path>.*))?$"
 
-		params = append(params, "wildcard")
+		params = append(params, "path")
 	} else {
 		// Replace OpenAPI wildcards with Go RegExp named wildcards
 		regexPath = regOpenAPIPath.ReplaceAllStringFunc(path, func(m string) string {
@@ -62,7 +62,7 @@ func (p *Path) match(path string) map[string]string {
 			continue
 		}
 
-		if name == "wildcard" {
+		if name == "path" {
 			matches["*"] = ms[i]
 		} else {
 			matches[name] = ms[i]
